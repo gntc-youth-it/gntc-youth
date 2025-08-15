@@ -1,46 +1,114 @@
-# Getting Started with Create React App
+# GNTC 청년부 웹사이트
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+GNTC 교회 청년부를 위한 현대적이고 반응형 웹사이트입니다.
 
-## Available Scripts
+## 🚀 기능
 
-In the project directory, you can run:
+- **반응형 디자인**: 모바일, 태블릿, 데스크톱 모든 기기에서 최적화
+- **현대적인 UI/UX**: 깔끔하고 직관적인 사용자 인터페이스
+- **섹션별 구성**: 홈, 소개, 일정, 갤러리, 연락처 등 체계적인 정보 구성
+- **부드러운 스크롤**: 네비게이션 링크를 통한 부드러운 페이지 이동
 
-### `npm start`
+## 🛠️ 기술 스택
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **React 18** - 사용자 인터페이스 구축
+- **TypeScript** - 타입 안전성과 개발 생산성 향상
+- **CSS3** - 현대적인 스타일링과 애니메이션
+- **HTML5** - 시맨틱 마크업
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 📁 프로젝트 구조
 
-### `npm test`
+```
+src/
+├── components/          # 재사용 가능한 컴포넌트
+│   ├── Header.tsx      # 네비게이션 헤더
+│   ├── Header.css      # 헤더 스타일
+│   ├── Main.tsx        # 메인 컨텐츠
+│   ├── Main.css        # 메인 컨텐츠 스타일
+│   ├── Footer.tsx      # 푸터
+│   └── Footer.css      # 푸터 스타일
+├── App.tsx             # 메인 앱 컴포넌트
+├── App.css             # 앱 전체 스타일
+├── index.tsx           # 앱 진입점
+└── index.css           # 글로벌 스타일
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🚀 시작하기
 
-### `npm run build`
+### 필수 요구사항
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js 16.0.0 이상
+- npm 8.0.0 이상
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 설치 및 실행
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **의존성 설치**
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+2. **개발 서버 실행**
+   ```bash
+   npm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+3. **브라우저에서 확인**
+   - [http://localhost:3000](http://localhost:3000) 열기
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 빌드
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+프로덕션용 빌드를 생성하려면:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+npm run build
+```
 
-## Learn More
+## 🎨 커스터마이징
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 색상 테마 변경
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+`src/components/` 폴더의 CSS 파일에서 다음 색상 변수들을 수정하여 테마를 변경할 수 있습니다:
+
+- 주요 색상: `#667eea` (파란색 계열)
+- 보조 색상: `#764ba2` (보라색 계열)
+- 배경 색상: `#f8f9fa` (연한 회색)
+
+### 로고 및 이미지
+
+- 교회 로고는 `Header.tsx`의 로고 부분을 수정
+- 갤러리 이미지는 `Main.tsx`의 갤러리 섹션을 수정
+
+### 연락처 정보
+
+`Main.tsx`와 `Footer.tsx`에서 연락처 정보를 실제 정보로 수정하세요.
+
+## 📱 반응형 디자인
+
+이 웹사이트는 다음과 같은 브레이크포인트를 지원합니다:
+
+- **모바일**: 768px 이하
+- **태블릿**: 768px - 1024px
+- **데스크톱**: 1024px 이상
+
+## 🤝 기여하기
+
+1. 이 저장소를 포크합니다
+2. 새로운 기능 브랜치를 생성합니다 (`git checkout -b feature/AmazingFeature`)
+3. 변경사항을 커밋합니다 (`git commit -m 'Add some AmazingFeature'`)
+4. 브랜치에 푸시합니다 (`git push origin feature/AmazingFeature`)
+5. Pull Request를 생성합니다
+
+## 📄 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+
+## 📞 문의
+
+프로젝트에 대한 문의사항이 있으시면 다음으로 연락해주세요:
+
+- **이메일**: youth@gntc.org
+- **전화**: 02-1234-5678
+
+---
+
+**GNTC 청년부** - 함께 성장하고, 함께 섬기며, 함께 예배하는 청년들의 공동체
