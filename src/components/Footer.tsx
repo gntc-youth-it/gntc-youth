@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 GNTC 청년부. 모든 권리 보유.</p>
+          <p>CopyrightⓒGrace and Truth Church.</p>
         </div>
       </div>
     </footer>
