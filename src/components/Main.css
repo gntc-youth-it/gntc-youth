@@ -168,9 +168,10 @@
 
 .about-text p {
   font-size: 1.125rem;
-  line-height: 1.7;
+  line-height: 1.5;
   margin-bottom: 1.5rem;
   color: #4e5968;
+  text-align: center;
 }
 
 .about-stats {
