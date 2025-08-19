@@ -68,7 +68,7 @@ const Main: React.FC = () => {
 
       <section id="about" className="about-section">
         <div className="container">
-          <h2>청년부 소개</h2>
+          <h2>청년봉사선교회 소개</h2>
           <div className="about-content">
             <div className="about-text">
               <p>
