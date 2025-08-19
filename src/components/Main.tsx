@@ -33,7 +33,7 @@ const Main: React.FC = () => {
           </div>
           <div className="hero-image">
             <img 
-              src="https://cdn.gntc-youth.com/assets/2025-summer-main.jpeg" 
+              src="https://cdn.gntc-youth.com/assets/2025-summer-main.webp" 
               alt="GNTC 청년부 2025년 여름 단체사진" 
               className="hero-main-image"
             />
