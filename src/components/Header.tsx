@@ -2,11 +2,22 @@ import React from 'react';
 import './Header.css';
 
 const Header: React.FC = () => {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className="header">
       <div className="header-container">
         <div className="logo">
-          <h1>GNTC YOUTH</h1>
+          <a href="#home" onClick={scrollToTop} className="logo-link">
+            <img 
+              src="https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp" 
+              alt="GNTC Youth 로고" 
+              className="logo-image"
+            />
+            <h1>GNTC YOUTH</h1>
+          </a>
         </div>
         <nav className="navigation">
           <ul>
