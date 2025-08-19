@@ -21,9 +21,9 @@ const Footer: React.FC = () => {
           </div>
           <div className="footer-section">
             <h4>연락처</h4>
-            <p>📍 서울특별시 강남구 테헤란로 123</p>
-            <p>📞 02-1234-5678</p>
-            <p>✉️ youth@gntc.org</p>
+            <p>📍 경기도 안양시 만안구 안양로 193</p>
+            <p>📞 031-443-3731~2</p>
+            <p>✉️ truth@gntc.net</p>
           </div>
           <div className="footer-section">
             <h4>소셜 미디어</h4>
