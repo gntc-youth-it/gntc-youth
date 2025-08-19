@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>GNTC 청년부</h3>
+            <h3>GNTC YOUTH</h3>
             <p>함께 성장하고, 함께 섬기며, 함께 예배하는 청년들의 공동체</p>
           </div>
           <div className="footer-section">
