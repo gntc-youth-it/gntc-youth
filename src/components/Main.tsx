@@ -146,10 +146,13 @@ const Main: React.FC = () => {
     { 
       id: "yeongdeungpo", 
       name: "영등포", 
-      media: "https://cdn.gntc-youth.com/assets/sejong-church.jpg", 
-      mediaType: "image",
+      media: "https://cdn.gntc-youth.com/assets/2025-yeongdeungpo-youth.mp4", 
+      mediaType: "video",
       prayers: [
-        "영등포 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+        "영등포 청년봉사선교회의 부흥 (출석100명 목표)",
+        "모이기를 더욱 힘쓰는 영등포 청년 되도록",
+        "모든 일을 성경을 통해 바라보고 분별하여 행동하도록",
+        "성령으로 충만하여 예배와 전도와 봉사에 힘쓰는 영등포 청년 되도록"
       ]
     },
     { 
@@ -173,10 +176,12 @@ const Main: React.FC = () => {
     { 
       id: "yuljeon", 
       name: "율전", 
-      media: "https://cdn.gntc-youth.com/assets/chungbuk-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-yuljeon-youth.webp", 
       mediaType: "image",
       prayers: [
-        "율전 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+        "모이기에 힘쓰는 율전청년 40명 목표",
+        "하나님 사랑 이웃 사랑",
+        "세상속에서 탁월한 그리스도인 (타협없는 믿음)"
       ]
     },
     { 
@@ -317,10 +322,12 @@ const Main: React.FC = () => {
     { 
       id: "dangjin", 
       name: "당진", 
-      media: "https://cdn.gntc-youth.com/assets/abroad10-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-dangjin-youth.webp", 
       mediaType: "image",
       prayers: [
-        "당진 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+        "모든 당진성전 청년들이 하나가 되어서 성령님 인도하심 아래 양적,질적으로 부흥될 수 있도록 (청년 예배 10명 참석)",
+        "모두 하나님이 기억하시는 믿음과 사랑의 수고와 헌신의 삶이 되기를",
+        "말씀을 가장 귀하게 여기고 교회에 성전을 사랑하고 섬기는 당진성전 청년들이 되기를"
       ]
     },
     { 
