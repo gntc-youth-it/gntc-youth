@@ -202,7 +202,10 @@ const Main: React.FC = () => {
       media: "https://cdn.gntc-youth.com/assets/2025-sihwa-youth.webp",
       mediaType: "image",
       prayers: [
-        "시화 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+        "예배에 함께하는 청년들이 15명 이상 모이도록",
+        "성령 충만하여 기쁨으로 봉사에 힘쓰는 청년부가 되도록",
+        "다양한 나이대의 청년들이 더 많이 모여 함께 교제하도록",
+        "나라를 사랑하며 중보하는 청년부가 되도록"
       ]
     },
     { 
