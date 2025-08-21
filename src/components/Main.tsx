@@ -119,10 +119,15 @@ const Main: React.FC = () => {
     { 
       id: "bugok", 
       name: "부곡", 
-      media: "https://cdn.gntc-youth.com/assets/gwangju-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-bugok-youth.webp", 
       mediaType: "image",
       prayers: [
-        "부곡 지역 청년들의 영적 각성과 부흥을 위한 기도"
+        "재적 50명, 출석 50명 목표",
+        "예배중심, 말씀중심으로 살아가는 청년이 되도록",
+        "마지막 때에 믿음을 지켜 나라를 위해 기도하는 청년이 되도록",
+        "세상을 말씀으로 바라보고 분별하는 삶을 살도록",
+        "각자의 자리에서 하나님의 영광을 위해 힘쓰는 청년이 되도록",
+        "행함과 진실함으로 나아가는 청년이 되도록"
       ]
     },
     { 
