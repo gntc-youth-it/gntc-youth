@@ -99,21 +99,39 @@ const Main: React.FC = () => {
       ]
     },
     { 
-      id: "jeonwon", 
-      name: "전원", 
-      media: "https://cdn.gntc-youth.com/assets/daegu-church.jpg", 
+      id: "gwacheon", 
+      name: "과천", 
+      media: "https://cdn.gntc-youth.com/assets/jeonbuk-church.jpg", 
       mediaType: "image",
       prayers: [
-        "전원 지역 청년들의 영적 깊이와 성숙을 위한 기도"
+        "과천 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
       ]
     },
     { 
-      id: "incheon", 
-      name: "인천", 
-      media: "https://cdn.gntc-youth.com/assets/incheon-church.jpg", 
+      id: "siheung", 
+      name: "시흥", 
+      media: "https://cdn.gntc-youth.com/assets/gangwon-church.jpg", 
       mediaType: "image",
       prayers: [
-        "인천 지역 청년들의 복음 전파와 교회 성장을 위한 기도"
+        "시흥 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "gwangmyeong", 
+      name: "광명", 
+      media: "https://cdn.gntc-youth.com/assets/abroad4-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "광명 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+      ]
+    },
+    { 
+      id: "bupyeong", 
+      name: "부평", 
+      media: "https://cdn.gntc-youth.com/assets/gyeonggi-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "부평 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
       ]
     },
     { 
@@ -140,15 +158,6 @@ const Main: React.FC = () => {
       ]
     },
     { 
-      id: "dongtan", 
-      name: "동탄", 
-      media: "https://cdn.gntc-youth.com/assets/ulsan-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "동탄 지역 청년들의 영적 성숙과 섬김을 위한 기도"
-      ]
-    },
-    { 
       id: "yeongdeungpo", 
       name: "영등포", 
       media: "https://cdn.gntc-youth.com/assets/2025-yeongdeungpo-youth.mp4", 
@@ -161,21 +170,156 @@ const Main: React.FC = () => {
       ]
     },
     { 
-      id: "bupyeong", 
-      name: "부평", 
-      media: "https://cdn.gntc-youth.com/assets/gyeonggi-church.jpg", 
+      id: "incheon", 
+      name: "인천", 
+      media: "https://cdn.gntc-youth.com/assets/incheon-church.jpg", 
       mediaType: "image",
       prayers: [
-        "부평 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+        "인천 지역 청년들의 복음 전파와 교회 성장을 위한 기도"
       ]
     },
     { 
-      id: "siheung", 
-      name: "시흥", 
-      media: "https://cdn.gntc-youth.com/assets/gangwon-church.jpg", 
+      id: "bucheon", 
+      name: "부천", 
+      media: "https://cdn.gntc-youth.com/assets/abroad2-church.jpg", 
       mediaType: "image",
       prayers: [
-        "시흥 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+        "부천 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+      ]
+    },
+    {
+      id: "sihwa",
+      name: "시화",
+      media: "https://cdn.gntc-youth.com/assets/2025-sihwa-youth.webp",
+      mediaType: "image",
+      prayers: [
+        "시화 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+      ]
+    },
+    { 
+      id: "yeongtong", 
+      name: "영통", 
+      media: "https://cdn.gntc-youth.com/assets/gyeongbuk-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "영통 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+      ]
+    },
+    { 
+      id: "guri", 
+      name: "구리", 
+      media: "https://cdn.gntc-youth.com/assets/abroad7-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "구리 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "poil", 
+      name: "포일", 
+      media: "https://cdn.gntc-youth.com/assets/gyeongnam-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "포일 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "jeonwon", 
+      name: "전원", 
+      media: "https://cdn.gntc-youth.com/assets/daegu-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "전원 지역 청년들의 영적 깊이와 성숙을 위한 기도"
+      ]
+    },
+    { 
+      id: "gimpo", 
+      name: "김포", 
+      media: "https://cdn.gntc-youth.com/assets/jeonnam-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "김포 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "pyeongtaek", 
+      name: "평택", 
+      media: "https://cdn.gntc-youth.com/assets/abroad9-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "평택 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "anjung", 
+      name: "안중", 
+      media: "https://cdn.gntc-youth.com/assets/abroad3-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "안중 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "cheonan", 
+      name: "천안", 
+      media: "https://cdn.gntc-youth.com/assets/abroad5-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "천안 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "yangju", 
+      name: "양주", 
+      media: "https://cdn.gntc-youth.com/assets/abroad11-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "양주 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "gangnam", 
+      name: "강남", 
+      media: "https://cdn.gntc-youth.com/assets/abroad8-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "강남 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+      ]
+    },
+    { 
+      id: "yongin", 
+      name: "용인", 
+      media: "https://cdn.gntc-youth.com/assets/chungnam-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "용인 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "daejeon", 
+      name: "대전", 
+      media: "https://cdn.gntc-youth.com/assets/jeju-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "대전 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+      ]
+    },
+    { 
+      id: "gwangju", 
+      name: "광주", 
+      media: "https://cdn.gntc-youth.com/assets/abroad12-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "광주 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+      ]
+    },
+    { 
+      id: "seosan", 
+      name: "서산", 
+      media: "https://cdn.gntc-youth.com/assets/abroad6-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "서산 지역 청년들의 영적 성숙과 섬김을 위한 기도"
       ]
     },
     { 
@@ -190,138 +334,12 @@ const Main: React.FC = () => {
       ]
     },
     { 
-      id: "yongin", 
-      name: "용인", 
-      media: "https://cdn.gntc-youth.com/assets/chungnam-church.jpg", 
+      id: "dongtan", 
+      name: "동탄", 
+      media: "https://cdn.gntc-youth.com/assets/ulsan-church.jpg", 
       mediaType: "image",
       prayers: [
-        "용인 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "gwacheon", 
-      name: "과천", 
-      media: "https://cdn.gntc-youth.com/assets/jeonbuk-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "과천 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
-      ]
-    },
-    { 
-      id: "gimpo", 
-      name: "김포", 
-      media: "https://cdn.gntc-youth.com/assets/jeonnam-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "김포 지역 청년들의 신앙의 열정과 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "yeongtong", 
-      name: "영통", 
-      media: "https://cdn.gntc-youth.com/assets/gyeongbuk-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "영통 지역 청년들의 영적 성숙과 섬김을 위한 기도"
-      ]
-    },
-    { 
-      id: "poil", 
-      name: "포일", 
-      media: "https://cdn.gntc-youth.com/assets/gyeongnam-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "포일 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "daejeon", 
-      name: "대전", 
-      media: "https://cdn.gntc-youth.com/assets/jeju-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "대전 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
-      ]
-    },
-    { 
-      id: "jeonju-hyoja", 
-      name: "전주효자", 
-      media: "https://cdn.gntc-youth.com/assets/abroad1-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "전주효자 지역 청년들의 신앙의 열정과 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "bucheon", 
-      name: "부천", 
-      media: "https://cdn.gntc-youth.com/assets/abroad2-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "부천 지역 청년들의 영적 성숙과 섬김을 위한 기도"
-      ]
-    },
-    { 
-      id: "anjung", 
-      name: "안중", 
-      media: "https://cdn.gntc-youth.com/assets/abroad3-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "안중 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "gwangmyeong", 
-      name: "광명", 
-      media: "https://cdn.gntc-youth.com/assets/abroad4-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "광명 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
-      ]
-    },
-    { 
-      id: "cheonan", 
-      name: "천안", 
-      media: "https://cdn.gntc-youth.com/assets/abroad5-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "천안 지역 청년들의 신앙의 열정과 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "seosan", 
-      name: "서산", 
-      media: "https://cdn.gntc-youth.com/assets/abroad6-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "서산 지역 청년들의 영적 성숙과 섬김을 위한 기도"
-      ]
-    },
-    { 
-      id: "guri", 
-      name: "구리", 
-      media: "https://cdn.gntc-youth.com/assets/abroad7-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "구리 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "gangnam", 
-      name: "강남", 
-      media: "https://cdn.gntc-youth.com/assets/abroad8-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "강남 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
-      ]
-    },
-    { 
-      id: "pyeongtaek", 
-      name: "평택", 
-      media: "https://cdn.gntc-youth.com/assets/abroad9-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "평택 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+        "동탄 지역 청년들의 영적 성숙과 섬김을 위한 기도"
       ]
     },
     { 
@@ -336,30 +354,21 @@ const Main: React.FC = () => {
       ]
     },
     { 
-      id: "yangju", 
-      name: "양주", 
-      media: "https://cdn.gntc-youth.com/assets/abroad11-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "양주 지역 청년들의 신앙의 깊이와 성장을 위한 기도"
-      ]
-    },
-    { 
-      id: "gwangju", 
-      name: "광주", 
-      media: "https://cdn.gntc-youth.com/assets/abroad12-church.jpg", 
-      mediaType: "image",
-      prayers: [
-        "광주 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
-      ]
-    },
-    { 
       id: "sejong", 
       name: "세종", 
       media: "https://cdn.gntc-youth.com/assets/abroad13-church.jpg", 
       mediaType: "image",
       prayers: [
         "세종 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+      ]
+    },
+    { 
+      id: "jeonju-hyoja", 
+      name: "전주효자", 
+      media: "https://cdn.gntc-youth.com/assets/abroad1-church.jpg", 
+      mediaType: "image",
+      prayers: [
+        "전주효자 지역 청년들의 신앙의 열정과 성장을 위한 기도"
       ]
     }
   ];
