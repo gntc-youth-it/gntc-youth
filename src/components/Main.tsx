@@ -188,6 +188,15 @@ const Main: React.FC = () => {
       ]
     },
     {
+      id: "ilsan",
+      name: "일산",
+      media: "https://cdn.gntc-youth.com/assets/2025-ilsan-youth.webp",
+      mediaType: "image",
+      prayers: [
+        "일산 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+      ]
+    },
+    {
       id: "sihwa",
       name: "시화",
       media: "https://cdn.gntc-youth.com/assets/2025-sihwa-youth.webp",
