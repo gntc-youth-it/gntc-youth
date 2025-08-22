@@ -172,10 +172,16 @@ const Main: React.FC = () => {
     { 
       id: "incheon", 
       name: "인천", 
-      media: "https://cdn.gntc-youth.com/assets/incheon-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-incheon-youth.webp", 
       mediaType: "image",
       prayers: [
-        "인천 지역 청년들의 복음 전파와 교회 성장을 위한 기도"
+        "인천 청년봉사선교회 부흥",
+        "전 청년 성령충만",
+        "구원의 확신과 굳건한 믿음으로 삶의 모든 순간을 살아가도록",
+        "예배/봉사/전도에 힘쓸 수 있는 마음과 환경의 문 열어주시고 지치지 않는 힘과 능력을 더하여주시길",
+        "말씀이 기준이 된 가치관, 역사관, 신앙관을 가지고 말씀대로 살아갈 수 있도록",
+        "하나님을 더욱 사랑하고 의지하는 청년들이 되도록",
+        "복음 전파에 힘써 인천청년봉사선교회가 복음의 통로 역할을 잘 감당할 수 있도록"
       ]
     },
     { 
