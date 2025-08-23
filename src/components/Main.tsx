@@ -66,6 +66,16 @@ const Main: React.FC = () => {
     setTimeout(() => setIsVisible(true), 100);
   };
 
+  // \n 문자를 <br> 태그로 변환하는 함수
+  const formatPrayerText = (text: string) => {
+    return text.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   // 34개 성전 데이터
   const churches = [
     { 
@@ -244,10 +254,12 @@ const Main: React.FC = () => {
     { 
       id: "jeonwon", 
       name: "전원", 
-      media: "https://cdn.gntc-youth.com/assets/daegu-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-jeonwon-youth.webp", 
       mediaType: "image",
       prayers: [
-        "전원 지역 청년들의 영적 깊이와 성숙을 위한 기도"
+        "오직 예수 그리스도로 말미암아 사는 전원 청년부\n- 예수 그리스도의 구속의 은혜와 사랑 안에 사는 전원 청년부\n- 예수 그리스도의 말씀에 순종하고 말씀으로 모든 것을 분별하는 전원 청년부",
+        "오직 예수 그리스도를 위하여 사는 전원 청년부\n- 하나님 사랑: 모든 동기와 목적이 하나님을 예배하는 전원 청년부\n- 이웃 사랑: 그리스도의 은혜와 사랑을 전파하기에 앞장서는 전원 청년부",
+        "오직 예수 그리스도를 알아가기에 힘쓰는 전원 청년부\n- 진리의 말씀을 다각도로 탐구하고 체험하여 굳건한 믿음을 가지고 사는 전원 청년부\n- 행함 있는 믿음으로 예수 그리스도를 닮아가는 전원 청년부"
       ]
     },
     { 
@@ -354,10 +366,13 @@ const Main: React.FC = () => {
     { 
       id: "dongtan", 
       name: "동탄", 
-      media: "https://cdn.gntc-youth.com/assets/ulsan-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-dongtan-youth.webp", 
       mediaType: "image",
       prayers: [
-        "동탄 지역 청년들의 영적 성숙과 섬김을 위한 기도"
+        "하나님의 동역자들로서 주 안에서 하나되는 2025년 (고후3:9)",
+        "성령충만과 은혜충만으로 예배와 말씀 묵상에 힘쓰는 모든 동탄 청년들 되기를",
+        "동탄청년봉사선교회 부흥(목표재적 50 출석목표 30 / 현재 재적 32 평균출석 15~18)",
+        "삶의 목표와 의미를 하나님께 두어 영광돌리는 삶이 우리의 기쁨이 되도록"
       ]
     },
     { 
@@ -533,7 +548,7 @@ const Main: React.FC = () => {
                       {church.prayers.map((prayer, index) => (
                         <div key={index} className={`prayer-item prayer-item-${index + 1} ${isVisible ? 'prayer-item-visible' : ''}`}>
                           <span className="prayer-number">{index + 1}.</span>
-                          <p>{prayer}</p>
+                          <p>{formatPrayerText(prayer)}</p>
                         </div>
                       ))}
                     </div>
