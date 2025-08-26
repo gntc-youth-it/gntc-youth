@@ -334,10 +334,14 @@ const Main: React.FC = () => {
     { 
       id: "daejeon", 
       name: "대전", 
-      media: "https://cdn.gntc-youth.com/assets/jeju-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-daejeon-youth.webp", 
       mediaType: "image",
       prayers: [
-        "대전 지역 청년들의 영적 부흥과 복음 전파를 위한 기도"
+        "복음 전파에 힘쓰는 대전청년봉사선교회",
+        "성령충만한 대전청년봉사선교회",
+        "한마음과 한뜻으로 하나님께 입을 넓게 열고, 주의 일에 힘쓰는 대전청년봉사선교회",
+        "살았고 운동력있는 말씀의 능력만을 매 순간 의지하는 대전청년봉사선교회",
+        "하나님의 마음으로 자신을, 서로를, 가족을, 이웃을 바라보는 대전청년봉사선교회"
       ]
     },
     { 
