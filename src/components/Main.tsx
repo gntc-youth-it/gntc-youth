@@ -105,7 +105,10 @@ const Main: React.FC = () => {
       media: "https://cdn.gntc-youth.com/assets/busan-church.jpg", 
       mediaType: "image",
       prayers: [
-        "안산 지역 청년들의 신앙의 열정과 섬김을 위한 기도"
+        "하나님 주시는 위로와 새 힘으로 '복음 중심'의 삶을 살아가는 청년봉사선교회",
+        "하나님 사랑, 이웃 사랑을 통해 기쁨으로 신앙 생활하는 청년봉사선교회",
+        "마지막 때에 오직 복음만이 능력 됨을 깨달아 속한 모든 처소에서 영혼 구원에 귀하게 쓰임 받는 청년봉사선교회",
+        "성경 말씀으로 현 시대(세속화, 공산·사회주의, 종교다원주의 外)를 바르게 분별하여 철저히 배격하기에 힘쓰는 청년봉사선교회"
       ]
     },
     { 
@@ -120,10 +123,13 @@ const Main: React.FC = () => {
     { 
       id: "siheung", 
       name: "시흥", 
-      media: "https://cdn.gntc-youth.com/assets/gangwon-church.jpg", 
+      media: "https://cdn.gntc-youth.com/assets/2025-siheung-youth.webp", 
       mediaType: "image",
       prayers: [
-        "시흥 지역 청년들의 신앙의 열정과 성장을 위한 기도"
+        "모이기에 더욱 힘쓰고 주의 일에 힘써  그리스도의 안에 거할 수 있도록",
+        "어둡고 혼탁한 세대에 깨어 기도하며  하나님의 뜻을 분별하는 시흥청년",
+        "성경대로 국가관, 성경관, 역사관 갖고 그리스도의 군사로써 세상에서 빛과 소금 역할 감당할 수 있도록",
+        "성령의 9가지 열매를 맺어 포도나무 예수님께 접붙임 될 수 있도록"
       ]
     },
     { 
