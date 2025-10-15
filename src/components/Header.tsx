@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
+import { getUserInfo, logout, isLoggedIn as checkIsLoggedIn, UserInfo } from '../utils/api';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -19,6 +25,67 @@ const Header: React.FC = () => {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     closeSidebar();
   };
+
+  const handleLogin = () => {
+    // 사이드바가 열려있으면 닫기
+    closeSidebar();
+    // 로그인 페이지로 이동
+    navigate('/login');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsLoggedIn(false);
+      setUser(null);
+      closeSidebar();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // 컴포넌트 마운트 시 로그인 상태 확인
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const loggedIn = checkIsLoggedIn();
+      setIsLoggedIn(loggedIn);
+
+      if (loggedIn) {
+        try {
+          const userInfo = await getUserInfo();
+          setUser(userInfo);
+        } catch (error) {
+          console.error('Failed to fetch user info:', error);
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      }
+
+      setIsLoadingUser(false);
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  // 사이드바가 열렸을 때 body 스크롤 막기
+  useEffect(() => {
+    if (isSidebarOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+  }, [isSidebarOpen]);
 
   return (
     <header className="header">
@@ -54,6 +121,21 @@ const Header: React.FC = () => {
             <li><a href="#gallery">갤러리</a></li>
             <li><a href="#contact">연락처</a></li>
           </ul>
+
+          {/* 로그인 버튼/사용자 정보 */}
+          <div className="auth-section">
+            {isLoggedIn && user ? (
+              <div className="user-info">
+                {user.profileImage && (
+                  <img src={user.profileImage} alt={user.name} className="user-avatar" />
+                )}
+                <span className="user-name">{user.name}</span>
+                <button onClick={handleLogout} className="logout-button">로그아웃</button>
+              </div>
+            ) : (
+              <button onClick={handleLogin} className="login-button">로그인</button>
+            )}
+          </div>
         </nav>
       </div>
 
@@ -68,6 +150,27 @@ const Header: React.FC = () => {
         <div className="sidebar-header">
           <h2>메뉴</h2>
         </div>
+
+        {/* 모바일 로그인 섹션 */}
+        <div className="sidebar-auth">
+          {isLoggedIn && user ? (
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-profile">
+                {user.profileImage && (
+                  <img src={user.profileImage} alt={user.name} className="sidebar-user-avatar" />
+                )}
+                <div className="sidebar-user-details">
+                  <span className="sidebar-user-name">{user.name}</span>
+                  <span className="sidebar-user-email">{user.email}</span>
+                </div>
+              </div>
+              <button onClick={handleLogout} className="sidebar-logout-button">로그아웃</button>
+            </div>
+          ) : (
+            <button onClick={handleLogin} className="sidebar-login-button">로그인</button>
+          )}
+        </div>
+
         <ul className="sidebar-menu">
           <li><a href="#home" onClick={handleNavClick}>홈</a></li>
           <li><a href="#about" onClick={handleNavClick}>소개</a></li>
