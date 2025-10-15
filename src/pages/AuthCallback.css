@@ -36,6 +36,12 @@
   color: #e53e3e;
 }
 
+.auth-callback-icon.success {
+  background: #d4edda;
+  color: #28a745;
+  font-weight: bold;
+}
+
 .spinner {
   width: 40px;
   height: 40px;

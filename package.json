@@ -4,7 +4,6 @@
   "private": true,
   "description": "GNTC 교회 청년부 웹사이트",
   "author": "GNTC Youth Ministry",
-  "homepage": ".",
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
     "@testing-library/jest-dom": "^5.17.0",
