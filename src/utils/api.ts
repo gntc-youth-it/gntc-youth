@@ -1,6 +1,26 @@
 const API_BASE_URL = 'https://api.gntc-youth.com';
 
 /**
+ * JWT 토큰 디코딩 (페이로드만 추출)
+ */
+const decodeJWT = (token: string): any => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Failed to decode JWT:', error);
+    return null;
+  }
+};
+
+/**
  * Access Token 가져오기
  */
 export const getAccessToken = (): string | null => {
@@ -70,17 +90,37 @@ export const apiRequest = async <T>(
 };
 
 /**
- * 사용자 정보 가져오기
+ * 사용자 정보 인터페이스
  */
 export interface UserInfo {
   id: number;
   name: string;
-  email: string;
-  profileImage?: string;
+  email?: string;
+  role?: string;
+  provider?: string;
 }
 
-export const getUserInfo = async (): Promise<UserInfo> => {
-  return apiRequest<UserInfo>('/api/user/me');
+/**
+ * JWT 토큰에서 사용자 정보 추출
+ */
+export const getUserInfoFromToken = (): UserInfo | null => {
+  const token = getAccessToken();
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeJWT(token);
+  if (!payload) {
+    return null;
+  }
+
+  return {
+    id: parseInt(payload.sub || '0'),
+    name: payload.name || '사용자',
+    email: payload.email,
+    role: payload.role,
+    provider: payload.provider,
+  };
 };
 
 /**

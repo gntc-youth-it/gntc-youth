@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
-import { getUserInfo, logout, isLoggedIn as checkIsLoggedIn, UserInfo } from '../utils/api';
+import { getUserInfoFromToken, logout, isLoggedIn as checkIsLoggedIn, UserInfo } from '../utils/api';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -45,16 +45,17 @@ const Header: React.FC = () => {
 
   // 컴포넌트 마운트 시 로그인 상태 확인
   useEffect(() => {
-    const checkLoginStatus = async () => {
+    const checkLoginStatus = () => {
       const loggedIn = checkIsLoggedIn();
       setIsLoggedIn(loggedIn);
 
       if (loggedIn) {
-        try {
-          const userInfo = await getUserInfo();
+        // JWT 토큰에서 사용자 정보 추출
+        const userInfo = getUserInfoFromToken();
+        if (userInfo) {
           setUser(userInfo);
-        } catch (error) {
-          console.error('Failed to fetch user info:', error);
+        } else {
+          // 토큰이 유효하지 않으면 로그아웃 처리
           setIsLoggedIn(false);
           setUser(null);
         }
@@ -123,10 +124,7 @@ const Header: React.FC = () => {
           <div className="auth-section">
             {isLoggedIn && user ? (
               <div className="user-info">
-                {user.profileImage && (
-                  <img src={user.profileImage} alt={user.name} className="user-avatar" />
-                )}
-                <span className="user-name">{user.name}</span>
+                <span className="user-welcome">{user.name}님 환영합니다</span>
                 <button onClick={handleLogout} className="logout-button">로그아웃</button>
               </div>
             ) : (
@@ -152,14 +150,9 @@ const Header: React.FC = () => {
         <div className="sidebar-auth">
           {isLoggedIn && user ? (
             <div className="sidebar-user-info">
-              <div className="sidebar-user-profile">
-                {user.profileImage && (
-                  <img src={user.profileImage} alt={user.name} className="sidebar-user-avatar" />
-                )}
-                <div className="sidebar-user-details">
-                  <span className="sidebar-user-name">{user.name}</span>
-                  <span className="sidebar-user-email">{user.email}</span>
-                </div>
+              <div className="sidebar-user-welcome">
+                <span className="sidebar-user-name">{user.name}님</span>
+                <span className="sidebar-user-greeting">환영합니다</span>
               </div>
               <button onClick={handleLogout} className="sidebar-logout-button">로그아웃</button>
             </div>
