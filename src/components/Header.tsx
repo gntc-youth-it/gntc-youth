@@ -8,7 +8,6 @@ const Header: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<UserInfo | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -60,8 +59,6 @@ const Header: React.FC = () => {
           setUser(null);
         }
       }
-
-      setIsLoadingUser(false);
     };
 
     checkLoginStatus();
