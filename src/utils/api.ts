@@ -145,3 +145,48 @@ export const logout = async (): Promise<void> => {
 export const redirectToKakaoLogin = (): void => {
   window.location.href = `${API_BASE_URL}/oauth2/authorization/kakao`;
 };
+
+/**
+ * 로컬 개발 환경 체크
+ */
+export const isLocalDevelopment = (): boolean => {
+  return (
+    process.env.NODE_ENV === 'development' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+};
+
+/**
+ * 테스트용 더미 JWT 토큰 생성 (로컬 개발 전용)
+ */
+export const createTestToken = (name: string = '테스트사용자'): string => {
+  const header = btoa(JSON.stringify({ alg: 'HS384' }));
+  const payload = btoa(
+    JSON.stringify({
+      iss: 'church-app',
+      sub: '999',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600, // 1시간 후 만료
+      name: name,
+      role: 'USER',
+      provider: 'TEST',
+    })
+  );
+  const signature = 'test-signature';
+
+  return `${header}.${payload}.${signature}`;
+};
+
+/**
+ * 테스트 로그인 (로컬 개발 전용)
+ */
+export const testLogin = (name: string = '테스트사용자'): void => {
+  if (!isLocalDevelopment()) {
+    console.error('테스트 로그인은 로컬 환경에서만 사용 가능합니다.');
+    return;
+  }
+
+  const testToken = createTestToken(name);
+  setAccessToken(testToken);
+};

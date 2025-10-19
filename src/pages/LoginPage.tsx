@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
-import { redirectToKakaoLogin, isLoggedIn } from '../utils/api';
+import { redirectToKakaoLogin, isLoggedIn, isLocalDevelopment, testLogin } from '../utils/api';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [isLocal, setIsLocal] = useState(false);
+  const [testUserName, setTestUserName] = useState('박석현');
 
   useEffect(() => {
     // 이미 로그인되어 있다면 리다이렉트
@@ -14,10 +15,20 @@ const LoginPage: React.FC = () => {
       sessionStorage.removeItem('redirectAfterLogin');
       navigate(redirectUrl);
     }
+
+    // 로컬 개발 환경 체크
+    setIsLocal(isLocalDevelopment());
   }, [navigate]);
 
   const handleKakaoLogin = () => {
     redirectToKakaoLogin();
+  };
+
+  const handleTestLogin = () => {
+    testLogin(testUserName);
+    const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+    sessionStorage.removeItem('redirectAfterLogin');
+    navigate(redirectUrl);
   };
 
   const handleGoBack = () => {
@@ -49,6 +60,28 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="login-buttons">
+            {/* 로컬 개발 환경 전용 테스트 로그인 */}
+            {isLocal && (
+              <div className="test-login-section">
+                <div className="test-login-header">
+                  <span className="test-badge">개발 모드</span>
+                  <span className="test-description">테스트 로그인</span>
+                </div>
+                <div className="test-login-input-group">
+                  <input
+                    type="text"
+                    className="test-login-input"
+                    value={testUserName}
+                    onChange={(e) => setTestUserName(e.target.value)}
+                    placeholder="테스트 사용자 이름"
+                  />
+                  <button className="social-login-button test-login" onClick={handleTestLogin}>
+                    🧪 테스트 로그인
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button className="social-login-button kakao" onClick={handleKakaoLogin}>
               <svg className="social-icon" viewBox="0 0 24 24" fill="none">
                 <path
