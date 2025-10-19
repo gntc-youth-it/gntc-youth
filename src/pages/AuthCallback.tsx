@@ -31,9 +31,12 @@ const AuthCallback: React.FC = () => {
         // 성공 상태 표시
         setIsSuccess(true);
 
-        // 1.5초 후 홈으로 이동
+        // 1.5초 후 리다이렉트
         setTimeout(() => {
-          navigate('/');
+          // 저장된 리다이렉트 경로가 있으면 그곳으로, 없으면 홈으로
+          const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+          sessionStorage.removeItem('redirectAfterLogin'); // 사용 후 삭제
+          navigate(redirectUrl);
         }, 1500);
       } else {
         setError('토큰을 받지 못했습니다. 다시 시도해주세요.');

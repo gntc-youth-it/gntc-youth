@@ -1,32 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import BookTransition from '../components/BookTransition';
 import './BibleTranscriptionPage.css';
 
 const BibleTranscriptionPage: React.FC = () => {
-  const [isBookOpen, setIsBookOpen] = useState(false);
-
-  useEffect(() => {
-    // 페이지 로드 후 책 열기 애니메이션 시작
-    setTimeout(() => {
-      setIsBookOpen(true);
-    }, 300);
-  }, []);
+  const navigate = useNavigate();
 
   const handleStart = () => {
-    // TODO: 필사 페이지로 이동
-    console.log('필사 시작!');
+    navigate('/bible/main');
   };
 
   return (
     <div className="bible-landing">
-      <div className="bible-landing-container">
-        {/* 책 표지 애니메이션 */}
-        <div className={`book-cover-left ${isBookOpen ? 'open' : ''}`}></div>
-        <div className={`book-cover-right ${isBookOpen ? 'open' : ''}`}></div>
-        {/* 배경 장식 */}
-        <div className="bible-bg-decoration"></div>
+      <BookTransition>
+        <div className="bible-landing-container">
+          {/* 배경 장식 */}
+          <div className="bible-bg-decoration"></div>
 
-        {/* 메인 콘텐츠 */}
-        <div className={`bible-content ${isBookOpen ? 'show' : ''}`}>
+          {/* 메인 콘텐츠 */}
+          <div className="bible-content">
           <div className="bible-icon">💖</div>
           <h1 className="bible-title">성경 필사 미션</h1>
           <p className="bible-description">
@@ -46,8 +38,9 @@ const BibleTranscriptionPage: React.FC = () => {
           <button className="bible-start-button" onClick={handleStart}>
             시작하기
           </button>
+          </div>
         </div>
-      </div>
+      </BookTransition>
     </div>
   );
 };

@@ -1,16 +1,28 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './LoginPage.css';
-import { redirectToKakaoLogin } from '../utils/api';
+import { redirectToKakaoLogin, isLoggedIn } from '../utils/api';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // 이미 로그인되어 있다면 리다이렉트
+    if (isLoggedIn()) {
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectUrl);
+    }
+  }, [navigate]);
 
   const handleKakaoLogin = () => {
     redirectToKakaoLogin();
   };
 
   const handleGoBack = () => {
+    // 돌아가기 버튼 클릭 시 저장된 리다이렉트 URL 삭제
+    sessionStorage.removeItem('redirectAfterLogin');
     navigate(-1);
   };
 
