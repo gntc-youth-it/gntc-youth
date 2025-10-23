@@ -46,9 +46,14 @@ const BibleMainPage: React.FC = () => {
               성경 필사를 시작해볼까요?
             </p>
 
-            {/* 여기에 필사 UI가 들어갈 예정 */}
-            <div className="placeholder">
-              <p>필사 UI가 여기에 추가됩니다</p>
+            {/* 버튼 영역 */}
+            <div className="bible-main-buttons">
+              <button className="bible-button secondary">
+                📊 달성률 보기
+              </button>
+              <button className="bible-button primary">
+                ✍️ 필사 시작하기
+              </button>
             </div>
           </div>
         </div>
