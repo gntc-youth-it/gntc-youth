@@ -49,6 +49,16 @@ export const isLoggedIn = (): boolean => {
 };
 
 /**
+ * HTTP 에러 클래스
+ */
+export class HttpError extends Error {
+  constructor(public status: number, message: string, public code?: string | number) {
+    super(message);
+    this.name = 'HttpError';
+  }
+}
+
+/**
  * API 요청 헬퍼 함수
  */
 export const apiRequest = async <T>(
@@ -78,12 +88,14 @@ export const apiRequest = async <T>(
     // 토큰 삭제 후 로그인 페이지로 리다이렉트
     removeAccessToken();
     window.location.href = '/';
-    throw new Error('Unauthorized');
+    throw new HttpError(401, 'Unauthorized');
   }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `API Error: ${response.status}`);
+    const message = errorData.message || `API Error: ${response.status}`;
+    const code = errorData.code;
+    throw new HttpError(response.status, message, code);
   }
 
   return response.json();
