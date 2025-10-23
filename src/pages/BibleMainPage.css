@@ -11,7 +11,7 @@
 
 .bible-main-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
   position: relative;
   z-index: 1;
 }
@@ -138,7 +138,7 @@
 /* 태블릿 */
 @media (min-width: 768px) {
   .bible-main-container {
-    max-width: 440px;
+    max-width: 540px;
   }
 
   .bible-main-content {
@@ -149,7 +149,7 @@
 /* 데스크톱 - 모바일과 같은 width 유지 */
 @media (min-width: 1024px) {
   .bible-main-container {
-    max-width: 440px;
+    max-width: 540px;
   }
 }
 

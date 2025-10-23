@@ -49,10 +49,10 @@ const BibleMainPage: React.FC = () => {
             {/* 버튼 영역 */}
             <div className="bible-main-buttons">
               <button className="bible-button secondary">
-                📊 달성률 보기
+                달성률 보기
               </button>
               <button className="bible-button primary">
-                ✍️ 필사 시작하기
+                필사 시작하기
               </button>
             </div>
           </div>
