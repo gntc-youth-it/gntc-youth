@@ -9,9 +9,9 @@ const AuthCallback: React.FC = () => {
 
   useEffect(() => {
     const processCallback = async () => {
-      // URL에서 accessToken 추출
+      // URL에서 access_token 추출 (snake_case로 변경)
       const urlParams = new URLSearchParams(window.location.search);
-      const accessToken = urlParams.get('accessToken');
+      const accessToken = urlParams.get('access_token') || urlParams.get('accessToken'); // 둘 다 지원
       const errorParam = urlParams.get('error');
 
       if (errorParam) {

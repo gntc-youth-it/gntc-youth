@@ -65,6 +65,49 @@ export class HttpError extends Error {
 }
 
 /**
+ * 토큰 갱신 중인지 추적하는 플래그
+ */
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
+
+/**
+ * Access Token 갱신
+ */
+const refreshAccessToken = async (): Promise<string> => {
+  // 이미 갱신 중이면 기존 Promise 반환
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // HttpOnly Cookie의 refresh token 자동 전송
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      const newAccessToken = data.access_token;
+
+      // 새 액세스 토큰 저장
+      setAccessToken(newAccessToken);
+
+      return newAccessToken;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+};
+
+/**
  * API 요청 헬퍼 함수
  */
 export const apiRequest = async <T>(
@@ -89,12 +132,38 @@ export const apiRequest = async <T>(
     credentials: 'include', // 쿠키를 포함하여 요청 (Refresh Token)
   });
 
-  // 401 Unauthorized - 토큰 만료
+  // 401 Unauthorized - 토큰 만료, refresh 시도
   if (response.status === 401) {
-    // 토큰 삭제 후 로그인 페이지로 리다이렉트
-    removeAccessToken();
-    window.location.href = '/';
-    throw new HttpError(401, 'Unauthorized');
+    try {
+      // Refresh Token으로 새 Access Token 발급
+      const newAccessToken = await refreshAccessToken();
+
+      // 새 토큰으로 원래 요청 재시도
+      const retryHeaders = {
+        ...headers,
+        'Authorization': `Bearer ${newAccessToken}`,
+      };
+
+      const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: retryHeaders,
+        credentials: 'include',
+      });
+
+      if (!retryResponse.ok) {
+        const errorData = await retryResponse.json().catch(() => ({}));
+        const message = errorData.message || `API Error: ${retryResponse.status}`;
+        const code = errorData.code;
+        throw new HttpError(retryResponse.status, message, code);
+      }
+
+      return retryResponse.json();
+    } catch (error) {
+      // Refresh 실패 - 로그아웃
+      removeAccessToken();
+      window.location.href = '/login';
+      throw new HttpError(401, 'Session expired. Please login again.');
+    }
   }
 
   if (!response.ok) {
@@ -197,6 +266,7 @@ export const testLogin = async (email: string): Promise<TestLoginResponse> => {
 
   const response = await fetch(`${API_BASE_URL}/api/auth/test/login`, {
     method: 'POST',
+    credentials: 'include', // HttpOnly Cookie의 refresh token 수신
     headers: {
       'Content-Type': 'application/json',
     },
@@ -210,8 +280,9 @@ export const testLogin = async (email: string): Promise<TestLoginResponse> => {
 
   const data: TestLoginResponse = await response.json();
 
-  // Access Token 저장
-  setAccessToken(data.accessToken);
+  // Access Token 저장 (snake_case 지원)
+  const accessToken = data.accessToken || (data as any).access_token;
+  setAccessToken(accessToken);
 
   return data;
 };
