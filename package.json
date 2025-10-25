@@ -54,5 +54,6 @@
     "youth",
     "ministry",
     "website"
-  ]
+  ],
+  "proxy": "https://api.gntc-youth.com"
 }

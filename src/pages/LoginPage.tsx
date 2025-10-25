@@ -6,7 +6,9 @@ import { redirectToKakaoLogin, isLoggedIn, isLocalDevelopment, testLogin } from 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [isLocal, setIsLocal] = useState(false);
-  const [testUserName, setTestUserName] = useState('박석현');
+  const [testEmail, setTestEmail] = useState('');
+  const [isTestLoginLoading, setIsTestLoginLoading] = useState(false);
+  const [testLoginError, setTestLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     // 이미 로그인되어 있다면 리다이렉트
@@ -24,11 +26,29 @@ const LoginPage: React.FC = () => {
     redirectToKakaoLogin();
   };
 
-  const handleTestLogin = () => {
-    testLogin(testUserName);
-    const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
-    sessionStorage.removeItem('redirectAfterLogin');
-    navigate(redirectUrl);
+  const handleTestLogin = async () => {
+    if (!testEmail) {
+      setTestLoginError('이메일을 입력해주세요.');
+      return;
+    }
+
+    setIsTestLoginLoading(true);
+    setTestLoginError(null);
+
+    try {
+      await testLogin(testEmail);
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectUrl);
+    } catch (error) {
+      if (error instanceof Error) {
+        setTestLoginError(error.message);
+      } else {
+        setTestLoginError('테스트 로그인에 실패했습니다.');
+      }
+    } finally {
+      setIsTestLoginLoading(false);
+    }
   };
 
   const handleGoBack = () => {
@@ -69,14 +89,25 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="test-login-input-group">
                   <input
-                    type="text"
+                    type="email"
                     className="test-login-input"
-                    value={testUserName}
-                    onChange={(e) => setTestUserName(e.target.value)}
-                    placeholder="테스트 사용자 이름"
+                    value={testEmail}
+                    onChange={(e) => {
+                      setTestEmail(e.target.value);
+                      setTestLoginError(null);
+                    }}
+                    placeholder="DB에 존재하는 이메일 입력"
+                    disabled={isTestLoginLoading}
                   />
-                  <button className="social-login-button test-login" onClick={handleTestLogin}>
-                    🧪 테스트 로그인
+                  {testLoginError && (
+                    <div className="test-login-error">{testLoginError}</div>
+                  )}
+                  <button
+                    className="social-login-button test-login"
+                    onClick={handleTestLogin}
+                    disabled={isTestLoginLoading}
+                  >
+                    {isTestLoginLoading ? '로그인 중...' : '🧪 테스트 로그인'}
                   </button>
                 </div>
               </div>

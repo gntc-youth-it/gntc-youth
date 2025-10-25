@@ -1,4 +1,10 @@
-const API_BASE_URL = 'https://api.gntc-youth.com';
+// 로컬 개발 환경에서는 package.json의 proxy 사용, 프로덕션에서는 실제 URL 사용
+const API_BASE_URL =
+  process.env.NODE_ENV === 'development' ||
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+    ? '' // 로컬: 프록시 사용
+    : 'https://api.gntc-youth.com'; // 프로덕션: 실제 API URL
 
 /**
  * JWT 토큰 디코딩 (페이로드만 추출)
@@ -170,35 +176,42 @@ export const isLocalDevelopment = (): boolean => {
 };
 
 /**
- * 테스트용 더미 JWT 토큰 생성 (로컬 개발 전용)
+ * 테스트 로그인 응답 인터페이스
  */
-export const createTestToken = (name: string = '테스트사용자'): string => {
-  const header = btoa(JSON.stringify({ alg: 'HS384' }));
-  const payload = btoa(
-    JSON.stringify({
-      iss: 'church-app',
-      sub: '999',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600, // 1시간 후 만료
-      name: name,
-      role: 'USER',
-      provider: 'TEST',
-    })
-  );
-  const signature = 'test-signature';
-
-  return `${header}.${payload}.${signature}`;
-};
+interface TestLoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  userId: number;
+  email: string;
+  name: string;
+  role: string;
+}
 
 /**
  * 테스트 로그인 (로컬 개발 전용)
  */
-export const testLogin = (name: string = '테스트사용자'): void => {
+export const testLogin = async (email: string): Promise<TestLoginResponse> => {
   if (!isLocalDevelopment()) {
-    console.error('테스트 로그인은 로컬 환경에서만 사용 가능합니다.');
-    return;
+    throw new Error('테스트 로그인은 로컬 환경에서만 사용 가능합니다.');
   }
 
-  const testToken = createTestToken(name);
-  setAccessToken(testToken);
+  const response = await fetch(`${API_BASE_URL}/api/auth/test/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || '테스트 로그인에 실패했습니다.');
+  }
+
+  const data: TestLoginResponse = await response.json();
+
+  // Access Token 저장
+  setAccessToken(data.accessToken);
+
+  return data;
 };

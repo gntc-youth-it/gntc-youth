@@ -52,6 +52,32 @@
   overflow-y: auto;
 }
 
+/* 스크롤바 스타일링 (Webkit 브라우저: Chrome, Safari, Edge) */
+.cell-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cell-list::-webkit-scrollbar-track {
+  background: #f9f7f4;
+  border-radius: 10px;
+}
+
+.cell-list::-webkit-scrollbar-thumb {
+  background: #c9b08c;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.cell-list::-webkit-scrollbar-thumb:hover {
+  background: #b59d7a;
+}
+
+/* 스크롤바 스타일링 (Firefox) */
+.cell-list {
+  scrollbar-width: thin;
+  scrollbar-color: #c9b08c #f9f7f4;
+}
+
 .cell-item {
   width: 100%;
   background: #ffffff;
@@ -86,20 +112,30 @@
   font-size: 1.0625rem;
   font-weight: 700;
   color: #2c2416;
+  flex: 1;
+  text-align: left;
 }
 
-.cell-member-count {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #8b7355;
-  background: #f9f7f4;
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
+.cell-check {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e8dfd0;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
-.cell-item.selected .cell-member-count {
-  background: #ffffff;
-  color: #c9b08c;
+.cell-item.selected .cell-check {
+  background: #c9b08c;
+  border-color: #c9b08c;
+}
+
+.check-icon {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 /* 빈 상태 */
@@ -181,9 +217,13 @@
     font-size: 1rem;
   }
 
-  .cell-member-count {
+  .cell-check {
+    width: 20px;
+    height: 20px;
+  }
+
+  .check-icon {
     font-size: 0.875rem;
-    padding: 0.3rem 0.625rem;
   }
 
   .cell-submit-button {

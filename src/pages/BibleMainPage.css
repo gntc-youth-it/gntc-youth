@@ -68,7 +68,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .progress-label {
@@ -80,30 +80,81 @@
 .progress-percentage {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #c9b08c;
+  color: #f082a1;
   letter-spacing: -0.02em;
 }
 
-.progress-bar-container {
-  width: 100%;
-  height: 12px;
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 0.75rem;
+/* 하트 병 컨테이너 */
+.heart-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 1.5rem;
 }
 
-.progress-bar-fill {
+.heart-bottle {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #c9b08c 0%, #b59d7a 100%);
-  border-radius: 20px;
-  transition: width 0.6s ease;
-  box-shadow: 0 0 8px rgba(201, 176, 140, 0.4);
+  filter: drop-shadow(0 4px 12px rgba(240, 130, 161, 0.2));
+}
+
+.heart-fill {
+  animation: fillWave 1.5s ease-in-out;
+  transition: y 0.8s ease, height 0.8s ease;
+}
+
+@keyframes fillWave {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+}
+
+/* 떨어지는 하트 애니메이션 */
+.falling-heart-svg {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes heartDrop {
+  0% {
+    transform: translateY(-90px) scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  85% {
+    transform: translateY(0) scale(1);
+  }
+  92% {
+    transform: translateY(-3px) scale(1.05);
+  }
+  96% {
+    transform: translateY(0) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 .progress-stats {
-  text-align: right;
+  text-align: center;
+}
+
+.progress-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c2416;
+  margin-bottom: 0.5rem;
+}
+
+.progress-cell-info {
   font-size: 0.875rem;
   color: #8b7355;
   font-weight: 600;
@@ -224,6 +275,19 @@
 
   .progress-percentage {
     font-size: 1.25rem;
+  }
+
+  .heart-container {
+    width: 160px;
+    height: 160px;
+  }
+
+  .progress-title {
+    font-size: 0.9375rem;
+  }
+
+  .progress-cell-info {
+    font-size: 0.8125rem;
   }
 
   .bible-button {

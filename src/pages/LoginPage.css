@@ -163,6 +163,22 @@
   color: #7dd3fc;
 }
 
+.test-login-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.test-login-error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+}
+
 .social-login-button.test-login {
   background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
   color: #ffffff;

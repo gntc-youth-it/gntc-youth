@@ -4,17 +4,20 @@ import BookTransition from '../components/BookTransition';
 import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError } from '../utils/api';
 import './CellSelectPage.css';
 
-interface Cell {
-  id: number;
-  name: string;
-  memberCount: number;
+interface CellResponse {
+  cell_id: number;
+  cell_name: string;
+}
+
+interface CellListResponse {
+  cell_infos: CellResponse[];
 }
 
 const CellSelectPage: React.FC = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [cells, setCells] = useState<Cell[]>([]);
+  const [cells, setCells] = useState<CellResponse[]>([]);
   const [selectedCellId, setSelectedCellId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -34,8 +37,8 @@ const CellSelectPage: React.FC = () => {
     // 구역 목록 가져오기
     const fetchCells = async () => {
       try {
-        const data = await apiRequest<Cell[]>('/bible/cells');
-        setCells(data);
+        const data = await apiRequest<CellListResponse>('/cell');
+        setCells(data.cell_infos);
       } catch (error) {
         console.error('Failed to fetch cells:', error);
       } finally {
@@ -53,20 +56,19 @@ const CellSelectPage: React.FC = () => {
     }
 
     try {
-      // 구역 등록 API 호출
-      await apiRequest('/bible/cell-member', {
+      // 구역 가입 API 호출
+      await apiRequest(`/cell/${selectedCellId}`, {
         method: 'POST',
-        body: JSON.stringify({ cellId: selectedCellId }),
       });
 
       // 성공 시 메인 페이지로 이동
       navigate('/bible/main');
     } catch (error) {
-      console.error('Failed to register cell:', error);
+      console.error('Failed to join cell:', error);
       if (error instanceof HttpError) {
-        alert(`구역 등록에 실패했습니다: ${error.message}`);
+        alert(`구역 가입에 실패했습니다: ${error.message}`);
       } else {
-        alert('구역 등록에 실패했습니다. 다시 시도해주세요.');
+        alert('구역 가입에 실패했습니다. 다시 시도해주세요.');
       }
     }
   };
@@ -94,13 +96,15 @@ const CellSelectPage: React.FC = () => {
               {cells.length > 0 ? (
                 cells.map((cell) => (
                   <button
-                    key={cell.id}
-                    className={`cell-item ${selectedCellId === cell.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedCellId(cell.id)}
+                    key={cell.cell_id}
+                    className={`cell-item ${selectedCellId === cell.cell_id ? 'selected' : ''}`}
+                    onClick={() => setSelectedCellId(cell.cell_id)}
                   >
                     <div className="cell-item-content">
-                      <span className="cell-name">{cell.name}</span>
-                      <span className="cell-member-count">{cell.memberCount}명</span>
+                      <span className="cell-name">{cell.cell_name}</span>
+                      <div className="cell-check">
+                        {selectedCellId === cell.cell_id && <span className="check-icon">✓</span>}
+                      </div>
                     </div>
                   </button>
                 ))
