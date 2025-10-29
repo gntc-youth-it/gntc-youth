@@ -74,7 +74,18 @@ const CellSelectPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="cell-select">
+        <div className="cell-select-container">
+          <div className="cell-select-content">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p className="loading-text">로딩 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

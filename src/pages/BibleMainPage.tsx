@@ -58,7 +58,18 @@ const BibleMainPage: React.FC = () => {
   }, [navigate]);
 
   if (isLoading) {
-    return null; // 로딩 중에는 아무것도 표시하지 않음
+    return (
+      <div className="bible-main">
+        <div className="bible-main-container">
+          <div className="bible-main-content">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p className="loading-text">로딩 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

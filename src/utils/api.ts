@@ -159,8 +159,15 @@ export const apiRequest = async <T>(
 
       return retryResponse.json();
     } catch (error) {
-      // Refresh 실패 - 로그아웃
+      // Refresh 실패 - 현재 경로 저장 후 로그인 페이지로
       removeAccessToken();
+
+      // 현재 경로 저장 (로그인 후 돌아오기 위해)
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/') {
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+      }
+
       window.location.href = '/login';
       throw new HttpError(401, 'Session expired. Please login again.');
     }
