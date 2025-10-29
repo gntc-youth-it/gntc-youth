@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
+import Modal from '../components/Modal';
 import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError } from '../utils/api';
 import './BibleMainPage.css';
 
@@ -16,6 +17,15 @@ const BibleMainPage: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [goalData, setGoalData] = useState<CellGoalData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleComingSoon = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     // 로그인 상태 확인
@@ -199,16 +209,21 @@ const BibleMainPage: React.FC = () => {
 
             {/* 버튼 영역 */}
             <div className="bible-main-buttons">
-              <button className="bible-button secondary">
-                달성률 보기
+              <button className="bible-button secondary" onClick={handleComingSoon}>
+                🏆 랭킹 보기
               </button>
-              <button className="bible-button primary">
+              <button className="bible-button primary" onClick={handleComingSoon}>
                 필사 시작하기
               </button>
             </div>
           </div>
         </div>
       </BookTransition>
+
+      {/* 준비중 모달 */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="알림">
+        <p>준비중입니다</p>
+      </Modal>
     </div>
   );
 };
