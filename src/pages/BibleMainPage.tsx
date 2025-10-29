@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
 import Modal from '../components/Modal';
 import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError } from '../utils/api';
+import { RecentChapterResponse } from '../types/bible';
 import './BibleMainPage.css';
 
 interface CellGoalData {
@@ -25,6 +26,16 @@ const BibleMainPage: React.FC = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleStartTranscribe = async () => {
+    try {
+      const data = await apiRequest<RecentChapterResponse>('/book/copy/recent');
+      navigate(`/bible/transcribe/${data.book}/${data.chapter}`);
+    } catch (error) {
+      console.error('Failed to fetch recent chapter:', error);
+      alert('필사 페이지를 불러오는데 실패했습니다.');
+    }
   };
 
   useEffect(() => {
@@ -212,7 +223,7 @@ const BibleMainPage: React.FC = () => {
               <button className="bible-button secondary" onClick={handleComingSoon}>
                 🏆 랭킹 보기
               </button>
-              <button className="bible-button primary" onClick={handleComingSoon}>
+              <button className="bible-button primary" onClick={handleStartTranscribe}>
                 필사 시작하기
               </button>
             </div>

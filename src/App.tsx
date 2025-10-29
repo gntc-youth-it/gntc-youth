@@ -7,6 +7,7 @@ import AuthCallback from './pages/AuthCallback';
 import BibleTranscriptionPage from './pages/BibleTranscriptionPage';
 import BibleMainPage from './pages/BibleMainPage';
 import CellSelectPage from './pages/CellSelectPage';
+import BibleTranscribePage from './pages/BibleTranscribePage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/bible" element={<BibleTranscriptionPage />} />
         <Route path="/bible/main" element={<BibleMainPage />} />
         <Route path="/bible/select-cell" element={<CellSelectPage />} />
+        <Route path="/bible/transcribe/:bookName/:chapter" element={<BibleTranscribePage />} />
       </Routes>
     </Router>
   );

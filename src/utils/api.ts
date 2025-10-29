@@ -76,9 +76,11 @@ let refreshPromise: Promise<string> | null = null;
 const refreshAccessToken = async (): Promise<string> => {
   // 이미 갱신 중이면 기존 Promise 반환
   if (isRefreshing && refreshPromise) {
+    console.log('[Refresh] Already refreshing, waiting for existing promise...');
     return refreshPromise;
   }
 
+  console.log('[Refresh] Starting token refresh...');
   isRefreshing = true;
   refreshPromise = (async () => {
     try {
@@ -87,15 +89,26 @@ const refreshAccessToken = async (): Promise<string> => {
         credentials: 'include', // HttpOnly Cookie의 refresh token 자동 전송
       });
 
+      console.log('[Refresh] Response status:', response.status);
+
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Refresh] Failed:', errorData);
         throw new Error('Token refresh failed');
       }
 
       const data = await response.json();
-      const newAccessToken = data.access_token;
+      console.log('[Refresh] Response data:', data);
+      const newAccessToken = data.access_token || data.accessToken;
+
+      if (!newAccessToken) {
+        console.error('[Refresh] No access token in response:', data);
+        throw new Error('No access token in refresh response');
+      }
 
       // 새 액세스 토큰 저장
       setAccessToken(newAccessToken);
+      console.log('[Refresh] New token saved successfully');
 
       return newAccessToken;
     } finally {
@@ -134,9 +147,11 @@ export const apiRequest = async <T>(
 
   // 401 Unauthorized - 토큰 만료, refresh 시도
   if (response.status === 401) {
+    console.log('[API] 401 Unauthorized detected, attempting token refresh...');
     try {
       // Refresh Token으로 새 Access Token 발급
       const newAccessToken = await refreshAccessToken();
+      console.log('[API] Token refreshed successfully, retrying original request...');
 
       // 새 토큰으로 원래 요청 재시도
       const retryHeaders = {
@@ -151,14 +166,17 @@ export const apiRequest = async <T>(
       });
 
       if (!retryResponse.ok) {
+        console.log('[API] Retry request failed with status:', retryResponse.status);
         const errorData = await retryResponse.json().catch(() => ({}));
         const message = errorData.message || `API Error: ${retryResponse.status}`;
         const code = errorData.code;
         throw new HttpError(retryResponse.status, message, code);
       }
 
+      console.log('[API] Retry request succeeded');
       return retryResponse.json();
     } catch (error) {
+      console.error('[API] Token refresh failed, redirecting to login:', error);
       // Refresh 실패 - 현재 경로 저장 후 로그인 페이지로
       removeAccessToken();
 
