@@ -37,8 +37,10 @@
 
 /* 헤더 */
 .transcribe-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 1rem;
@@ -47,6 +49,27 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.transcribe-menu-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b5d4f;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.transcribe-menu-button:hover {
+  background: #f5f1e8;
+  color: #2c2416;
 }
 
 .transcribe-back-button {
@@ -68,26 +91,11 @@
   flex: 1;
 }
 
-.transcribe-title h1 {
+.transcribe-title-text {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
   color: #2c2416;
-}
-
-.transcribe-title-clickable {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0.25rem 0.5rem;
-  margin: -0.25rem -0.5rem 0.25rem;
-  border-radius: 8px;
-  display: inline-block;
-}
-
-.transcribe-title-clickable:hover {
-  background: #f5f1e8;
-  color: #c9b08c;
-  transform: scale(1.02);
 }
 
 .transcribe-progress {
@@ -121,6 +129,7 @@
 /* 구절 리스트 */
 .verse-list {
   padding: 1rem;
+  padding-top: 6rem; /* 헤더 높이만큼 상단 여백 추가 */
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -151,6 +160,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  scroll-margin-top: 6rem; /* 헤더 높이 + 여유 공간 */
 }
 
 .verse-item:hover {
@@ -430,18 +440,20 @@
     padding: 1.5rem 2rem;
   }
 
-  .transcribe-title h1 {
+  .transcribe-title-text {
     font-size: 1.5rem;
   }
 
   .verse-list {
     padding: 1.5rem 2rem;
+    padding-top: 7rem; /* 태블릿 헤더 높이 고려 */
     max-width: 800px;
     margin: 0 auto;
   }
 
   .verse-item {
     padding: 1.25rem;
+    scroll-margin-top: 7rem; /* 태블릿 헤더 높이 + 여유 공간 */
   }
 
   .verse-text {
@@ -471,6 +483,7 @@
 @media (min-width: 1024px) {
   .verse-list {
     padding: 2rem;
+    padding-top: 7rem; /* 데스크톱 헤더 높이 고려 */
   }
 
   .verse-item {

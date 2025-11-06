@@ -256,15 +256,11 @@ const BibleTranscribePage: React.FC = () => {
 
       {/* 헤더 */}
       <div className="transcribe-header">
-        <button className="transcribe-back-button" onClick={() => navigate('/bible/main')}>
-          ← 뒤로
+        <button className="transcribe-menu-button" onClick={() => setIsNavigatorOpen(true)} title="성경 선택">
+          ☰
         </button>
         <div className="transcribe-title">
-          <h1
-            className="transcribe-title-clickable"
-            onClick={() => setIsNavigatorOpen(true)}
-            title="책/장 선택"
-          >
+          <h1 className="transcribe-title-text">
             {displayBookName} {chapter}장 📖
           </h1>
           <div className="transcribe-progress">
@@ -274,6 +270,9 @@ const BibleTranscribePage: React.FC = () => {
             <span className="progress-text">{completedCount} / {verses.length}</span>
           </div>
         </div>
+        <button className="transcribe-back-button" onClick={() => navigate('/bible/main')}>
+          ← 뒤로
+        </button>
       </div>
 
       {/* 책/장 선택 네비게이터 */}

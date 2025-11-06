@@ -5,24 +5,40 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 2000;
-  padding: 1rem;
   animation: fadeIn 0.2s ease;
 }
 
 .bible-navigator-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 85%;
+  max-width: 400px;
   background: #ffffff;
-  border-radius: 24px;
-  width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 헤더 */
@@ -210,10 +226,17 @@
 /* 태블릿 이상 */
 @media (min-width: 768px) {
   .bible-navigator-content {
-    max-width: 700px;
+    max-width: 450px;
   }
 
   .chapter-grid {
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+/* 데스크톱 */
+@media (min-width: 1024px) {
+  .bible-navigator-content {
+    max-width: 500px;
   }
 }
