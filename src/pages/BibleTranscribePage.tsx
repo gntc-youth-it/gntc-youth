@@ -71,14 +71,25 @@ const BibleTranscribePage: React.FC = () => {
     fetchChapter();
   }, [bookName, chapter, navigate]);
 
+  // selectedVerse가 변경될 때마다 input에 자동 포커스 (모바일 키보드 유지)
+  useEffect(() => {
+    if (selectedVerse !== null && inputRef.current) {
+      // 모바일에서 키보드 전환을 위해 약간의 delay
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 350);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedVerse]);
+
   const handleVerseClick = (verseNumber: number) => {
     const verse = verses.find(v => v.number === verseNumber);
     console.log('Clicked verse:', verseNumber, 'verse data:', verse);
     if (verse && !verse.isCompleted) {
       setSelectedVerse(verseNumber);
       setInputText('');
-      // input에 포커스
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // input 포커스는 useEffect에서 자동 처리
     } else {
       console.log('Cannot select verse - isCompleted:', verse?.isCompleted);
     }
