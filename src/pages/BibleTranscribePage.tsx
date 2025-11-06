@@ -84,6 +84,19 @@ const BibleTranscribePage: React.FC = () => {
     }
   }, [isInputPanelOpen, selectedVerse]);
 
+  // selectedVerse가 변경될 때마다 해당 구절로 스크롤 (모바일 UX 개선)
+  useEffect(() => {
+    if (selectedVerse !== null) {
+      const verseElement = document.querySelector(`[data-verse-number="${selectedVerse}"]`);
+      if (verseElement) {
+        verseElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }
+    }
+  }, [selectedVerse]);
+
   const handleVerseClick = (verseNumber: number) => {
     const verse = verses.find(v => v.number === verseNumber);
     console.log('Clicked verse:', verseNumber, 'verse data:', verse);
@@ -248,6 +261,7 @@ const BibleTranscribePage: React.FC = () => {
         {verses.map((verse) => (
           <div
             key={verse.id}
+            data-verse-number={verse.number}
             className={`verse-item ${verse.isCompleted ? 'completed' : ''} ${verse.isMission ? 'mission' : ''} ${selectedVerse === verse.number ? 'selected' : ''}`}
             onClick={(e) => {
               console.log('onClick triggered for verse:', verse.number, 'isMission:', verse.isMission, 'isCompleted:', verse.isCompleted);
