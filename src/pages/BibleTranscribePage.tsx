@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { BookName, BOOK_INFO, ChapterResponse, VerseItem } from '../types/bible';
 import BibleNavigator from '../components/BibleNavigator';
+import Modal from '../components/Modal';
 import './BibleTranscribePage.css';
 
 interface Verse {
@@ -24,6 +25,8 @@ const BibleTranscribePage: React.FC = () => {
   const [heartSmokes, setHeartSmokes] = useState<{ id: number; x: number; y: number }[]>([]);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
   const [isInputPanelOpen, setIsInputPanelOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completedCount = verses.filter(v => v.isCompleted).length;
@@ -62,8 +65,10 @@ const BibleTranscribePage: React.FC = () => {
         setVerses(versesData);
       } catch (error) {
         console.error('Failed to fetch chapter:', error);
-        alert('성경 데이터를 불러오는데 실패했습니다.');
-        navigate('/bible/main');
+        setModalMessage('성경 데이터를 불러오는데 실패했습니다.');
+        setIsModalOpen(true);
+        // 에러 발생 시 메인 페이지로 이동
+        setTimeout(() => navigate('/bible/main'), 100);
       } finally {
         setIsLoading(false);
       }
@@ -96,6 +101,21 @@ const BibleTranscribePage: React.FC = () => {
       }
     }
   }, [selectedVerse]);
+
+  // 페이지 전체에서 복사 방지 (성경 필사 서비스 본질 유지)
+  useEffect(() => {
+    const preventCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      setModalMessage('성경 필사 서비스는 직접 타이핑하여 말씀을 새기는 것을 목적으로 합니다.');
+      setIsModalOpen(true);
+    };
+
+    document.addEventListener('copy', preventCopy);
+
+    return () => {
+      document.removeEventListener('copy', preventCopy);
+    };
+  }, []);
 
   const handleVerseClick = (verseNumber: number) => {
     const verse = verses.find(v => v.number === verseNumber);
@@ -153,10 +173,12 @@ const BibleTranscribePage: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to save progress:', error);
-        alert('저장에 실패했습니다. 다시 시도해주세요.');
+        setModalMessage('저장에 실패했습니다. 다시 시도해주세요.');
+        setIsModalOpen(true);
       }
     } else {
-      alert('정확하게 입력해주세요!');
+      setModalMessage('정확하게 입력해주세요!');
+      setIsModalOpen(true);
     }
   };
 
@@ -164,6 +186,12 @@ const BibleTranscribePage: React.FC = () => {
     if (e.key === 'Enter') {
       handleComplete();
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setModalMessage('붙여넣기는 사용할 수 없습니다. 직접 입력해주세요.');
+    setIsModalOpen(true);
   };
 
   const triggerHeartSmoke = () => {
@@ -309,6 +337,7 @@ const BibleTranscribePage: React.FC = () => {
               value={inputText}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
+              onPaste={handlePaste}
               placeholder="구절을 정확하게 따라 적어주세요..."
             />
             <button className="input-submit" onClick={handleComplete}>
@@ -317,6 +346,11 @@ const BibleTranscribePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 알림 모달 */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="알림">
+        <p>{modalMessage}</p>
+      </Modal>
     </div>
   );
 };
