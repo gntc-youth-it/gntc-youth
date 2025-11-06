@@ -23,6 +23,7 @@ const BibleTranscribePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [heartSmokes, setHeartSmokes] = useState<{ id: number; x: number; y: number }[]>([]);
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+  const [isInputPanelOpen, setIsInputPanelOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completedCount = verses.filter(v => v.isCompleted).length;
@@ -73,20 +74,21 @@ const BibleTranscribePage: React.FC = () => {
 
   // selectedVerse가 변경될 때마다 input에 자동 포커스 (모바일 키보드 유지)
   useEffect(() => {
-    if (selectedVerse !== null && inputRef.current) {
-      // 모바일에서 키보드 전환을 위해 약간의 delay
+    if (isInputPanelOpen && selectedVerse !== null && inputRef.current) {
+      // drawer가 열릴 때만 포커스
       const timer = setTimeout(() => {
         inputRef.current?.focus();
-      }, 350);
+      }, 100);
 
       return () => clearTimeout(timer);
     }
-  }, [selectedVerse]);
+  }, [isInputPanelOpen, selectedVerse]);
 
   const handleVerseClick = (verseNumber: number) => {
     const verse = verses.find(v => v.number === verseNumber);
     console.log('Clicked verse:', verseNumber, 'verse data:', verse);
     if (verse && !verse.isCompleted) {
+      setIsInputPanelOpen(true);
       setSelectedVerse(verseNumber);
       setInputText('');
       // input 포커스는 useEffect에서 자동 처리
@@ -123,13 +125,18 @@ const BibleTranscribePage: React.FC = () => {
         setVerses(verses.map(v =>
           v.number === selectedVerse ? { ...v, isCompleted: true } : v
         ));
-        setSelectedVerse(null);
-        setInputText('');
 
         // 다음 미완료 구절 자동 선택
         const nextVerse = verses.find(v => v.number > selectedVerse && !v.isCompleted);
         if (nextVerse) {
-          setTimeout(() => handleVerseClick(nextVerse.number), 300);
+          // drawer는 유지하고 내용만 변경 (키보드 유지)
+          setSelectedVerse(nextVerse.number);
+          setInputText('');
+        } else {
+          // 모든 구절 완료 시에만 drawer 닫기
+          setIsInputPanelOpen(false);
+          setSelectedVerse(null);
+          setInputText('');
         }
       } catch (error) {
         console.error('Failed to save progress:', error);
@@ -264,12 +271,16 @@ const BibleTranscribePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 하단 입력 영역 */}
-      {selectedVerse !== null && (
+      {/* 하단 입력 영역 - drawer는 한번 열리면 유지 */}
+      {isInputPanelOpen && selectedVerse !== null && (
         <div className="input-panel">
           <div className="input-header">
             <span className="input-verse-number">{selectedVerse}절</span>
-            <button className="input-cancel" onClick={() => setSelectedVerse(null)}>
+            <button className="input-cancel" onClick={() => {
+              setIsInputPanelOpen(false);
+              setSelectedVerse(null);
+              setInputText('');
+            }}>
               ✕
             </button>
           </div>
