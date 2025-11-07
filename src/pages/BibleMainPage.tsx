@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
 import Modal from '../components/Modal';
-import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError } from '../utils/api';
+import ConfirmModal from '../components/ConfirmModal';
+import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError, logout } from '../utils/api';
 import { RecentChapterResponse } from '../types/bible';
 import './BibleMainPage.css';
 
@@ -19,6 +20,8 @@ const BibleMainPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [goalData, setGoalData] = useState<CellGoalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleComingSoon = () => {
     setIsModalOpen(true);
@@ -36,6 +39,21 @@ const BibleMainPage: React.FC = () => {
       console.error('Failed to fetch recent chapter:', error);
       alert('필사 페이지를 불러오는데 실패했습니다.');
     }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogoutClick = () => {
+    setIsMenuOpen(false);
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setIsLogoutConfirmOpen(false);
+    await logout();
+    navigate('/login');
   };
 
   useEffect(() => {
@@ -99,6 +117,24 @@ const BibleMainPage: React.FC = () => {
         <div className="bible-main-container">
           {/* 배경 장식 */}
           <div className="bible-bg-decoration"></div>
+
+          {/* 메뉴 버튼 */}
+          <div className="bible-menu-container">
+            <button className="bible-menu-button" onClick={toggleMenu} title="메뉴">
+              ⋮
+            </button>
+            {isMenuOpen && (
+              <>
+                <div className="bible-menu-overlay" onClick={() => setIsMenuOpen(false)} />
+                <div className="bible-menu-dropdown">
+                  <button className="bible-menu-item" onClick={handleLogoutClick}>
+                    <span className="menu-item-icon">⎋</span>
+                    <span className="menu-item-text">로그아웃</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* 메인 콘텐츠 */}
           <div className="bible-main-content">
@@ -235,6 +271,17 @@ const BibleMainPage: React.FC = () => {
       <Modal isOpen={isModalOpen} onClose={closeModal} title="알림">
         <p>준비중입니다</p>
       </Modal>
+
+      {/* 로그아웃 확인 모달 */}
+      <ConfirmModal
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={handleLogoutConfirm}
+        title="로그아웃"
+        message="로그아웃하시겠습니까?"
+        confirmText="로그아웃"
+        cancelText="취소"
+      />
     </div>
   );
 };

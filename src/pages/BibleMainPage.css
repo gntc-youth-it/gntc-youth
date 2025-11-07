@@ -29,6 +29,110 @@
   pointer-events: none;
 }
 
+/* 메뉴 컨테이너 */
+.bible-menu-container {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+}
+
+/* 메뉴 버튼 */
+.bible-menu-button {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #e8dfd0;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #6b5d4f;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.bible-menu-button:hover {
+  background: #ffffff;
+  border-color: #c9b08c;
+  color: #c9b08c;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.bible-menu-button:active {
+  transform: scale(0.95);
+}
+
+/* 메뉴 오버레이 (배경 클릭 시 닫기용) */
+.bible-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+}
+
+/* 드롭다운 메뉴 */
+.bible-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: #ffffff;
+  border: 2px solid #e8dfd0;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 140px;
+  animation: slideDown 0.2s ease;
+  z-index: 100;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 메뉴 아이템 */
+.bible-menu-item {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b5d4f;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.bible-menu-item:hover {
+  background: #f5f1e8;
+  color: #c9b08c;
+}
+
+.menu-item-icon {
+  font-size: 1rem;
+}
+
+.menu-item-text {
+  line-height: 1;
+}
+
 /* 메인 콘텐츠 */
 .bible-main-content {
   background: #ffffff;
