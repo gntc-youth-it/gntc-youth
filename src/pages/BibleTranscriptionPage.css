@@ -40,9 +40,10 @@
 }
 
 .bible-icon {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-  display: inline-block;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 1.5rem;
+  display: block;
   animation: iconEntrance 0.6s ease-out 0.8s both, float 3s ease-in-out 1.4s infinite;
 }
 

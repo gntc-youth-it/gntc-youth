@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Lottie from 'lottie-react';
 import BookTransition from '../components/BookTransition';
+import heartAnimation from '../lottie/heart.json';
 import './BibleTranscriptionPage.css';
 
 const BibleTranscriptionPage: React.FC = () => {
@@ -19,7 +21,13 @@ const BibleTranscriptionPage: React.FC = () => {
 
           {/* 메인 콘텐츠 */}
           <div className="bible-content">
-          <div className="bible-icon">💖</div>
+          <div className="bible-icon">
+            <Lottie
+              animationData={heartAnimation}
+              loop={true}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
           <h1 className="bible-title">성경 필사 미션</h1>
           <p className="bible-description">
             말씀을 직접 필사하며<br />
