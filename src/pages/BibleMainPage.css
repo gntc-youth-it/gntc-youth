@@ -135,12 +135,14 @@
 
 /* 메인 콘텐츠 */
 .bible-main-content {
+  width: 100%;
   background: #ffffff;
   border-radius: 32px;
   padding: 3rem 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   text-align: center;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* 로딩 스피너 */
@@ -188,6 +190,55 @@
   line-height: 1.7;
   color: #6b5d47;
   font-weight: 500;
+}
+
+/* 최근 활동 */
+.bible-main-recent-activity {
+  margin-bottom: 2rem;
+  height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.recent-activity-text {
+  font-size: 1rem;
+  color: #6b5d4f;
+  margin: 0;
+  line-height: 1.5;
+  animation: fadeInSlide 0.6s ease;
+  text-align: center;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.recent-activity-text strong {
+  color: #c9b08c;
+  font-weight: 700;
+}
+
+.time-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background: #f5f1e8;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #c9b08c;
+  margin: 0 0.25rem;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 달성률 섹션 */

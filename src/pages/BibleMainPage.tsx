@@ -14,6 +14,38 @@ interface CellGoalData {
   progress: number; // 0.0 ~ 1.0 (소수)
 }
 
+interface RecentRankItem {
+  user_name: string;
+  verse_name: string;
+  copied_at: string; // ISO 8601 UTC
+}
+
+interface RecentRankResponse {
+  ranks: RecentRankItem[];
+}
+
+// UTC 시간을 KST로 변환 후 상대 시간 계산
+const getRelativeTime = (utcTimeStr: string): string => {
+  const utcTime = new Date(utcTimeStr);
+  const kstTime = new Date(utcTime.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간
+  const now = new Date();
+  const diffMs = now.getTime() - kstTime.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) {
+    return '방금 전';
+  } else if (diffMin < 60) {
+    return `${diffMin}분 전`;
+  } else if (diffHour < 24) {
+    return `${diffHour}시간 전`;
+  } else {
+    return `${diffDay}일 전`;
+  }
+};
+
 const BibleMainPage: React.FC = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
@@ -22,6 +54,8 @@ const BibleMainPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [recentRanks, setRecentRanks] = useState<RecentRankItem[]>([]);
+  const [currentRankIndex, setCurrentRankIndex] = useState(0);
 
   const handleComingSoon = () => {
     setIsModalOpen(true);
@@ -94,7 +128,30 @@ const BibleMainPage: React.FC = () => {
     };
 
     fetchGoalData();
+
+    // 최근 필사 기록 가져오기
+    const fetchRecentRanks = async () => {
+      try {
+        const data = await apiRequest<RecentRankResponse>('/bible/rank/recent');
+        setRecentRanks(data.ranks);
+      } catch (error) {
+        console.error('Failed to fetch recent ranks:', error);
+      }
+    };
+
+    fetchRecentRanks();
   }, [navigate]);
+
+  // 최근 필사 기록 자동 순환
+  useEffect(() => {
+    if (recentRanks.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentRankIndex((prev) => (prev + 1) % recentRanks.length);
+    }, 5000); // 5초마다 전환
+
+    return () => clearInterval(interval);
+  }, [recentRanks]);
 
   if (isLoading) {
     return (
@@ -139,9 +196,19 @@ const BibleMainPage: React.FC = () => {
           {/* 메인 콘텐츠 */}
           <div className="bible-main-content">
             <h1 className="bible-main-title">{userName}님</h1>
-            <p className="bible-main-description">
-              성경 필사를 시작해볼까요?
-            </p>
+            {recentRanks.length > 0 ? (
+              <div className="bible-main-recent-activity">
+                <p className="recent-activity-text" key={currentRankIndex}>
+                  <strong>{recentRanks[currentRankIndex].user_name}</strong>님이{' '}
+                  <span className="time-badge">{getRelativeTime(recentRanks[currentRankIndex].copied_at)}</span>{' '}
+                  <strong>{recentRanks[currentRankIndex].verse_name}</strong> 말씀을 필사했어요! 🙏
+                </p>
+              </div>
+            ) : (
+              <p className="bible-main-description">
+                성경 필사를 시작해볼까요?
+              </p>
+            )}
 
             {/* 달성률 표시 */}
             {goalData ? (
