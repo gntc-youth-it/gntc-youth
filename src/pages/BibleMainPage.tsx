@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
-import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
 import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError, logout } from '../utils/api';
 import { RecentChapterResponse } from '../types/bible';
@@ -51,18 +50,13 @@ const BibleMainPage: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [goalData, setGoalData] = useState<CellGoalData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [recentRanks, setRecentRanks] = useState<RecentRankItem[]>([]);
   const [currentRankIndex, setCurrentRankIndex] = useState(0);
 
-  const handleComingSoon = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const handleRanking = () => {
+    navigate('/bible/ranking');
   };
 
   const handleStartTranscribe = async () => {
@@ -323,7 +317,7 @@ const BibleMainPage: React.FC = () => {
 
             {/* 버튼 영역 */}
             <div className="bible-main-buttons">
-              <button className="bible-button secondary" onClick={handleComingSoon}>
+              <button className="bible-button secondary" onClick={handleRanking}>
                 🏆 랭킹 보기
               </button>
               <button className="bible-button primary" onClick={handleStartTranscribe}>
@@ -333,11 +327,6 @@ const BibleMainPage: React.FC = () => {
           </div>
         </div>
       </BookTransition>
-
-      {/* 준비중 모달 */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title="알림">
-        <p>준비중입니다</p>
-      </Modal>
 
       {/* 로그아웃 확인 모달 */}
       <ConfirmModal

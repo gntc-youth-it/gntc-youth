@@ -1,0 +1,389 @@
+.bible-ranking {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: linear-gradient(to bottom, #fdfbf7 0%, #f5f1e8 100%);
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.bible-ranking-container {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 배경 장식 */
+.bible-bg-decoration {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(201, 176, 140, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 헤더 */
+.bible-ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 1.5rem;
+  position: relative;
+}
+
+.ranking-back-button {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #e8dfd0;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #6b5d4f;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ranking-back-button:hover {
+  background: #ffffff;
+  border-color: #c9b08c;
+  color: #c9b08c;
+  transform: scale(1.05);
+}
+
+.ranking-back-button:active {
+  transform: scale(0.95);
+}
+
+.ranking-header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c2416;
+  margin: 0;
+}
+
+.ranking-header-spacer {
+  width: 40px;
+}
+
+/* 메인 콘텐츠 */
+.bible-ranking-content {
+  background: #ffffff;
+  border-radius: 32px;
+  padding: 3rem 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* 메인 탭 */
+.ranking-main-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.ranking-main-tab {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e8dfd0;
+  border-radius: 16px;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8b7355;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ranking-main-tab:hover {
+  border-color: #c9b08c;
+  color: #6b5d47;
+}
+
+.ranking-main-tab.active {
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+}
+
+/* 탭 콘텐츠 */
+.ranking-tab-content {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 구역 현황 - 구역 카드 */
+.cell-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cell-card {
+  background: linear-gradient(135deg, #f9f7f4 0%, #f3efe7 100%);
+  border: 1px solid #e8dfd0;
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.cell-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.cell-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.cell-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c2416;
+  margin: 0;
+}
+
+.cell-trophy {
+  font-size: 1.5rem;
+}
+
+.cell-title {
+  font-size: 0.9375rem;
+  color: #6b5d47;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.cell-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #e8dfd0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.cell-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f082a1 0%, #f5a3bb 100%);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.cell-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cell-percentage {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #f082a1;
+}
+
+.cell-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #8b7355;
+}
+
+/* 개인 순위 - 서브탭 */
+.ranking-sub-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: #f5f1e8;
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+.ranking-sub-tab {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #8b7355;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ranking-sub-tab:hover {
+  color: #6b5d47;
+}
+
+.ranking-sub-tab.active {
+  background: #ffffff;
+  color: #c9b08c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 내 순위 하이라이트 */
+.my-rank-card {
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border: 2px solid #f0ddc5;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.15);
+}
+
+.my-rank-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #b39a7a;
+  margin-bottom: 0.5rem;
+}
+
+.my-rank-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.my-rank-badge {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #c9b08c;
+}
+
+.my-rank-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c2416;
+}
+
+.my-rank-count {
+  margin-left: auto;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #c9b08c;
+}
+
+/* 순위 리스트 */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #faf8f5;
+  border-radius: 12px;
+  border: 1px solid #f0ebe3;
+  transition: all 0.2s ease;
+}
+
+.rank-item:hover {
+  background: #f5f1e8;
+  border-color: #e8dfd0;
+}
+
+.rank-item.is-me {
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border-color: #f0ddc5;
+}
+
+.rank-position {
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-medal {
+  font-size: 1.5rem;
+}
+
+.rank-number {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #8b7355;
+}
+
+.rank-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #4d4035;
+}
+
+.rank-count {
+  margin-left: auto;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #6b5d47;
+}
+
+/* 태블릿 */
+@media (min-width: 768px) {
+  .bible-ranking-container {
+    max-width: 640px;
+  }
+
+  .bible-ranking-content {
+    padding: 3.5rem 2.5rem;
+  }
+}
+
+/* 데스크톱 */
+@media (min-width: 1024px) {
+  .bible-ranking-container {
+    max-width: 680px;
+  }
+}
+
+/* 작은 모바일 */
+@media (max-width: 400px) {
+  .bible-ranking-content {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .ranking-main-tab {
+    font-size: 0.9375rem;
+    padding: 0.75rem 0.875rem;
+  }
+
+  .cell-card {
+    padding: 1.25rem;
+  }
+
+  .cell-name {
+    font-size: 1.125rem;
+  }
+}
