@@ -31,6 +31,26 @@ interface DailyRankResponse {
   ranks: DailyRankItem[];
 }
 
+interface WeeklyRankItem {
+  user_name: string;
+  copy_count: number;
+}
+
+interface WeeklyRankResponse {
+  start_date: string;
+  end_date: string;
+  ranks: WeeklyRankItem[];
+}
+
+interface TotalRankItem {
+  user_name: string;
+  copy_count: number;
+}
+
+interface TotalRankResponse {
+  ranks: TotalRankItem[];
+}
+
 // API 응답 타입 - 내 순위
 interface MyRankResponse {
   user_id: number;
@@ -66,11 +86,23 @@ const BibleRankingPage: React.FC = () => {
   const [userCellId, setUserCellId] = useState<number | null>(null);
   const [isLoadingCell, setIsLoadingCell] = useState(true);
 
-  // 개인 순위
+  // 개인 순위 - 일별
   const [dailyRanks, setDailyRanks] = useState<RankItem[]>([]);
   const [myDailyRank, setMyDailyRank] = useState<MyRankData | null>(null);
   const [isLoadingDaily, setIsLoadingDaily] = useState(false);
-  const [isLoadingMyRank, setIsLoadingMyRank] = useState(false);
+  const [isLoadingMyDaily, setIsLoadingMyDaily] = useState(false);
+
+  // 개인 순위 - 주별
+  const [weeklyRanks, setWeeklyRanks] = useState<RankItem[]>([]);
+  const [myWeeklyRank, setMyWeeklyRank] = useState<MyRankData | null>(null);
+  const [isLoadingWeekly, setIsLoadingWeekly] = useState(false);
+  const [isLoadingMyWeekly, setIsLoadingMyWeekly] = useState(false);
+
+  // 개인 순위 - 전체
+  const [totalRanks, setTotalRanks] = useState<RankItem[]>([]);
+  const [myTotalRank, setMyTotalRank] = useState<MyRankData | null>(null);
+  const [isLoadingTotal, setIsLoadingTotal] = useState(false);
+  const [isLoadingMyTotal, setIsLoadingMyTotal] = useState(false);
 
   // 사용자 정보
   const userInfo = getUserInfoFromToken();
@@ -138,7 +170,7 @@ const BibleRankingPage: React.FC = () => {
 
     const fetchMyDailyRank = async () => {
       try {
-        setIsLoadingMyRank(true);
+        setIsLoadingMyDaily(true);
         const data = await apiRequest<MyRankResponse>('/bible/rank/daily/my');
 
         // rank가 null이 아닌 경우에만 저장
@@ -151,18 +183,153 @@ const BibleRankingPage: React.FC = () => {
           setMyDailyRank(null);
         }
       } catch (error) {
-        console.error('내 순위 조회 실패:', error);
+        console.error('내 일별 순위 조회 실패:', error);
         setMyDailyRank(null);
       } finally {
-        setIsLoadingMyRank(false);
+        setIsLoadingMyDaily(false);
       }
     };
 
     fetchMyDailyRank();
   }, [personalSubTab]);
 
+  // 주별 순위 API 호출
+  useEffect(() => {
+    if (personalSubTab !== 'weekly') return;
+
+    const fetchWeeklyRanks = async () => {
+      try {
+        setIsLoadingWeekly(true);
+        const data = await apiRequest<WeeklyRankResponse>('/bible/rank/weekly');
+
+        // API 응답을 RankItem 형태로 변환
+        const ranksWithRank: RankItem[] = data.ranks.map((item, index) => ({
+          rank: index + 1,
+          name: item.user_name,
+          count: item.copy_count,
+        }));
+
+        setWeeklyRanks(ranksWithRank);
+      } catch (error) {
+        console.error('주별 순위 조회 실패:', error);
+      } finally {
+        setIsLoadingWeekly(false);
+      }
+    };
+
+    fetchWeeklyRanks();
+  }, [personalSubTab]);
+
+  // 내 주별 순위 API 호출
+  useEffect(() => {
+    if (personalSubTab !== 'weekly') return;
+
+    const fetchMyWeeklyRank = async () => {
+      try {
+        setIsLoadingMyWeekly(true);
+        const data = await apiRequest<MyRankResponse>('/bible/rank/weekly/my');
+
+        // rank가 null이 아닌 경우에만 저장
+        if (data.rank !== null) {
+          setMyWeeklyRank({
+            rank: data.rank,
+            count: data.count,
+          });
+        } else {
+          setMyWeeklyRank(null);
+        }
+      } catch (error) {
+        console.error('내 주별 순위 조회 실패:', error);
+        setMyWeeklyRank(null);
+      } finally {
+        setIsLoadingMyWeekly(false);
+      }
+    };
+
+    fetchMyWeeklyRank();
+  }, [personalSubTab]);
+
+  // 전체 순위 API 호출
+  useEffect(() => {
+    if (personalSubTab !== 'total') return;
+
+    const fetchTotalRanks = async () => {
+      try {
+        setIsLoadingTotal(true);
+        const data = await apiRequest<TotalRankResponse>('/bible/rank');
+
+        // API 응답을 RankItem 형태로 변환
+        const ranksWithRank: RankItem[] = data.ranks.map((item, index) => ({
+          rank: index + 1,
+          name: item.user_name,
+          count: item.copy_count,
+        }));
+
+        setTotalRanks(ranksWithRank);
+      } catch (error) {
+        console.error('전체 순위 조회 실패:', error);
+      } finally {
+        setIsLoadingTotal(false);
+      }
+    };
+
+    fetchTotalRanks();
+  }, [personalSubTab]);
+
+  // 내 전체 순위 API 호출
+  useEffect(() => {
+    if (personalSubTab !== 'total') return;
+
+    const fetchMyTotalRank = async () => {
+      try {
+        setIsLoadingMyTotal(true);
+        const data = await apiRequest<MyRankResponse>('/bible/rank/my');
+
+        // rank가 null이 아닌 경우에만 저장
+        if (data.rank !== null) {
+          setMyTotalRank({
+            rank: data.rank,
+            count: data.count,
+          });
+        } else {
+          setMyTotalRank(null);
+        }
+      } catch (error) {
+        console.error('내 전체 순위 조회 실패:', error);
+        setMyTotalRank(null);
+      } finally {
+        setIsLoadingMyTotal(false);
+      }
+    };
+
+    fetchMyTotalRank();
+  }, [personalSubTab]);
+
   // 현재 선택된 탭의 순위 데이터
-  const currentPersonalRanks = personalSubTab === 'daily' ? dailyRanks : [];
+  const currentPersonalRanks =
+    personalSubTab === 'daily'
+      ? dailyRanks
+      : personalSubTab === 'weekly'
+      ? weeklyRanks
+      : personalSubTab === 'total'
+      ? totalRanks
+      : [];
+  const currentMyRank =
+    personalSubTab === 'daily'
+      ? myDailyRank
+      : personalSubTab === 'weekly'
+      ? myWeeklyRank
+      : personalSubTab === 'total'
+      ? myTotalRank
+      : null;
+  const isLoadingRanks =
+    personalSubTab === 'daily'
+      ? isLoadingDaily || isLoadingMyDaily
+      : personalSubTab === 'weekly'
+      ? isLoadingWeekly || isLoadingMyWeekly
+      : personalSubTab === 'total'
+      ? isLoadingTotal || isLoadingMyTotal
+      : false;
 
   // IT부 제외하고 구역 데이터를 진행률 순서대로 정렬
   const sortedCellData = cellData
@@ -272,56 +439,47 @@ const BibleRankingPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* 일별 순위 */}
-                {personalSubTab === 'daily' && (
+                {/* 순위 표시 */}
+                {isLoadingRanks ? (
+                  <div className="loading-message">순위를 불러오는 중...</div>
+                ) : currentPersonalRanks.length === 0 ? (
+                  <div className="empty-message">지금 필사를 해서 순위에 내 이름을 남겨보세요! 📝</div>
+                ) : (
                   <>
-                    {isLoadingDaily || isLoadingMyRank ? (
-                      <div className="loading-message">순위를 불러오는 중...</div>
-                    ) : currentPersonalRanks.length === 0 ? (
-                      <div className="empty-message">지금 필사를 해서 순위에 내 이름을 남겨보세요! 📝</div>
-                    ) : (
-                      <>
-                        {/* 내 순위 하이라이트 */}
-                        {myDailyRank && (
-                          <div className="my-rank-card">
-                            <span className="my-rank-label">✨ 내 순위</span>
-                            <div className="my-rank-info">
-                              <span className="my-rank-badge">
-                                {getRankIcon(myDailyRank.rank) || `${myDailyRank.rank}위`}
-                              </span>
-                              <span className="my-rank-name">{myName}</span>
-                              <span className="my-rank-count">{myDailyRank.count}절</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 전체 순위 리스트 */}
-                        <div className="rank-list">
-                          {currentPersonalRanks.map((item) => {
-                            const isMe = item.name === myName;
-                            return (
-                              <div key={item.rank} className={`rank-item ${isMe ? 'is-me' : ''}`}>
-                                <div className="rank-position">
-                                  {getRankIcon(item.rank) ? (
-                                    <span className="rank-medal">{getRankIcon(item.rank)}</span>
-                                  ) : (
-                                    <span className="rank-number">{item.rank}위</span>
-                                  )}
-                                </div>
-                                <span className="rank-name">{item.name}</span>
-                                <span className="rank-count">{item.count}절</span>
-                              </div>
-                            );
-                          })}
+                    {/* 내 순위 하이라이트 */}
+                    {currentMyRank && (
+                      <div className="my-rank-card">
+                        <span className="my-rank-label">✨ 내 순위</span>
+                        <div className="my-rank-info">
+                          <span className="my-rank-badge">
+                            {getRankIcon(currentMyRank.rank) || `${currentMyRank.rank}위`}
+                          </span>
+                          <span className="my-rank-name">{myName}</span>
+                          <span className="my-rank-count">{currentMyRank.count}절</span>
                         </div>
-                      </>
+                      </div>
                     )}
-                  </>
-                )}
 
-                {/* 주별/전체 순위 - 준비중 */}
-                {personalSubTab !== 'daily' && (
-                  <div className="empty-message">준비중입니다.</div>
+                    {/* 전체 순위 리스트 */}
+                    <div className="rank-list">
+                      {currentPersonalRanks.map((item) => {
+                        const isMe = item.name === myName;
+                        return (
+                          <div key={item.rank} className={`rank-item ${isMe ? 'is-me' : ''}`}>
+                            <div className="rank-position">
+                              {getRankIcon(item.rank) ? (
+                                <span className="rank-medal">{getRankIcon(item.rank)}</span>
+                              ) : (
+                                <span className="rank-number">{item.rank}위</span>
+                              )}
+                            </div>
+                            <span className="rank-name">{item.name}</span>
+                            <span className="rank-count">{item.count}절</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             )}
