@@ -105,20 +105,22 @@ const CellSelectPage: React.FC = () => {
             {/* 구역 목록 */}
             <div className="cell-list">
               {cells.length > 0 ? (
-                cells.map((cell) => (
-                  <button
-                    key={cell.cell_id}
-                    className={`cell-item ${selectedCellId === cell.cell_id ? 'selected' : ''}`}
-                    onClick={() => setSelectedCellId(cell.cell_id)}
-                  >
-                    <div className="cell-item-content">
-                      <span className="cell-name">{cell.cell_name}</span>
-                      <div className="cell-check">
-                        {selectedCellId === cell.cell_id && <span className="check-icon">✓</span>}
+                cells
+                  .filter((cell) => cell.cell_name !== 'IT부')
+                  .map((cell) => (
+                    <button
+                      key={cell.cell_id}
+                      className={`cell-item ${selectedCellId === cell.cell_id ? 'selected' : ''}`}
+                      onClick={() => setSelectedCellId(cell.cell_id)}
+                    >
+                      <div className="cell-item-content">
+                        <span className="cell-name">{cell.cell_name}</span>
+                        <div className="cell-check">
+                          {selectedCellId === cell.cell_id && <span className="check-icon">✓</span>}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))
+                    </button>
+                  ))
               ) : (
                 <div className="cell-empty">
                   <p>등록된 구역이 없습니다.</p>

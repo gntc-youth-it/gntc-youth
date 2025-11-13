@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
+import { apiRequest } from '../utils/api';
 import './BibleRankingPage.css';
 
 type MainTab = 'cell' | 'personal';
 type PersonalSubTab = 'daily' | 'weekly' | 'total';
 
-// 임시 더미 데이터 (나중에 API 연동)
-const dummyCellData = [
-  { id: 1, name: '1구역', title: '이사야 40-55장', progress: 0.675, completed: 135, total: 200 },
-  { id: 2, name: '2구역', title: '요한복음 1-10장', progress: 0.82, completed: 164, total: 200 },
-  { id: 3, name: '3구역', title: '창세기 1-20장', progress: 0.45, completed: 90, total: 200 },
-  { id: 4, name: '4구역', title: '마태복음 5-15장', progress: 0.58, completed: 116, total: 200 },
-];
+// API 응답 타입
+interface CellGoalStatsResponse {
+  cell_id: number;
+  cell_name: string;
+  title: string;
+  progress: number;
+}
+
+interface CellGoalStatListResponse {
+  user_cell_id: number;
+  cell_goal_stats: CellGoalStatsResponse[];
+}
 
 const dummyPersonalRanks = {
   daily: [
@@ -51,6 +57,9 @@ const BibleRankingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mainTab, setMainTab] = useState<MainTab>('cell');
   const [personalSubTab, setPersonalSubTab] = useState<PersonalSubTab>('daily');
+  const [cellData, setCellData] = useState<CellGoalStatsResponse[]>([]);
+  const [userCellId, setUserCellId] = useState<number | null>(null);
+  const [isLoadingCell, setIsLoadingCell] = useState(true);
 
   // 임시로 내 이름을 홍길동으로 설정
   const myName = '홍길동';
@@ -66,8 +75,31 @@ const BibleRankingPage: React.FC = () => {
     return null;
   };
 
+  // 구역 현황 API 호출
+  useEffect(() => {
+    const fetchCellData = async () => {
+      try {
+        setIsLoadingCell(true);
+        const data = await apiRequest<CellGoalStatListResponse>('/bible/cell-goal/list');
+        setCellData(data.cell_goal_stats);
+        setUserCellId(data.user_cell_id);
+      } catch (error) {
+        console.error('구역 현황 조회 실패:', error);
+      } finally {
+        setIsLoadingCell(false);
+      }
+    };
+
+    fetchCellData();
+  }, []);
+
   const currentPersonalRanks = dummyPersonalRanks[personalSubTab];
   const myRank = currentPersonalRanks.find((r) => r.name === myName);
+
+  // IT부 제외하고 구역 데이터를 진행률 순서대로 정렬
+  const sortedCellData = cellData
+    .filter((cell) => cell.cell_name !== 'IT부')
+    .sort((a, b) => b.progress - a.progress);
 
   return (
     <div className="bible-ranking">
@@ -106,29 +138,44 @@ const BibleRankingPage: React.FC = () => {
             {/* 구역 현황 탭 */}
             {mainTab === 'cell' && (
               <div className="ranking-tab-content">
-                <div className="cell-list">
-                  {dummyCellData.map((cell) => (
-                    <div key={cell.id} className="cell-card">
-                      <div className="cell-card-header">
-                        <h3 className="cell-name">{cell.name}</h3>
-                        <span className="cell-trophy">🏆</span>
-                      </div>
-                      <p className="cell-title">{cell.title}</p>
-                      <div className="cell-progress-bar">
-                        <div
-                          className="cell-progress-fill"
-                          style={{ width: `${cell.progress * 100}%` }}
-                        ></div>
-                      </div>
-                      <div className="cell-stats">
-                        <span className="cell-percentage">{(cell.progress * 100).toFixed(1)}%</span>
-                        <span className="cell-count">
-                          {cell.completed} / {cell.total}절
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {isLoadingCell ? (
+                  <div className="loading-message">구역 현황을 불러오는 중...</div>
+                ) : sortedCellData.length === 0 ? (
+                  <div className="empty-message">구역 현황이 없습니다.</div>
+                ) : (
+                  <div className="cell-list">
+                    {sortedCellData.map((cell, index) => {
+                      const rank = index + 1;
+                      const rankIcon = getRankIcon(rank);
+                      const isMyCell = cell.cell_id === userCellId;
+                      return (
+                        <div key={cell.cell_id} className={`cell-card ${isMyCell ? 'is-my-cell' : ''}`}>
+                          <div className="cell-card-header">
+                            <div className="cell-name-with-rank">
+                              {rankIcon ? (
+                                <span className="cell-rank-medal">{rankIcon}</span>
+                              ) : (
+                                <span className="cell-rank-number">{rank}위</span>
+                              )}
+                              <h3 className="cell-name">{cell.cell_name}</h3>
+                            </div>
+                            <span className="cell-trophy">🏆</span>
+                          </div>
+                          <p className="cell-title">{cell.title}</p>
+                          <div className="cell-progress-bar">
+                            <div
+                              className="cell-progress-fill"
+                              style={{ width: `${cell.progress * 100}%` }}
+                            ></div>
+                          </div>
+                          <div className="cell-stats">
+                            <span className="cell-percentage">{(cell.progress * 100).toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

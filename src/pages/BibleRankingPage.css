@@ -94,6 +94,7 @@
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 
 .ranking-main-tab {
@@ -164,6 +165,25 @@
   margin-bottom: 0.5rem;
 }
 
+.cell-name-with-rank {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cell-rank-medal {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.cell-rank-number {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #8b7355;
+  min-width: 36px;
+  text-align: center;
+}
+
 .cell-name {
   font-size: 1.25rem;
   font-weight: 700;
@@ -201,7 +221,7 @@
 .cell-stats {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .cell-percentage {
@@ -214,6 +234,22 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #8b7355;
+}
+
+/* 내 구역 강조 */
+.cell-card.is-my-cell {
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border-color: #f0ddc5;
+  box-shadow: 0 4px 16px rgba(201, 176, 140, 0.2);
+}
+
+/* 로딩 및 빈 메시지 */
+.loading-message,
+.empty-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #8b7355;
+  font-size: 1rem;
 }
 
 /* 개인 순위 - 서브탭 */
