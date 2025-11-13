@@ -4,9 +4,8 @@
   justify-content: center;
   align-items: flex-start;
   background: linear-gradient(to bottom, #fdfbf7 0%, #f5f1e8 100%);
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 4rem;
   position: relative;
-  overflow: hidden;
 }
 
 .bible-ranking-container {
@@ -14,6 +13,7 @@
   max-width: 600px;
   position: relative;
   z-index: 1;
+  margin-bottom: 2rem;
 }
 
 /* 배경 장식 */
@@ -139,10 +139,26 @@
 }
 
 /* 구역 현황 - 구역 카드 */
-.cell-list {
+.bible-ranking .cell-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: none;
+  overflow-y: visible;
+  scrollbar-width: auto;
+}
+
+/* CellSelectPage의 스크롤바 스타일 덮어쓰기 */
+.bible-ranking .cell-list::-webkit-scrollbar {
+  width: auto;
+}
+
+.bible-ranking .cell-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bible-ranking .cell-list::-webkit-scrollbar-thumb {
+  background: transparent;
 }
 
 .cell-card {
