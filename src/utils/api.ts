@@ -73,7 +73,7 @@ let refreshPromise: Promise<string> | null = null;
 /**
  * Access Token 갱신
  */
-const refreshAccessToken = async (): Promise<string> => {
+export const refreshAccessToken = async (): Promise<string> => {
   // 이미 갱신 중이면 기존 Promise 반환
   if (isRefreshing && refreshPromise) {
     console.log('[Refresh] Already refreshing, waiting for existing promise...');

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
 import ConfirmModal from '../components/ConfirmModal';
-import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError, logout } from '../utils/api';
+import InputModal from '../components/InputModal';
+import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError, logout, refreshAccessToken } from '../utils/api';
 import { RecentChapterResponse } from '../types/bible';
 import './BibleMainPage.css';
 
@@ -54,6 +55,8 @@ const BibleMainPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [recentRanks, setRecentRanks] = useState<RecentRankItem[]>([]);
   const [currentRankIndex, setCurrentRankIndex] = useState(0);
+  const [isNameChangeModalOpen, setIsNameChangeModalOpen] = useState(false);
+  const [isNameChangeSuccessModalOpen, setIsNameChangeSuccessModalOpen] = useState(false);
 
   const handleRanking = () => {
     navigate('/bible/ranking');
@@ -82,6 +85,40 @@ const BibleMainPage: React.FC = () => {
     setIsLogoutConfirmOpen(false);
     await logout();
     navigate('/login');
+  };
+
+  const handleNameChangeClick = () => {
+    setIsMenuOpen(false);
+    setIsNameChangeModalOpen(true);
+  };
+
+  const handleNameChangeConfirm = async (newName: string) => {
+    try {
+      interface UserNameUpdateResponse {
+        success: boolean;
+      }
+
+      await apiRequest<UserNameUpdateResponse>('/user/name', {
+        method: 'PUT',
+        body: JSON.stringify({ new_name: newName }),
+      });
+
+      // 이름 변경 성공 후 새 토큰 요청
+      await refreshAccessToken();
+
+      // 입력 모달 닫고 성공 모달 표시
+      setIsNameChangeModalOpen(false);
+      setIsNameChangeSuccessModalOpen(true);
+    } catch (error) {
+      console.error('Failed to update name:', error);
+      alert('이름 변경에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleNameChangeSuccess = () => {
+    // 성공 모달 닫고 페이지 새로고침
+    setIsNameChangeSuccessModalOpen(false);
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -172,12 +209,16 @@ const BibleMainPage: React.FC = () => {
           {/* 메뉴 버튼 */}
           <div className="bible-menu-container">
             <button className="bible-menu-button" onClick={toggleMenu} title="메뉴">
-              ⋮
+              👤
             </button>
             {isMenuOpen && (
               <>
                 <div className="bible-menu-overlay" onClick={() => setIsMenuOpen(false)} />
                 <div className="bible-menu-dropdown">
+                  <button className="bible-menu-item" onClick={handleNameChangeClick}>
+                    <span className="menu-item-icon">✏️</span>
+                    <span className="menu-item-text">이름 바꾸기</span>
+                  </button>
                   <button className="bible-menu-item" onClick={handleLogoutClick}>
                     <span className="menu-item-icon">⎋</span>
                     <span className="menu-item-text">로그아웃</span>
@@ -337,6 +378,30 @@ const BibleMainPage: React.FC = () => {
         message="로그아웃하시겠습니까?"
         confirmText="로그아웃"
         cancelText="취소"
+      />
+
+      {/* 이름 변경 모달 */}
+      <InputModal
+        isOpen={isNameChangeModalOpen}
+        onClose={() => setIsNameChangeModalOpen(false)}
+        onConfirm={handleNameChangeConfirm}
+        title="이름 바꾸기"
+        message="새로운 이름을 입력해주세요"
+        placeholder="새 이름"
+        confirmText="변경"
+        cancelText="취소"
+        defaultValue={userName}
+      />
+
+      {/* 이름 변경 성공 모달 */}
+      <ConfirmModal
+        isOpen={isNameChangeSuccessModalOpen}
+        onClose={handleNameChangeSuccess}
+        onConfirm={handleNameChangeSuccess}
+        title="이름 변경 완료"
+        message="이름이 성공적으로 변경되었습니다. 화면이 새로고침됩니다."
+        confirmText="확인"
+        cancelText="확인"
       />
     </div>
   );
