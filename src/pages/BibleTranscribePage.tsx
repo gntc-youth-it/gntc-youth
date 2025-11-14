@@ -194,6 +194,16 @@ const BibleTranscribePage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setModalMessage('드래그 앤 드롭은 사용할 수 없습니다. 직접 입력해주세요.');
+    setIsModalOpen(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLInputElement>) => {
+    e.preventDefault();
+  };
+
   const triggerHeartSmoke = () => {
     // 여러 개의 하트를 랜덤 위치에서 생성
     const newHearts = Array.from({ length: 8 }, (_, i) => ({
@@ -337,6 +347,8 @@ const BibleTranscribePage: React.FC = () => {
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               onPaste={handlePaste}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
               placeholder="구절을 정확하게 따라 적어주세요..."
             />
             <button className="input-submit" onClick={handleComplete}>
