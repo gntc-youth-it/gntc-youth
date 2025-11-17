@@ -4,7 +4,7 @@ import BookTransition from '../components/BookTransition';
 import { apiRequest, getUserInfoFromToken } from '../utils/api';
 import './BibleRankingPage.css';
 
-type MainTab = 'cell' | 'personal';
+type MainTab = 'cell' | 'personal' | 'credits';
 type PersonalSubTab = 'daily' | 'weekly' | 'total';
 
 // API 응답 타입 - 구역 현황
@@ -76,6 +76,36 @@ interface MyRankData {
   count: number;
 }
 
+// 제작진 타입
+interface Creator {
+  name: string;
+  role: string;
+}
+
+interface Contributor {
+  name: string;
+  contribution: string;
+}
+
+// 제작자 및 기여자 데이터 (하드코딩)
+const CREATORS: Creator[] = [
+    { name: '박석희', role: '백엔드 개발' },
+    { name: '김은선', role: '프론트엔드 개발' },
+    { name: '양원석', role: 'UI/UX 디자인' },
+    { name: '박주은', role: 'UI/UX 디자인' },
+    { name: '박주애', role: 'UI/UX 디자인' },
+    { name: '김승진', role: 'UI/UX 디자인' },
+    { name: '남상형', role: 'UI/UX 디자인' },
+    { name: '윤지성', role: 'UI/UX 디자인' },
+];
+
+const CONTRIBUTORS: Contributor[] = [
+    { name: '이인호', contribution: '성경 필사 사용성 개선' },
+    { name: '김예원', contribution: '성경 필사 오류 제보' },
+    { name: '박건우', contribution: '성경 필사 사용성 개선' },
+    { name: '이가현', contribution: '성경 오탈자 제보' },
+];
+
 const BibleRankingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mainTab, setMainTab] = useState<MainTab>('cell');
@@ -107,6 +137,9 @@ const BibleRankingPage: React.FC = () => {
   // 사용자 정보
   const userInfo = getUserInfoFromToken();
   const myName = userInfo?.name || '';
+
+  // 기여자 툴팁 표시 상태 (클릭한 기여자의 이름을 저장)
+  const [selectedContributor, setSelectedContributor] = useState<string | null>(null);
 
   const handleBack = () => {
     navigate('/bible/main');
@@ -368,6 +401,12 @@ const BibleRankingPage: React.FC = () => {
               >
                 개인 순위
               </button>
+              <button
+                className={`ranking-main-tab ${mainTab === 'credits' ? 'active' : ''}`}
+                onClick={() => setMainTab('credits')}
+              >
+                함께한 분들
+              </button>
             </div>
 
             {/* 구역 현황 탭 */}
@@ -481,6 +520,58 @@ const BibleRankingPage: React.FC = () => {
                     </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {/* 제작진 탭 */}
+            {mainTab === 'credits' && (
+              <div className="ranking-tab-content">
+                {/* 프로젝트 제작자 */}
+                <div className="credits-section">
+                  <h3 className="credits-section-title">프로젝트 제작자</h3>
+                  <div className="creators-list">
+                    {CREATORS.map((creator) => (
+                      <span key={creator.name} className="creator-badge">
+                        {creator.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 프로젝트 기여자 */}
+                <div className="credits-section">
+                  <h3 className="credits-section-title">기여하신 분</h3>
+                  <p className="credits-section-description">이름을 클릭하면 기여 내역을 확인할 수 있습니다</p>
+                  <div className="credits-list">
+                    {CONTRIBUTORS.map((contributor) => (
+                      <div key={contributor.name} className="credit-card contributor-card">
+                        <button
+                          className="contributor-name-button"
+                          onClick={() =>
+                            setSelectedContributor(
+                              selectedContributor === contributor.name ? null : contributor.name
+                            )
+                          }
+                        >
+                          {contributor.name}
+                        </button>
+                        {selectedContributor === contributor.name && (
+                          <div className="contributor-tooltip">
+                            <p className="contributor-tooltip-text">{contributor.contribution}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <a
+                    href="https://forms.gle/gdz6BSL6iSpTWdfVA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contribute-link"
+                  >
+                    나도 기여하러 가기 →
+                  </a>
+                </div>
               </div>
             )}
           </div>

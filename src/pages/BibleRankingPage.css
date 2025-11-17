@@ -92,22 +92,32 @@
 /* 메인 탭 */
 .ranking-main-tabs {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
   width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.ranking-main-tabs::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .ranking-main-tab {
   flex: 1;
-  padding: 0.875rem 1rem;
+  min-width: fit-content;
+  padding: 0.75rem 0.875rem;
   border: 2px solid #e8dfd0;
   border-radius: 16px;
   background: transparent;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: #8b7355;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .ranking-main-tab:hover {
@@ -420,6 +430,148 @@
   }
 }
 
+/* 제작진 탭 */
+.credits-section {
+  margin-bottom: 2.5rem;
+}
+
+.credits-section:last-child {
+  margin-bottom: 0;
+}
+
+.credits-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2c2416;
+  margin: 0 0 0.5rem;
+}
+
+.credits-section-description {
+  font-size: 0.875rem;
+  color: #8b7355;
+  margin: 0 0 1rem;
+}
+
+/* 제작자 명단 (가로 배치) */
+.creators-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.creator-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border: 1px solid #f0ddc5;
+  border-radius: 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #6b5d47;
+  transition: all 0.2s ease;
+}
+
+.creator-badge:hover {
+  background: linear-gradient(135deg, #fdf5eb 0%, #fce9d9 100%);
+  border-color: #e8d0b5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(201, 176, 140, 0.2);
+}
+
+/* 기여자 리스트 (세로 배치) */
+.credits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.credit-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #faf8f5;
+  border-radius: 12px;
+  border: 1px solid #f0ebe3;
+  transition: all 0.2s ease;
+}
+
+.contributor-card {
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.contributor-name-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #c9b08c;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: all 0.2s ease;
+}
+
+.contributor-name-button:hover {
+  color: #b59d7a;
+  text-decoration-thickness: 2px;
+}
+
+.contributor-tooltip {
+  margin-top: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border: 1px solid #f0ddc5;
+  border-radius: 8px;
+  animation: tooltipSlideIn 0.2s ease;
+}
+
+.contributor-tooltip-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #4d4035;
+}
+
+@keyframes tooltipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 기여하러 가기 링크 */
+.contribute-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(201, 176, 140, 0.2);
+}
+
+.contribute-link:hover {
+  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+}
+
+.contribute-link:active {
+  transform: translateY(0);
+}
+
 /* 작은 모바일 */
 @media (max-width: 400px) {
   .bible-ranking-content {
@@ -427,8 +579,8 @@
   }
 
   .ranking-main-tab {
-    font-size: 0.9375rem;
-    padding: 0.75rem 0.875rem;
+    font-size: 0.875rem;
+    padding: 0.625rem 0.75rem;
   }
 
   .cell-card {
@@ -437,5 +589,13 @@
 
   .cell-name {
     font-size: 1.125rem;
+  }
+
+  .credit-card {
+    padding: 0.875rem 1rem;
+  }
+
+  .credits-section-title {
+    font-size: 1rem;
   }
 }
