@@ -528,7 +528,7 @@ const BibleRankingPage: React.FC = () => {
               <div className="ranking-tab-content">
                 {/* 프로젝트 제작자 */}
                 <div className="credits-section">
-                  <h3 className="credits-section-title">프로젝트 제작자</h3>
+                  <h3 className="credits-section-title">제작 - IT부</h3>
                   <div className="creators-list">
                     {CREATORS.map((creator) => (
                       <span key={creator.name} className="creator-badge">
