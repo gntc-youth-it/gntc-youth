@@ -105,6 +105,7 @@ const CONTRIBUTORS: Contributor[] = [
     { name: '박건우', contribution: '성경 필사 사용성 개선' },
     { name: '이가현', contribution: '성경 오탈자 제보' },
     { name: '김철', contribution: '성경 필사 사용성 개선' },
+    { name: '이은호', contribution: '성경 필사 오류 제보' },
 ];
 
 const BibleRankingPage: React.FC = () => {
