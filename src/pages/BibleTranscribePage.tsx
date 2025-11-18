@@ -256,6 +256,33 @@ const BibleTranscribePage: React.FC = () => {
 
   // getMatchStatus 함수는 디바운싱 로직으로 대체되어 더 이상 필요하지 않음
 
+  // 이전/다음 장 존재 여부 확인
+  const hasPrevChapter = () => {
+    if (!bookName || !chapter) return false;
+    const chapterNum = parseInt(chapter);
+    return chapterNum > 1;
+  };
+
+  const hasNextChapter = () => {
+    if (!bookName || !chapter) return false;
+    const chapterNum = parseInt(chapter);
+    const bookInfo = BOOK_INFO[bookName as BookName];
+    return bookInfo && chapterNum < bookInfo.chapters;
+  };
+
+  // 장 이동 핸들러
+  const handlePrevChapter = () => {
+    if (!hasPrevChapter()) return;
+    const prevChapter = parseInt(chapter!) - 1;
+    navigate(`/bible/transcribe/${bookName}/${prevChapter}`);
+  };
+
+  const handleNextChapter = () => {
+    if (!hasNextChapter()) return;
+    const nextChapter = parseInt(chapter!) + 1;
+    navigate(`/bible/transcribe/${bookName}/${nextChapter}`);
+  };
+
   if (isLoading) {
     return (
       <div className="transcribe-page">
@@ -335,6 +362,26 @@ const BibleTranscribePage: React.FC = () => {
             </div>
           </div>
         ))}
+
+        {/* 장 네비게이션 버튼 */}
+        {(hasPrevChapter() || hasNextChapter()) && (
+          <div className="chapter-navigation">
+            <button
+              className="chapter-nav-button prev"
+              onClick={handlePrevChapter}
+              disabled={!hasPrevChapter()}
+            >
+              ← 이전 장
+            </button>
+            <button
+              className="chapter-nav-button next"
+              onClick={handleNextChapter}
+              disabled={!hasNextChapter()}
+            >
+              다음 장 →
+            </button>
+          </div>
+        )}
 
         {/* 저작권 표시 */}
         <div className="bible-copyright">

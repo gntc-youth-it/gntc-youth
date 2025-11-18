@@ -135,6 +135,51 @@
   gap: 0.75rem;
 }
 
+/* 장 네비게이션 버튼 */
+.chapter-navigation {
+  display: flex;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.chapter-nav-button {
+  flex: 1;
+  max-width: 200px;
+  min-height: 50px;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
+  border: 2px solid #e8dfd0;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a403a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.chapter-nav-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #ffffff;
+  border-color: #c9b08c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+}
+
+.chapter-nav-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.chapter-nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: #f5f3f0;
+  border-color: #e8dfd0;
+  color: #a09080;
+}
+
 /* 저작권 표시 */
 .bible-copyright {
   text-align: center;
