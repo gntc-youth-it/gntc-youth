@@ -27,6 +27,7 @@ const BibleTranscribePage: React.FC = () => {
   const [isInputPanelOpen, setIsInputPanelOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [debouncedMatchStatus, setDebouncedMatchStatus] = useState<'typing' | 'correct' | 'wrong'>('typing');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completedCount = verses.filter(v => v.isCompleted).length;
@@ -117,6 +118,36 @@ const BibleTranscribePage: React.FC = () => {
     };
   }, []);
 
+  // 입력 검증 디바운싱 (0.3초 후 검사)
+  useEffect(() => {
+    // 입력이 없거나 선택된 구절이 없으면 'typing' 상태로 초기화
+    if (!inputText || !selectedVerse) {
+      setDebouncedMatchStatus('typing');
+      return;
+    }
+
+    // 0.3초 후 검증 실행
+    const debounceTimer = setTimeout(() => {
+      const verse = verses.find(v => v.number === selectedVerse);
+      if (!verse) {
+        setDebouncedMatchStatus('typing');
+        return;
+      }
+
+      const normalizedInput = inputText.trim().replace(/\s+/g, '');
+      const normalizedOriginal = verse.text.replace(/\s+/g, '');
+
+      if (normalizedOriginal.startsWith(normalizedInput)) {
+        setDebouncedMatchStatus('correct');
+      } else {
+        setDebouncedMatchStatus('wrong');
+      }
+    }, 300); // 0.3초 디바운스
+
+    // 클린업: 타이머 취소
+    return () => clearTimeout(debounceTimer);
+  }, [inputText, selectedVerse, verses]);
+
   const handleVerseClick = (verseNumber: number) => {
     const verse = verses.find(v => v.number === verseNumber);
     console.log('Clicked verse:', verseNumber, 'verse data:', verse);
@@ -124,6 +155,7 @@ const BibleTranscribePage: React.FC = () => {
       setIsInputPanelOpen(true);
       setSelectedVerse(verseNumber);
       setInputText('');
+      setDebouncedMatchStatus('typing'); // 새 구절 선택 시 상태 초기화
       // input 포커스는 useEffect에서 자동 처리
     } else {
       console.log('Cannot select verse - isCompleted:', verse?.isCompleted);
@@ -165,11 +197,13 @@ const BibleTranscribePage: React.FC = () => {
           // drawer는 유지하고 내용만 변경 (키보드 유지)
           setSelectedVerse(nextVerse.number);
           setInputText('');
+          setDebouncedMatchStatus('typing'); // 다음 구절로 이동 시 상태 초기화
         } else {
           // 모든 구절 완료 시에만 drawer 닫기
           setIsInputPanelOpen(false);
           setSelectedVerse(null);
           setInputText('');
+          setDebouncedMatchStatus('typing'); // 완료 시 상태 초기화
         }
       } catch (error) {
         console.error('Failed to save progress:', error);
@@ -220,21 +254,7 @@ const BibleTranscribePage: React.FC = () => {
     }, 2000);
   };
 
-  const getMatchStatus = () => {
-    if (!selectedVerse || !inputText) return 'typing';
-
-    const verse = verses.find(v => v.number === selectedVerse);
-    if (!verse) return 'typing';
-
-    const normalizedInput = inputText.trim().replace(/\s+/g, '');
-    const normalizedOriginal = verse.text.replace(/\s+/g, '');
-
-    if (normalizedOriginal.startsWith(normalizedInput)) {
-      return 'correct';
-    } else {
-      return 'wrong';
-    }
-  };
+  // getMatchStatus 함수는 디바운싱 로직으로 대체되어 더 이상 필요하지 않음
 
   if (isLoading) {
     return (
@@ -331,6 +351,7 @@ const BibleTranscribePage: React.FC = () => {
               setIsInputPanelOpen(false);
               setSelectedVerse(null);
               setInputText('');
+              setDebouncedMatchStatus('typing'); // 취소 시 상태 초기화
             }}>
               ✕
             </button>
@@ -342,7 +363,7 @@ const BibleTranscribePage: React.FC = () => {
             <input
               ref={inputRef}
               type="text"
-              className={`transcribe-input ${getMatchStatus()}`}
+              className={`transcribe-input ${debouncedMatchStatus}`}
               value={inputText}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
