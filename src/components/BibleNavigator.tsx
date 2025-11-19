@@ -36,6 +36,7 @@ const BibleNavigator: React.FC<BibleNavigatorProps> = ({
       const data = await apiRequest<BookListResponse>('/book');
       console.log('Books data:', data);
       console.log('First book:', data.books[0]);
+      console.log('Books with is_completed:', data.books.filter(b => b.is_completed));
       setBooks(data.books);
     } catch (error) {
       console.error('Failed to fetch books:', error);
@@ -110,14 +111,16 @@ const BibleNavigator: React.FC<BibleNavigatorProps> = ({
             <div className="chapter-grid">
               {Array.from({ length: chapterData.chapters }, (_, i) => i + 1).map((chapter) => {
                 const isMission = chapterData.mission_chapters.includes(chapter);
+                const isComplete = chapterData.completed_chapters.includes(chapter);
                 const isCurrent = selectedBookCode === currentBook && chapter === currentChapter;
                 return (
                   <button
                     key={chapter}
-                    className={`chapter-button ${isMission ? 'mission' : ''} ${isCurrent ? 'current' : ''}`}
+                    className={`chapter-button ${isMission ? 'mission' : ''} ${isComplete ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}
                     onClick={() => handleChapterSelect(chapter)}
                   >
                     {isMission && <span className="chapter-heart">💗</span>}
+                    {isComplete && <span className="chapter-check">✓</span>}
                     {chapter}장
                   </button>
                 );
@@ -128,13 +131,18 @@ const BibleNavigator: React.FC<BibleNavigatorProps> = ({
             <div className="book-list">
               {books.map((book) => {
                 const isCurrent = book.book_code === currentBook;
+                const classes = `book-button ${book.is_mission ? 'mission' : ''} ${book.is_completed ? 'completed' : ''} ${isCurrent ? 'current' : ''}`;
+                if (book.is_completed) {
+                  console.log(`Book ${book.book_name} - is_completed: ${book.is_completed}, classes: ${classes}`);
+                }
                 return (
                   <button
                     key={book.book_code}
-                    className={`book-button ${book.is_mission ? 'mission' : ''} ${isCurrent ? 'current' : ''}`}
+                    className={classes}
                     onClick={() => handleBookSelect(book.book_code)}
                   >
                     {book.is_mission && <span className="book-heart">💗</span>}
+                    {book.is_completed && <span className="book-check">✓</span>}
                     <span className="book-name">{book.book_name}</span>
                     <span className="book-arrow">→</span>
                   </button>

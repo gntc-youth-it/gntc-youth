@@ -164,6 +164,7 @@ export interface BookListItem {
   book_name: string;
   order: number;
   is_mission: boolean;
+  is_completed: boolean;
 }
 
 export interface BookListResponse {
@@ -173,4 +174,5 @@ export interface BookListResponse {
 export interface ChapterListResponse {
   chapters: number;
   mission_chapters: number[];
+  completed_chapters: number[];
 }

@@ -159,6 +159,34 @@
   animation: heartBeat 1.5s ease-in-out infinite;
 }
 
+.book-check {
+  font-size: 1.125rem;
+  color: #66bb6a;
+  font-weight: bold;
+}
+
+/* 완료된 책 스타일 - 우선순위 높이기 */
+.book-button.completed {
+  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
+  border-color: #66bb6a !important;
+}
+
+.book-button.completed:hover {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  border-color: #4caf50 !important;
+}
+
+/* 미션이면서 완료된 책 */
+.book-button.mission.completed {
+  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
+  border-color: #66bb6a !important;
+}
+
+.book-button.mission.completed:hover {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  border-color: #4caf50 !important;
+}
+
 .book-name {
   flex: 1;
   color: #2c2416;
@@ -221,6 +249,37 @@
   top: 4px;
   right: 4px;
   animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+.chapter-check {
+  font-size: 0.875rem;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  color: #66bb6a;
+  font-weight: bold;
+}
+
+/* 완료된 장 스타일 - 우선순위 높이기 */
+.chapter-button.completed {
+  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
+  border-color: #66bb6a !important;
+}
+
+.chapter-button.completed:hover {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  border-color: #4caf50 !important;
+}
+
+/* 미션이면서 완료된 장 */
+.chapter-button.mission.completed {
+  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
+  border-color: #66bb6a !important;
+}
+
+.chapter-button.mission.completed:hover {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  border-color: #4caf50 !important;
 }
 
 /* 태블릿 이상 */
