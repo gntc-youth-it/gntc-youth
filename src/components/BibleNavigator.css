@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-bg);
   z-index: 2000;
   animation: fadeIn 0.2s ease;
 }
@@ -16,10 +16,10 @@
   bottom: 0;
   width: 85%;
   max-width: 400px;
-  background: #ffffff;
+  background: var(--card-bg);
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   animation: slideInLeft 0.3s ease;
 }
 
@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid #e8dfd0;
+  border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
 }
 
@@ -57,7 +57,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
 }
 
 .bible-nav-back,
@@ -65,7 +65,7 @@
   background: none;
   border: none;
   font-size: 1.125rem;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.5rem;
   transition: all 0.2s ease;
@@ -75,8 +75,8 @@
 
 .bible-nav-back:hover,
 .bible-nav-close:hover {
-  background: #f5f1e8;
-  color: #2c2416;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 /* 바디 */
@@ -99,15 +99,15 @@
 .bible-nav-loading .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #e8dfd0;
-  border-top-color: #c9b08c;
+  border: 4px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .bible-nav-loading p {
   font-size: 1rem;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -123,8 +123,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #ffffff;
-  border: 2px solid #e8dfd0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-primary);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -133,24 +133,24 @@
 }
 
 .book-button:hover {
-  background: #f5f1e8;
-  border-color: #c9b08c;
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
   transform: translateX(4px);
 }
 
 .book-button.mission {
-  background: linear-gradient(135deg, #fff0f6 0%, #ffe8f0 100%);
-  border-color: #ff6b9d;
+  background: var(--gradient-pink-light);
+  border-color: var(--pink-primary);
 }
 
 .book-button.mission:hover {
-  background: linear-gradient(135deg, #ffe8f0 0%, #ffd9e8 100%);
-  border-color: #ff3d7f;
+  background: var(--gradient-pink-medium);
+  border-color: var(--pink-secondary);
 }
 
 .book-button.current {
-  background: linear-gradient(135deg, #fff9f0 0%, #fef5e7 100%);
-  border-color: #c9b08c;
+  background: var(--gradient-accent-light);
+  border-color: var(--accent-primary);
   font-weight: 700;
 }
 
@@ -161,39 +161,39 @@
 
 .book-check {
   font-size: 1.125rem;
-  color: #66bb6a;
+  color: var(--green-primary);
   font-weight: bold;
 }
 
 /* 완료된 책 스타일 - 우선순위 높이기 */
 .book-button.completed {
-  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
-  border-color: #66bb6a !important;
+  background: var(--gradient-green-light) !important;
+  border-color: var(--green-primary) !important;
 }
 
 .book-button.completed:hover {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
-  border-color: #4caf50 !important;
+  background: var(--gradient-green-medium) !important;
+  border-color: var(--green-secondary) !important;
 }
 
 /* 미션이면서 완료된 책 */
 .book-button.mission.completed {
-  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
-  border-color: #66bb6a !important;
+  background: var(--gradient-green-light) !important;
+  border-color: var(--green-primary) !important;
 }
 
 .book-button.mission.completed:hover {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
-  border-color: #4caf50 !important;
+  background: var(--gradient-green-medium) !important;
+  border-color: var(--green-secondary) !important;
 }
 
 .book-name {
   flex: 1;
-  color: #2c2416;
+  color: var(--text-primary);
 }
 
 .book-arrow {
-  color: #6b5d4f;
+  color: var(--text-secondary);
   font-size: 1.125rem;
 }
 
@@ -207,14 +207,14 @@
 .chapter-button {
   position: relative;
   padding: 1rem 0.5rem;
-  background: #ffffff;
-  border: 2px solid #e8dfd0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-primary);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 1rem;
   font-weight: 600;
-  color: #2c2416;
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -222,25 +222,25 @@
 }
 
 .chapter-button:hover {
-  background: #f5f1e8;
-  border-color: #c9b08c;
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
 
 .chapter-button.mission {
-  background: linear-gradient(135deg, #fff0f6 0%, #ffe8f0 100%);
-  border-color: #ff6b9d;
+  background: var(--gradient-pink-light);
+  border-color: var(--pink-primary);
 }
 
 .chapter-button.mission:hover {
-  background: linear-gradient(135deg, #ffe8f0 0%, #ffd9e8 100%);
-  border-color: #ff3d7f;
+  background: var(--gradient-pink-medium);
+  border-color: var(--pink-secondary);
 }
 
 .chapter-button.current {
-  background: linear-gradient(135deg, #fff9f0 0%, #fef5e7 100%);
-  border-color: #c9b08c;
-  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+  background: var(--gradient-accent-light);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .chapter-heart {
@@ -256,30 +256,30 @@
   position: absolute;
   top: 4px;
   left: 4px;
-  color: #66bb6a;
+  color: var(--green-primary);
   font-weight: bold;
 }
 
 /* 완료된 장 스타일 - 우선순위 높이기 */
 .chapter-button.completed {
-  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
-  border-color: #66bb6a !important;
+  background: var(--gradient-green-light) !important;
+  border-color: var(--green-primary) !important;
 }
 
 .chapter-button.completed:hover {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
-  border-color: #4caf50 !important;
+  background: var(--gradient-green-medium) !important;
+  border-color: var(--green-secondary) !important;
 }
 
 /* 미션이면서 완료된 장 */
 .chapter-button.mission.completed {
-  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%) !important;
-  border-color: #66bb6a !important;
+  background: var(--gradient-green-light) !important;
+  border-color: var(--green-primary) !important;
 }
 
 .chapter-button.mission.completed:hover {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
-  border-color: #4caf50 !important;
+  background: var(--gradient-green-medium) !important;
+  border-color: var(--green-secondary) !important;
 }
 
 /* 태블릿 이상 */

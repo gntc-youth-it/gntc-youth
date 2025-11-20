@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(to bottom, #fdfbf7 0%, #f5f1e8 100%);
+  background: linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   padding: 2rem 1rem;
   position: relative;
   overflow: hidden;
@@ -24,7 +24,7 @@
   transform: translateX(-50%);
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(201, 176, 140, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--decoration-bg) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -39,8 +39,8 @@
 
 /* 메뉴 버튼 */
 .bible-menu-button {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #e8dfd0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-primary);
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -48,18 +48,18 @@
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--shadow-lg);
 }
 
 .bible-menu-button:hover {
-  background: #ffffff;
-  border-color: #c9b08c;
-  color: #c9b08c;
+  background: var(--card-bg);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px var(--shadow-xl);
 }
 
 .bible-menu-button:active {
@@ -82,10 +82,10 @@
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  background: #ffffff;
-  border: 2px solid #e8dfd0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-primary);
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px var(--shadow-xl);
   overflow: hidden;
   min-width: 140px;
   animation: slideDown 0.2s ease;
@@ -114,15 +114,15 @@
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
 }
 
 .bible-menu-item:hover {
-  background: #f5f1e8;
-  color: #c9b08c;
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
 }
 
 .menu-item-icon {
@@ -136,10 +136,10 @@
 /* 메인 콘텐츠 */
 .bible-main-content {
   width: 100%;
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 32px;
   padding: 3rem 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px var(--shadow-md);
   text-align: center;
   position: relative;
   box-sizing: border-box;
@@ -157,8 +157,8 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f3efe7;
-  border-top-color: #f082a1;
+  border: 4px solid var(--border-secondary);
+  border-top-color: var(--pink-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -172,7 +172,7 @@
 .loading-text {
   margin: 0;
   font-size: 1rem;
-  color: #8b7355;
+  color: var(--text-tertiary);
   font-weight: 600;
 }
 
@@ -180,7 +180,7 @@
   margin: 0 0 0.75rem;
   font-size: 2.25rem;
   font-weight: 800;
-  color: #2c2416;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -188,7 +188,7 @@
   margin: 0 0 2rem;
   font-size: 1.0625rem;
   line-height: 1.7;
-  color: #6b5d47;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -204,7 +204,7 @@
 
 .recent-activity-text {
   font-size: 1rem;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
   animation: fadeInSlide 0.6s ease;
@@ -215,18 +215,18 @@
 }
 
 .recent-activity-text strong {
-  color: #c9b08c;
+  color: var(--accent-primary);
   font-weight: 700;
 }
 
 .time-badge {
   display: inline-block;
   padding: 0.125rem 0.5rem;
-  background: #f5f1e8;
+  background: var(--bg-secondary);
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #c9b08c;
+  color: var(--accent-primary);
   margin: 0 0.25rem;
 }
 
@@ -243,11 +243,11 @@
 
 /* 달성률 섹션 */
 .progress-section {
-  background: linear-gradient(135deg, #f9f7f4 0%, #f3efe7 100%);
+  background: var(--card-secondary-bg);
   border-radius: 20px;
   padding: 1.75rem 2rem;
   margin-bottom: 2rem;
-  border: 1px solid #e8dfd0;
+  border: 1px solid var(--border-primary);
 }
 
 .progress-header {
@@ -260,13 +260,13 @@
 .progress-label {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #4d4035;
+  color: var(--text-quaternary);
 }
 
 .progress-percentage {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #f082a1;
+  color: var(--pink-primary);
   letter-spacing: -0.02em;
 }
 
@@ -336,13 +336,13 @@
 .progress-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .progress-cell-info {
   font-size: 0.875rem;
-  color: #8b7355;
+  color: var(--text-tertiary);
   font-weight: 600;
 }
 
@@ -361,13 +361,13 @@
   margin: 0 0 0.25rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #4d4035;
+  color: var(--text-quaternary);
 }
 
 .progress-empty-subtext {
   margin: 0;
   font-size: 0.875rem;
-  color: #8b7355;
+  color: var(--text-tertiary);
 }
 
 /* 버튼 영역 */
@@ -394,15 +394,15 @@
 }
 
 .bible-button.primary {
-  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(201, 176, 140, 0.3);
+  box-shadow: 0 4px 16px var(--shadow-md);
 }
 
 .bible-button.primary:hover {
-  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
+  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(201, 176, 140, 0.4);
+  box-shadow: 0 6px 20px var(--shadow-lg);
 }
 
 .bible-button.primary:active {
@@ -410,17 +410,17 @@
 }
 
 .bible-button.secondary {
-  background: #ffffff;
-  color: #6b5d47;
-  border: 2px solid #e8dfd0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-primary);
+  box-shadow: 0 2px 8px var(--shadow-sm);
 }
 
 .bible-button.secondary:hover {
-  background: #fdfbf7;
-  border-color: #c9b08c;
+  background: var(--bg-primary);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px var(--shadow-lg);
 }
 
 .bible-button.secondary:active {

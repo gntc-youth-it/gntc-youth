@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: linear-gradient(to bottom, #fdfbf7 0%, #f5f1e8 100%);
+  background: linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   padding: 2rem 1rem 4rem;
   position: relative;
 }
@@ -24,7 +24,7 @@
   transform: translateX(-50%);
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(201, 176, 140, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--decoration-bg) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -39,8 +39,8 @@
 }
 
 .ranking-back-button {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #e8dfd0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-primary);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -48,16 +48,16 @@
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: #6b5d4f;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--shadow-lg);
 }
 
 .ranking-back-button:hover {
-  background: #ffffff;
-  border-color: #c9b08c;
-  color: #c9b08c;
+  background: var(--card-bg);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: scale(1.05);
 }
 
@@ -71,7 +71,7 @@
   transform: translateX(-50%);
   font-size: 1.25rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -81,10 +81,10 @@
 
 /* 메인 콘텐츠 */
 .bible-ranking-content {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 32px;
   padding: 3rem 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px var(--shadow-md);
   position: relative;
   box-sizing: border-box;
 }
@@ -109,27 +109,27 @@
   flex: 1;
   min-width: fit-content;
   padding: 0.75rem 0.875rem;
-  border: 2px solid #e8dfd0;
+  border: 2px solid var(--border-primary);
   border-radius: 16px;
   background: transparent;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #8b7355;
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .ranking-main-tab:hover {
-  border-color: #c9b08c;
-  color: #6b5d47;
+  border-color: var(--accent-primary);
+  color: var(--text-secondary);
 }
 
 .ranking-main-tab.active {
-  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+  box-shadow: 0 4px 12px var(--shadow-md);
 }
 
 /* 탭 콘텐츠 */
@@ -172,15 +172,15 @@
 }
 
 .cell-card {
-  background: linear-gradient(135deg, #f9f7f4 0%, #f3efe7 100%);
-  border: 1px solid #e8dfd0;
+  background: var(--card-secondary-bg);
+  border: 1px solid var(--border-primary);
   border-radius: 20px;
   padding: 1.5rem;
   transition: all 0.3s ease;
 }
 
 .cell-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px var(--shadow-lg);
   transform: translateY(-2px);
 }
 
@@ -205,7 +205,7 @@
 .cell-rank-number {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #8b7355;
+  color: var(--text-tertiary);
   min-width: 36px;
   text-align: center;
 }
@@ -213,7 +213,7 @@
 .cell-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -223,7 +223,7 @@
 
 .cell-title {
   font-size: 0.9375rem;
-  color: #6b5d47;
+  color: var(--text-secondary);
   font-weight: 600;
   margin: 0 0 1rem;
 }
@@ -231,7 +231,7 @@
 .cell-progress-bar {
   width: 100%;
   height: 12px;
-  background: #e8dfd0;
+  background: var(--border-primary);
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 0.75rem;
@@ -239,7 +239,7 @@
 
 .cell-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #f082a1 0%, #f5a3bb 100%);
+  background: linear-gradient(90deg, var(--pink-primary) 0%, var(--pink-secondary) 100%);
   border-radius: 10px;
   transition: width 0.6s ease;
 }
@@ -253,20 +253,20 @@
 .cell-percentage {
   font-size: 1.125rem;
   font-weight: 800;
-  color: #f082a1;
+  color: var(--pink-primary);
 }
 
 .cell-count {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #8b7355;
+  color: var(--text-tertiary);
 }
 
 /* 내 구역 강조 */
 .cell-card.is-my-cell {
-  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
-  border-color: #f0ddc5;
-  box-shadow: 0 4px 16px rgba(201, 176, 140, 0.2);
+  background: var(--card-secondary-bg);
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 16px var(--shadow-md);
 }
 
 /* 로딩 및 빈 메시지 */
@@ -274,7 +274,7 @@
 .empty-message {
   text-align: center;
   padding: 3rem 2rem;
-  color: #8b7355;
+  color: var(--text-tertiary);
   font-size: 1rem;
 }
 
@@ -283,7 +283,7 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  background: #f5f1e8;
+  background: var(--bg-secondary);
   padding: 0.25rem;
   border-radius: 12px;
 }
@@ -296,36 +296,36 @@
   background: transparent;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #8b7355;
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .ranking-sub-tab:hover {
-  color: #6b5d47;
+  color: var(--text-secondary);
 }
 
 .ranking-sub-tab.active {
-  background: #ffffff;
-  color: #c9b08c;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--card-bg);
+  color: var(--accent-primary);
+  box-shadow: 0 2px 8px var(--shadow-md);
 }
 
 /* 내 순위 하이라이트 */
 .my-rank-card {
-  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
-  border: 2px solid #f0ddc5;
+  background: var(--card-secondary-bg);
+  border: 2px solid var(--accent-primary);
   border-radius: 16px;
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.15);
+  box-shadow: 0 4px 12px var(--shadow-md);
 }
 
 .my-rank-label {
   display: block;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #b39a7a;
+  color: var(--text-tertiary);
   margin-bottom: 0.5rem;
 }
 
@@ -338,20 +338,20 @@
 .my-rank-badge {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #c9b08c;
+  color: var(--accent-primary);
 }
 
 .my-rank-name {
   font-size: 1rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
 }
 
 .my-rank-count {
   margin-left: auto;
   font-size: 1rem;
   font-weight: 700;
-  color: #c9b08c;
+  color: var(--accent-primary);
 }
 
 /* 순위 리스트 */
@@ -366,20 +366,20 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  background: #faf8f5;
+  background: var(--card-secondary-bg);
   border-radius: 12px;
-  border: 1px solid #f0ebe3;
+  border: 1px solid var(--border-primary);
   transition: all 0.2s ease;
 }
 
 .rank-item:hover {
-  background: #f5f1e8;
-  border-color: #e8dfd0;
+  background: var(--bg-secondary);
+  border-color: var(--border-primary);
 }
 
 .rank-item.is-me {
-  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
-  border-color: #f0ddc5;
+  background: var(--card-secondary-bg);
+  border-color: var(--accent-primary);
 }
 
 .rank-position {
@@ -396,20 +396,20 @@
 .rank-number {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #8b7355;
+  color: var(--text-tertiary);
 }
 
 .rank-name {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #4d4035;
+  color: var(--text-quaternary);
 }
 
 .rank-count {
   margin-left: auto;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #6b5d47;
+  color: var(--text-secondary);
 }
 
 /* 태블릿 */
@@ -442,13 +442,13 @@
 .credits-section-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--text-primary);
   margin: 0 0 0.5rem;
 }
 
 .credits-section-description {
   font-size: 0.875rem;
-  color: #8b7355;
+  color: var(--text-tertiary);
   margin: 0 0 1rem;
 }
 
@@ -462,20 +462,20 @@
 .creator-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
-  border: 1px solid #f0ddc5;
+  background: var(--card-secondary-bg);
+  border: 1px solid var(--accent-primary);
   border-radius: 20px;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #6b5d47;
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 
 .creator-badge:hover {
-  background: linear-gradient(135deg, #fdf5eb 0%, #fce9d9 100%);
-  border-color: #e8d0b5;
+  background: var(--bg-secondary);
+  border-color: var(--accent-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(201, 176, 140, 0.2);
+  box-shadow: 0 2px 8px var(--shadow-md);
 }
 
 /* 기여자 리스트 (세로 배치) */
@@ -490,9 +490,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #faf8f5;
+  background: var(--card-secondary-bg);
   border-radius: 12px;
-  border: 1px solid #f0ebe3;
+  border: 1px solid var(--border-primary);
   transition: all 0.2s ease;
 }
 
@@ -508,7 +508,7 @@
   padding: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #c9b08c;
+  color: var(--accent-primary);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -516,15 +516,15 @@
 }
 
 .contributor-name-button:hover {
-  color: #b59d7a;
+  color: var(--accent-secondary);
   text-decoration-thickness: 2px;
 }
 
 .contributor-tooltip {
   margin-top: 0.75rem;
   padding: 0.875rem 1rem;
-  background: linear-gradient(135deg, #fef9f3 0%, #fdf5eb 100%);
-  border: 1px solid #f0ddc5;
+  background: var(--card-secondary-bg);
+  border: 1px solid var(--accent-primary);
   border-radius: 8px;
   animation: tooltipSlideIn 0.2s ease;
 }
@@ -533,7 +533,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: #4d4035;
+  color: var(--text-quaternary);
 }
 
 @keyframes tooltipSlideIn {
@@ -552,20 +552,20 @@
   display: inline-block;
   margin-top: 1.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: #ffffff;
   text-decoration: none;
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 600;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(201, 176, 140, 0.2);
+  box-shadow: 0 2px 8px var(--shadow-md);
 }
 
 .contribute-link:hover {
-  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
+  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+  box-shadow: 0 4px 12px var(--shadow-lg);
 }
 
 .contribute-link:active {

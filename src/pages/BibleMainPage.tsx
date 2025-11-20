@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BookTransition from '../components/BookTransition';
 import ConfirmModal from '../components/ConfirmModal';
 import InputModal from '../components/InputModal';
+import { useTheme } from '../contexts/ThemeContext';
 import { isLoggedIn, getUserInfoFromToken, apiRequest, HttpError, logout, refreshAccessToken } from '../utils/api';
 import { RecentChapterResponse } from '../types/bible';
 import './BibleMainPage.css';
@@ -48,6 +49,7 @@ const getRelativeTime = (utcTimeStr: string): string => {
 
 const BibleMainPage: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [goalData, setGoalData] = useState<CellGoalData | null>(null);
@@ -215,6 +217,10 @@ const BibleMainPage: React.FC = () => {
               <>
                 <div className="bible-menu-overlay" onClick={() => setIsMenuOpen(false)} />
                 <div className="bible-menu-dropdown">
+                  <button className="bible-menu-item" onClick={() => { setIsMenuOpen(false); toggleTheme(); }}>
+                    <span className="menu-item-icon">{theme === 'light' ? '🌙' : '☀️'}</span>
+                    <span className="menu-item-text">{theme === 'light' ? '다크모드' : '라이트모드'}</span>
+                  </button>
                   <button className="bible-menu-item" onClick={handleNameChangeClick}>
                     <span className="menu-item-icon">✏️</span>
                     <span className="menu-item-text">이름 바꾸기</span>

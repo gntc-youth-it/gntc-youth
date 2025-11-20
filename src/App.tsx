@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
+import { ThemeProvider } from './contexts/ThemeContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import AuthCallback from './pages/AuthCallback';
@@ -12,18 +13,20 @@ import BibleRankingPage from './pages/BibleRankingPage';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/bible" element={<BibleTranscriptionPage />} />
-        <Route path="/bible/main" element={<BibleMainPage />} />
-        <Route path="/bible/select-cell" element={<CellSelectPage />} />
-        <Route path="/bible/transcribe/:bookName/:chapter" element={<BibleTranscribePage />} />
-        <Route path="/bible/ranking" element={<BibleRankingPage />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/bible" element={<BibleTranscriptionPage />} />
+          <Route path="/bible/main" element={<BibleMainPage />} />
+          <Route path="/bible/select-cell" element={<CellSelectPage />} />
+          <Route path="/bible/transcribe/:bookName/:chapter" element={<BibleTranscribePage />} />
+          <Route path="/bible/ranking" element={<BibleRankingPage />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
