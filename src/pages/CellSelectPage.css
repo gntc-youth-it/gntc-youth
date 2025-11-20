@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background: linear-gradient(to bottom, #fdfbf7 0%, #f5f1e8 100%);
   padding: 2rem 1rem;
   position: relative;
   overflow: hidden;
@@ -18,10 +18,10 @@
 
 /* 메인 콘텐츠 */
 .cell-select-content {
-  background: var(--card-bg);
+  background: #ffffff;
   border-radius: 32px;
   padding: 3rem 2rem;
-  box-shadow: 0 8px 32px var(--shadow-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   text-align: center;
   position: relative;
 }
@@ -38,8 +38,8 @@
 .cell-select .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid var(--border-secondary);
-  border-top-color: var(--accent-primary);
+  border: 4px solid #f3efe7;
+  border-top-color: #c9b08c;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -53,7 +53,7 @@
 .cell-select .loading-text {
   margin: 0;
   font-size: 1rem;
-  color: var(--text-tertiary);
+  color: #8b7355;
   font-weight: 600;
 }
 
@@ -61,7 +61,7 @@
   margin: 0 0 0.75rem;
   font-size: 2.25rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #2c2416;
   letter-spacing: -0.02em;
 }
 
@@ -69,7 +69,7 @@
   margin: 0 0 2rem;
   font-size: 1.0625rem;
   line-height: 1.7;
-  color: var(--text-secondary);
+  color: #6b5d47;
   font-weight: 500;
 }
 
@@ -89,30 +89,30 @@
 }
 
 .cell-list::-webkit-scrollbar-track {
-  background: var(--card-secondary-bg);
+  background: #f9f7f4;
   border-radius: 10px;
 }
 
 .cell-list::-webkit-scrollbar-thumb {
-  background: var(--accent-primary);
+  background: #c9b08c;
   border-radius: 10px;
   transition: background 0.2s ease;
 }
 
 .cell-list::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-secondary);
+  background: #b59d7a;
 }
 
 /* 스크롤바 스타일링 (Firefox) */
 .cell-list {
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary) var(--card-secondary-bg);
+  scrollbar-color: #c9b08c #f9f7f4;
 }
 
 .cell-item {
   width: 100%;
-  background: var(--card-bg);
-  border: 2px solid var(--border-primary);
+  background: #ffffff;
+  border: 2px solid #e8dfd0;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   cursor: pointer;
@@ -121,16 +121,16 @@
 }
 
 .cell-item:hover {
-  border-color: var(--accent-primary);
-  background: var(--bg-primary);
+  border-color: #c9b08c;
+  background: #fdfbf7;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shadow-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .cell-item.selected {
-  border-color: var(--accent-primary);
-  background: linear-gradient(135deg, var(--card-secondary-bg) 0%, var(--border-secondary) 100%);
-  box-shadow: 0 4px 16px var(--decoration-bg);
+  border-color: #c9b08c;
+  background: linear-gradient(135deg, #f9f7f4 0%, #f3efe7 100%);
+  box-shadow: 0 4px 16px rgba(201, 176, 140, 0.2);
 }
 
 .cell-item-content {
@@ -142,7 +142,7 @@
 .cell-name {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2c2416;
   flex: 1;
   text-align: left;
 }
@@ -153,18 +153,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--border-primary);
+  border: 2px solid #e8dfd0;
   border-radius: 50%;
   transition: all 0.2s ease;
 }
 
 .cell-item.selected .cell-check {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
+  background: #c9b08c;
+  border-color: #c9b08c;
 }
 
 .check-icon {
-  color: var(--bg-tertiary);
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
 }
@@ -172,7 +172,7 @@
 /* 빈 상태 */
 .cell-empty {
   padding: 3rem 2rem;
-  color: var(--text-tertiary);
+  color: #8b7355;
   font-size: 1rem;
 }
 
@@ -184,21 +184,21 @@
 .cell-submit-button {
   width: 100%;
   padding: 1.125rem 1.5rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-  color: var(--bg-tertiary);
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #ffffff;
   border: none;
   border-radius: 16px;
   font-size: 1.0625rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px var(--decoration-bg);
+  box-shadow: 0 4px 16px rgba(201, 176, 140, 0.3);
 }
 
 .cell-submit-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
+  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--decoration-bg);
+  box-shadow: 0 6px 20px rgba(201, 176, 140, 0.4);
 }
 
 .cell-submit-button:active:not(:disabled) {
@@ -206,7 +206,7 @@
 }
 
 .cell-submit-button:disabled {
-  background: var(--border-primary);
+  background: #e8dfd0;
   cursor: not-allowed;
   opacity: 0.6;
   box-shadow: none;

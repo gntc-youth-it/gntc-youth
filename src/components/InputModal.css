@@ -14,12 +14,12 @@
 }
 
 .input-modal-content {
-  background: var(--card-bg);
+  background: #ffffff;
   border-radius: 24px;
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  box-shadow: 0 20px 60px var(--shadow-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
 }
 
@@ -27,7 +27,7 @@
   margin: 0 0 1rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2c2416;
   text-align: center;
 }
 
@@ -40,30 +40,28 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: #4e5968;
 }
 
 .input-modal-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 2px solid var(--border-primary);
+  border: 2px solid #e8dfd0;
   border-radius: 12px;
   font-size: 1rem;
   margin-bottom: 1.5rem;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  background: var(--card-bg);
-  color: var(--text-primary);
 }
 
 .input-modal-input:focus {
   outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--decoration-bg);
+  border-color: #c9b08c;
+  box-shadow: 0 0 0 3px rgba(201, 176, 140, 0.1);
 }
 
 .input-modal-input::placeholder {
-  color: var(--text-tertiary);
+  color: #a0a0a0;
 }
 
 .input-modal-buttons {
@@ -83,23 +81,23 @@
 }
 
 .input-modal-button.cancel {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
+  background: #f5f1e8;
+  color: #6b5d4f;
 }
 
 .input-modal-button.cancel:hover {
-  background: var(--border-primary);
+  background: #e8dfd0;
 }
 
 .input-modal-button.confirm {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-  color: var(--bg-tertiary);
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #ffffff;
 }
 
 .input-modal-button.confirm:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
+  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shadow-lg);
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.4);
 }
 
 .input-modal-button.confirm:disabled {

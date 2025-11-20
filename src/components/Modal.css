@@ -23,12 +23,12 @@
 }
 
 .modal-content {
-  background: var(--card-bg);
+  background: #ffffff;
   border-radius: 24px;
   padding: 2rem;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 60px var(--shadow-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
 }
 
@@ -47,7 +47,7 @@
   margin: 0 0 1rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2c2416;
   text-align: center;
 }
 
@@ -55,15 +55,15 @@
   margin-bottom: 1.5rem;
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: #4e5968;
   text-align: center;
 }
 
 .modal-close-button {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-  color: var(--bg-tertiary);
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #ffffff;
   border: none;
   border-radius: 12px;
   font-size: 1rem;
@@ -73,9 +73,9 @@
 }
 
 .modal-close-button:hover {
-  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
+  background: linear-gradient(135deg, #b59d7a 0%, #a38a68 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shadow-lg);
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.4);
 }
 
 .modal-close-button:active {
