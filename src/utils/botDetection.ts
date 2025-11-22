@@ -115,7 +115,7 @@ export class BotDetector {
       intervalCounts.set(rounded, (intervalCounts.get(rounded) || 0) + 1);
     });
 
-    const maxCount = Math.max(...intervalCounts.values());
+    const maxCount = Math.max(...Array.from(intervalCounts.values()));
     const uniformityRatio = maxCount / intervals.length;
 
     if (uniformityRatio > 0.7) { // 70% 이상이 비슷한 간격
