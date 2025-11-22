@@ -16,9 +16,9 @@ interface BotDetectionConfig {
 }
 
 const DEFAULT_CONFIG: BotDetectionConfig = {
-  minTypingDelay: 30, // 사람이 타이핑할 때 최소 30ms 간격 (매우 빠른 타이핑도 허용)
-  maxTypingSpeed: 20, // 초당 최대 20자 (프로 타이피스트 수준)
-  suspiciousPatternThreshold: 0.85, // 85% 이상 일정한 간격이면 의심
+  minTypingDelay: 30, // 사람이 타이핑할 때 최소 30ms 간격
+  maxTypingSpeed: 15, // 초당 최대 15자 (빠른 타이핑 수준)
+  suspiciousPatternThreshold: 0.75, // 75% 이상 의심 패턴
 };
 
 export class BotDetector {

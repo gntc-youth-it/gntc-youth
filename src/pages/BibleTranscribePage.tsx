@@ -50,11 +50,11 @@ const BibleTranscribePage: React.FC = () => {
 
   // 봇 감지 초기화
   useEffect(() => {
-    // 봇 감지기 초기화 (완화된 설정)
+    // 봇 감지기 초기화
     botDetectorRef.current = new BotDetector({
-      minTypingDelay: 30, // 최소 30ms 간격 (매우 빠른 타이핑도 허용)
-      maxTypingSpeed: 20, // 초당 최대 20자 (프로 타이피스트 수준)
-      suspiciousPatternThreshold: 0.85, // 85% 이상 확실한 패턴만 감지
+      minTypingDelay: 30, // 최소 30ms 간격
+      maxTypingSpeed: 15, // 초당 최대 15자 (빠른 타이핑 수준)
+      suspiciousPatternThreshold: 0.75, // 75% 이상 의심 패턴 감지
     });
 
     return () => {
@@ -209,12 +209,12 @@ const BibleTranscribePage: React.FC = () => {
 
     setInputText(newValue);
 
-    // 일정 길이마다 패턴 분석 (15자마다)
-    if (newLength > 0 && newLength % 15 === 0 && botDetectorRef.current) {
+    // 일정 길이마다 패턴 분석 (10자마다)
+    if (newLength > 0 && newLength % 10 === 0 && botDetectorRef.current) {
       const analysis = botDetectorRef.current.analyzeCurrentPattern();
-      if (analysis.isBot && analysis.confidence > 0.8) {
+      if (analysis.isBot) {
         console.warn('Bot pattern detected:', analysis.reasons);
-        showBotWarning(`자동 입력이 감지되었습니다.\n${analysis.reasons.join(', ')}`);
+        showBotWarning(`자동 입력이 감지되었습니다.\n${analysis.reasons.join('\n')}`);
       }
     }
   };
@@ -229,13 +229,16 @@ const BibleTranscribePage: React.FC = () => {
     setBotWarningVisible(true);
     setIsModalOpen(true);
 
-    // 5초 후 자동으로 경고 닫기 (사용자가 수동으로 닫을 수 없음)
+    // 3초 후 자동으로 시작 페이지로 이동
     warningTimeoutRef.current = setTimeout(() => {
       setBotWarningVisible(false);
       setIsModalOpen(false);
       setWarningMessage('');
       warningTimeoutRef.current = null;
-    }, 5000);
+
+      // 시작 페이지로 리다이렉트
+      navigate('/bible/main');
+    }, 3000);
   };
 
   const handleComplete = async () => {
@@ -254,8 +257,8 @@ const BibleTranscribePage: React.FC = () => {
     // 최종 봇 패턴 체크
     if (botDetectorRef.current) {
       const finalAnalysis = botDetectorRef.current.analyzeCurrentPattern();
-      if (finalAnalysis.isBot && finalAnalysis.confidence > 0.85) {
-        showBotWarning(`자동 입력이 감지되었습니다.\n${finalAnalysis.reasons.join(', ')}`);
+      if (finalAnalysis.isBot) {
+        showBotWarning(`자동 입력이 감지되었습니다.\n${finalAnalysis.reasons.join('\n')}`);
         return;
       }
     }
@@ -538,10 +541,10 @@ const BibleTranscribePage: React.FC = () => {
           <p style={{
             marginTop: '15px',
             fontSize: '14px',
-            color: '#666',
-            fontStyle: 'italic'
+            color: '#ff4444',
+            fontWeight: 'bold'
           }}>
-            이 메시지는 5초 후 자동으로 닫힙니다...
+            3초 후 시작 페이지로 이동합니다...
           </p>
         )}
       </Modal>
