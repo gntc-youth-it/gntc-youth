@@ -34,7 +34,7 @@ const BibleTranscribePage: React.FC = () => {
   // 봇 감지 관련 상태
   const [botWarningVisible, setBotWarningVisible] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [warningTimeoutRef] = useState<{ current: NodeJS.Timeout | null }>({ current: null });
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 봇 감지 인스턴스
   const botDetectorRef = useRef<BotDetector | null>(null);
