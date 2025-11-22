@@ -16,9 +16,9 @@ interface BotDetectionConfig {
 }
 
 const DEFAULT_CONFIG: BotDetectionConfig = {
-  minTypingDelay: 30, // 사람이 타이핑할 때 최소 30ms 간격
-  maxTypingSpeed: 15, // 초당 최대 15자 (빠른 타이핑 수준)
-  suspiciousPatternThreshold: 0.75, // 75% 이상 의심 패턴
+  minTypingDelay: 20, // 사람이 타이핑할 때 최소 20ms 간격 (극단적으로 빠른 봇만)
+  maxTypingSpeed: 30, // 초당 최대 30자 (사실상 봇 수준)
+  suspiciousPatternThreshold: 0.95, // 95% 이상 확실한 봇만
 };
 
 export class BotDetector {
@@ -90,9 +90,9 @@ export class BotDetector {
     const cvr = stdDev / avgInterval; // 변동계수
 
     // 변동계수가 너무 낮으면 (일정한 간격) 봇으로 의심
-    if (cvr < 0.15) { // 매우 일정한 패턴
+    if (cvr < 0.05) { // 거의 완벽하게 일정한 패턴 (기계만 가능)
       reasons.push(`키 입력이 기계적으로 일정함`);
-      suspicionScore += 0.5;
+      suspicionScore += 0.6;
     }
 
     // 3. 극단적으로 빠른 입력 체크
@@ -101,9 +101,9 @@ export class BotDetector {
       const fastCount = intervals.filter(i => i < this.config.minTypingDelay).length;
       const fastRatio = fastCount / intervals.length;
 
-      if (fastRatio > 0.3) { // 30% 이상이 너무 빠름
+      if (fastRatio > 0.5) { // 50% 이상이 너무 빠름 (절반 이상이 20ms 미만)
         reasons.push(`비현실적으로 빠른 타이핑`);
-        suspicionScore += 0.4;
+        suspicionScore += 0.5;
       }
     }
 
@@ -118,9 +118,9 @@ export class BotDetector {
     const maxCount = Math.max(...Array.from(intervalCounts.values()));
     const uniformityRatio = maxCount / intervals.length;
 
-    if (uniformityRatio > 0.7) { // 70% 이상이 비슷한 간격
+    if (uniformityRatio > 0.85) { // 85% 이상이 비슷한 간격 (거의 똑같은 간격)
       reasons.push(`동일한 간격으로 반복 입력`);
-      suspicionScore += 0.3;
+      suspicionScore += 0.4;
     }
 
     return {
@@ -151,8 +151,8 @@ export class BotDetector {
    */
   static detectBulkInput(prevLength: number, newLength: number): boolean {
     const diff = newLength - prevLength;
-    // 한 번에 10자 이상 입력되면 의심
-    return diff > 10;
+    // 한 번에 20자 이상 입력되면 의심 (긴 단어나 빠른 타이핑 허용)
+    return diff > 20;
   }
 
   /**
@@ -160,8 +160,9 @@ export class BotDetector {
    */
   static detectRapidCompletion(textLength: number, timeTaken: number): boolean {
     // 평균 타이핑 속도: 분당 40단어 (한글 기준 초당 2-3자)
-    // 매우 빠른 타이핑: 초당 5자
-    const minTimeRequired = (textLength / 5) * 1000; // 최소 필요 시간 (ms)
+    // 매우 빠른 타이핑: 초당 10자 (프로 수준)
+    // 봇 수준: 초당 15자 이상
+    const minTimeRequired = (textLength / 15) * 1000; // 최소 필요 시간 (ms)
     return timeTaken < minTimeRequired;
   }
 }
