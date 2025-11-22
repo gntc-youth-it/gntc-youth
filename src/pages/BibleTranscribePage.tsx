@@ -4,6 +4,7 @@ import { apiRequest } from '../utils/api';
 import { BookName, BOOK_INFO, ChapterResponse, VerseItem } from '../types/bible';
 import BibleNavigator from '../components/BibleNavigator';
 import Modal from '../components/Modal';
+import { BotDetector } from '../utils/botDetection';
 import './BibleTranscribePage.css';
 
 interface Verse {
@@ -30,6 +31,15 @@ const BibleTranscribePage: React.FC = () => {
   const [debouncedMatchStatus, setDebouncedMatchStatus] = useState<'typing' | 'correct' | 'wrong'>('typing');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 봇 감지 관련 상태
+  const [botWarningVisible, setBotWarningVisible] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+  const [warningTimeoutRef] = useState<{ current: NodeJS.Timeout | null }>({ current: null });
+
+  // 봇 감지 인스턴스
+  const botDetectorRef = useRef<BotDetector | null>(null);
+  const verseStartTimeRef = useRef<number>(Date.now());
+
   const completedCount = verses.filter(v => v.isCompleted).length;
   const progress = verses.length > 0 ? (completedCount / verses.length) * 100 : 0;
 
@@ -37,6 +47,24 @@ const BibleTranscribePage: React.FC = () => {
   const displayBookName = bookName && bookName in BookName
     ? BOOK_INFO[bookName as BookName].displayName
     : bookName;
+
+  // 봇 감지 초기화
+  useEffect(() => {
+    // 봇 감지기 초기화 (완화된 설정)
+    botDetectorRef.current = new BotDetector({
+      minTypingDelay: 30, // 최소 30ms 간격 (매우 빠른 타이핑도 허용)
+      maxTypingSpeed: 20, // 초당 최대 20자 (프로 타이피스트 수준)
+      suspiciousPatternThreshold: 0.85, // 85% 이상 확실한 패턴만 감지
+    });
+
+    return () => {
+      // 클린업
+      botDetectorRef.current = null;
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // API에서 장 데이터 가져오기
   useEffect(() => {
@@ -156,6 +184,8 @@ const BibleTranscribePage: React.FC = () => {
       setSelectedVerse(verseNumber);
       setInputText('');
       setDebouncedMatchStatus('typing'); // 새 구절 선택 시 상태 초기화
+      verseStartTimeRef.current = Date.now(); // 구절 시작 시간 기록
+      botDetectorRef.current?.resetPattern(); // 새 구절 시작 시 패턴 초기화
       // input 포커스는 useEffect에서 자동 처리
     } else {
       console.log('Cannot select verse - isCompleted:', verse?.isCompleted);
@@ -163,7 +193,49 @@ const BibleTranscribePage: React.FC = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value);
+    const newValue = e.target.value;
+    const prevLength = inputText.length;
+    const newLength = newValue.length;
+
+    // 타이핑 패턴 기록 (한 글자씩 입력할 때만)
+    if (botDetectorRef.current && Math.abs(newLength - prevLength) === 1) {
+      botDetectorRef.current.recordKeystroke();
+    }
+
+    // 대량 텍스트 입력 감지
+    if (BotDetector.detectBulkInput(prevLength, newLength)) {
+      showBotWarning('한 번에 너무 많은 텍스트가 입력되었습니다.\n직접 타이핑해주세요.');
+    }
+
+    setInputText(newValue);
+
+    // 일정 길이마다 패턴 분석 (15자마다)
+    if (newLength > 0 && newLength % 15 === 0 && botDetectorRef.current) {
+      const analysis = botDetectorRef.current.analyzeCurrentPattern();
+      if (analysis.isBot && analysis.confidence > 0.8) {
+        console.warn('Bot pattern detected:', analysis.reasons);
+        showBotWarning(`자동 입력이 감지되었습니다.\n${analysis.reasons.join(', ')}`);
+      }
+    }
+  };
+
+  const showBotWarning = (message: string) => {
+    // 이전 타이머가 있으면 취소
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+    }
+
+    setWarningMessage(message);
+    setBotWarningVisible(true);
+    setIsModalOpen(true);
+
+    // 5초 후 자동으로 경고 닫기 (사용자가 수동으로 닫을 수 없음)
+    warningTimeoutRef.current = setTimeout(() => {
+      setBotWarningVisible(false);
+      setIsModalOpen(false);
+      setWarningMessage('');
+      warningTimeoutRef.current = null;
+    }, 5000);
   };
 
   const handleComplete = async () => {
@@ -171,6 +243,22 @@ const BibleTranscribePage: React.FC = () => {
 
     const verse = verses.find(v => v.number === selectedVerse);
     if (!verse) return;
+
+    // 너무 빠른 완료 감지
+    const timeTaken = Date.now() - verseStartTimeRef.current;
+    if (BotDetector.detectRapidCompletion(verse.text.length, timeTaken)) {
+      showBotWarning(`너무 빠른 입력이 감지되었습니다.\n최소 ${Math.ceil(verse.text.length / 5)}초는 필요합니다.`);
+      return;
+    }
+
+    // 최종 봇 패턴 체크
+    if (botDetectorRef.current) {
+      const finalAnalysis = botDetectorRef.current.analyzeCurrentPattern();
+      if (finalAnalysis.isBot && finalAnalysis.confidence > 0.85) {
+        showBotWarning(`자동 입력이 감지되었습니다.\n${finalAnalysis.reasons.join(', ')}`);
+        return;
+      }
+    }
 
     // 입력한 텍스트가 원본과 일치하는지 확인
     const normalizedInput = inputText.trim().replace(/\s+/g, '');
@@ -180,7 +268,9 @@ const BibleTranscribePage: React.FC = () => {
       // 정답! 구절 완료 처리
       try {
         // 서버에 필사 완료 POST 요청
-        await apiRequest(`/book/copy/${verse.id}`, { method: 'POST' });
+        await apiRequest(`/book/copy/${verse.id}`, {
+          method: 'POST'
+        });
 
         // 미션 구절이면 하트 연기 효과 발동!
         if (verse.isMission) {
@@ -191,6 +281,9 @@ const BibleTranscribePage: React.FC = () => {
           v.number === selectedVerse ? { ...v, isCompleted: true } : v
         ));
 
+        // 봇 감지 패턴 초기화 (다음 구절로)
+        botDetectorRef.current?.resetPattern();
+
         // 다음 미완료 구절 자동 선택
         const nextVerse = verses.find(v => v.number > selectedVerse && !v.isCompleted);
         if (nextVerse) {
@@ -198,6 +291,7 @@ const BibleTranscribePage: React.FC = () => {
           setSelectedVerse(nextVerse.number);
           setInputText('');
           setDebouncedMatchStatus('typing'); // 다음 구절로 이동 시 상태 초기화
+          verseStartTimeRef.current = Date.now(); // 새 구절 시작 시간 기록
         } else {
           // 모든 구절 완료 시에만 drawer 닫기
           setIsInputPanelOpen(false);
@@ -427,8 +521,29 @@ const BibleTranscribePage: React.FC = () => {
       )}
 
       {/* 알림 모달 */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="알림">
-        <p>{modalMessage}</p>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          // 봇 경고 중이면 모달을 닫을 수 없음
+          if (!botWarningVisible) {
+            setIsModalOpen(false);
+          }
+        }}
+        title={botWarningVisible ? "⚠️ 자동 입력 감지" : "알림"}
+      >
+        <p style={{ whiteSpace: 'pre-line' }}>
+          {botWarningVisible ? warningMessage : modalMessage}
+        </p>
+        {botWarningVisible && (
+          <p style={{
+            marginTop: '15px',
+            fontSize: '14px',
+            color: '#666',
+            fontStyle: 'italic'
+          }}>
+            이 메시지는 5초 후 자동으로 닫힙니다...
+          </p>
+        )}
       </Modal>
     </div>
   );
