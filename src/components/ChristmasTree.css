@@ -38,6 +38,8 @@
   fill: #FFD700;
   filter: drop-shadow(0 0 10px #FFD700) drop-shadow(0 0 20px #FFA500);
   animation: starGlow 2s ease-in-out infinite;
+  will-change: filter;
+  transform: translateZ(0);
 }
 
 @keyframes starGlow {
