@@ -1,0 +1,161 @@
+.detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 1rem;
+  animation: detailFadeIn 0.2s ease;
+}
+
+@keyframes detailFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.detail-modal-content {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    #fdfbf7 0%,
+    #f5f1e8 50%,
+    #ebe5d9 100%
+  );
+  border-radius: 20px;
+  width: 100%;
+  max-width: 340px;
+  padding: 2rem 1.5rem 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8);
+  animation: detailSlideUp 0.3s ease;
+}
+
+@keyframes detailSlideUp {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 장식 */
+.detail-modal-decoration {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-modal-holly {
+  width: 20px;
+  height: 20px;
+  background: #2d5a27;
+  border-radius: 50% 0 50% 50%;
+}
+
+.detail-modal-holly.left {
+  transform: rotate(-30deg);
+}
+
+.detail-modal-holly.right {
+  transform: rotate(30deg);
+}
+
+.detail-modal-holly::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: #c0392b;
+  border-radius: 50%;
+}
+
+.detail-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(201, 176, 140, 0.3);
+}
+
+.detail-modal-author {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c2416;
+}
+
+.detail-modal-time {
+  font-size: 0.8rem;
+  color: #8b7355;
+}
+
+.detail-modal-body {
+  min-height: 80px;
+  margin-bottom: 1.25rem;
+}
+
+.detail-modal-message {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #4a3f35;
+  margin: 0;
+  word-break: keep-all;
+  white-space: pre-wrap;
+}
+
+.detail-modal-close {
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #c9b08c 0%, #b59d7a 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.detail-modal-close:hover {
+  background: linear-gradient(135deg, #d4c4a8 0%, #c9b08c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(201, 176, 140, 0.3);
+}
+
+.detail-modal-close:active {
+  transform: translateY(0);
+}
+
+/* 반응형 */
+@media (max-width: 360px) {
+  .detail-modal-content {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
+
+  .detail-modal-author {
+    font-size: 1rem;
+  }
+
+  .detail-modal-message {
+    font-size: 0.95rem;
+  }
+}

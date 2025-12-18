@@ -1,0 +1,142 @@
+.ornament {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.3s ease, z-index 0s;
+  animation: ornamentSwing 3s ease-in-out infinite;
+  z-index: 10;
+}
+
+.ornament:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  z-index: 100;
+}
+
+.ornament:focus {
+  outline: none;
+}
+
+.ornament:focus-visible {
+  outline: 2px solid #FFD700;
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.ornament-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ornament-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.ornament-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.ornament:hover .ornament-glow {
+  opacity: 1;
+}
+
+/* 흔들리는 애니메이션 */
+@keyframes ornamentSwing {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(-3deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(3deg);
+  }
+}
+
+/* 오너먼트별 애니메이션 딜레이 */
+.ornament:nth-child(1) { animation-delay: 0s; }
+.ornament:nth-child(2) { animation-delay: 0.3s; }
+.ornament:nth-child(3) { animation-delay: 0.6s; }
+.ornament:nth-child(4) { animation-delay: 0.9s; }
+.ornament:nth-child(5) { animation-delay: 1.2s; }
+.ornament:nth-child(6) { animation-delay: 1.5s; }
+.ornament:nth-child(7) { animation-delay: 1.8s; }
+.ornament:nth-child(8) { animation-delay: 2.1s; }
+.ornament:nth-child(9) { animation-delay: 2.4s; }
+.ornament:nth-child(10) { animation-delay: 2.7s; }
+
+/* 별 오너먼트 특별 효과 */
+.ornament-star .ornament-svg {
+  filter: drop-shadow(0 0 8px #FFD700);
+}
+
+.ornament-star .ornament-glow {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+}
+
+/* 눈송이 오너먼트 특별 효과 */
+.ornament-snowflake .ornament-svg {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+}
+
+.ornament-snowflake .ornament-glow {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+}
+
+/* 공 오너먼트 반짝임 */
+.ornament-ball_red .ornament-svg,
+.ornament-ball_gold .ornament-svg,
+.ornament-ball_blue .ornament-svg {
+  animation: ballShine 2s ease-in-out infinite;
+}
+
+@keyframes ballShine {
+  0%, 100% {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(1.1);
+  }
+}
+
+/* 반응형 */
+@media (min-width: 480px) {
+  .ornament {
+    width: 28px;
+    height: 28px;
+  }
+
+  .ornament-glow {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ornament {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ornament-glow {
+    width: 44px;
+    height: 44px;
+  }
+}

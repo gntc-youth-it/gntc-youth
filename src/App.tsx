@@ -9,6 +9,7 @@ import BibleMainPage from './pages/BibleMainPage';
 import CellSelectPage from './pages/CellSelectPage';
 import BibleTranscribePage from './pages/BibleTranscribePage';
 import BibleRankingPage from './pages/BibleRankingPage';
+import ChristmasPage from './pages/ChristmasPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/bible/select-cell" element={<CellSelectPage />} />
         <Route path="/bible/transcribe/:bookName/:chapter" element={<BibleTranscribePage />} />
         <Route path="/bible/ranking" element={<BibleRankingPage />} />
+        <Route path="/christmas" element={<ChristmasPage />} />
       </Routes>
     </Router>
   );
