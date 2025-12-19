@@ -4,7 +4,7 @@ import './MessageModal.css';
 interface MessageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (message: string) => void;
+  onConfirm: (writerName: string, message: string) => void;
 }
 
 const MessageModal: React.FC<MessageModalProps> = ({
@@ -12,16 +12,19 @@ const MessageModal: React.FC<MessageModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const [writerName, setWriterName] = useState('');
   const [message, setMessage] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const MAX_LENGTH = 200;
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const MAX_NAME_LENGTH = 50;
+  const MAX_MESSAGE_LENGTH = 200;
 
   useEffect(() => {
     if (isOpen) {
+      setWriterName('');
       setMessage('');
-      // 모달 열릴 때 textarea에 포커스
+      // 모달 열릴 때 이름 입력에 포커스
       setTimeout(() => {
-        textareaRef.current?.focus();
+        nameInputRef.current?.focus();
       }, 100);
     }
   }, [isOpen]);
@@ -39,16 +42,19 @@ const MessageModal: React.FC<MessageModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isValid = writerName.trim() && message.trim();
+
   const handleConfirm = () => {
-    if (message.trim()) {
-      onConfirm(message.trim());
+    if (isValid) {
+      onConfirm(writerName.trim(), message.trim());
+      setWriterName('');
       setMessage('');
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Ctrl/Cmd + Enter로 제출
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim()) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && isValid) {
       handleConfirm();
     }
   };
@@ -77,19 +83,29 @@ const MessageModal: React.FC<MessageModalProps> = ({
           트리에 걸릴 특별한 메시지를 남겨주세요
         </p>
 
+        <input
+          ref={nameInputRef}
+          type="text"
+          className="message-modal-input"
+          placeholder="이름 (익명 가능)"
+          value={writerName}
+          onChange={(e) => setWriterName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+          onKeyDown={handleKeyDown}
+          maxLength={MAX_NAME_LENGTH}
+        />
+
         <textarea
-          ref={textareaRef}
           className="message-modal-textarea"
           placeholder="따뜻한 메시지를 남겨주세요..."
           value={message}
-          onChange={(e) => setMessage(e.target.value.slice(0, MAX_LENGTH))}
+          onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
           onKeyDown={handleKeyDown}
-          maxLength={MAX_LENGTH}
+          maxLength={MAX_MESSAGE_LENGTH}
         />
 
         <div className="message-modal-footer">
           <span className="message-modal-char-count">
-            {message.length}/{MAX_LENGTH}
+            {message.length}/{MAX_MESSAGE_LENGTH}
           </span>
           <div className="message-modal-buttons">
             <button className="message-modal-button cancel" onClick={onClose}>
@@ -98,7 +114,7 @@ const MessageModal: React.FC<MessageModalProps> = ({
             <button
               className="message-modal-button confirm"
               onClick={handleConfirm}
-              disabled={!message.trim()}
+              disabled={!isValid}
             >
               확인
             </button>

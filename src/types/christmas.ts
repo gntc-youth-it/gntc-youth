@@ -15,15 +15,53 @@ export interface OrnamentPosition {
   y: number;
 }
 
-// 롤링페이퍼 메시지
-export interface RollingPaperMessage {
-  id: string;
-  authorName: string;
+// API 응답용 오너먼트 (snake_case)
+export interface OrnamentResponse {
+  id: number;
+  writer_name: string;
+  type: OrnamentType;
   message: string;
-  ornamentType: OrnamentType;
-  position: OrnamentPosition;
-  createdAt: string;
+  x: number;
+  y: number;
 }
 
-// localStorage 키
-export const CHRISTMAS_STORAGE_KEY = 'christmas_rolling_papers';
+// API 요청용 오너먼트 생성 (snake_case)
+export interface OrnamentCreateRequest {
+  writer_name: string;
+  type: OrnamentType;
+  message: string;
+  x: number;
+  y: number;
+}
+
+// 프론트엔드 내부용 오너먼트 (camelCase)
+export interface Ornament {
+  id: number;
+  writerName: string;
+  type: OrnamentType;
+  message: string;
+  position: OrnamentPosition;
+}
+
+// API 응답 → 프론트엔드 변환
+export const toOrnament = (response: OrnamentResponse): Ornament => ({
+  id: response.id,
+  writerName: response.writer_name,
+  type: response.type,
+  message: response.message,
+  position: { x: response.x, y: response.y },
+});
+
+// 프론트엔드 → API 요청 변환
+export const toOrnamentCreateRequest = (
+  writerName: string,
+  type: OrnamentType,
+  message: string,
+  position: OrnamentPosition
+): OrnamentCreateRequest => ({
+  writer_name: writerName,
+  type,
+  message,
+  x: position.x,
+  y: position.y,
+});

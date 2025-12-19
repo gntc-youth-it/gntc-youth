@@ -1,15 +1,15 @@
 import React from 'react';
-import { RollingPaperMessage } from '../types/christmas';
+import { Ornament as OrnamentType } from '../types/christmas';
 import Ornament from './Ornament';
 import './ChristmasTree.css';
 
 interface ChristmasTreeProps {
-  messages: RollingPaperMessage[];
-  onOrnamentClick: (message: RollingPaperMessage) => void;
+  ornaments: OrnamentType[];
+  onOrnamentClick: (ornament: OrnamentType) => void;
 }
 
 const ChristmasTree: React.FC<ChristmasTreeProps> = ({
-  messages,
+  ornaments,
   onOrnamentClick,
 }) => {
   return (
@@ -39,11 +39,11 @@ const ChristmasTree: React.FC<ChristmasTreeProps> = ({
 
         {/* 오너먼트들 */}
         <div className="ornaments-container">
-          {messages.map((message) => (
+          {ornaments.map((ornament) => (
             <Ornament
-              key={message.id}
-              message={message}
-              onClick={() => onOrnamentClick(message)}
+              key={ornament.id}
+              ornament={ornament}
+              onClick={() => onOrnamentClick(ornament)}
             />
           ))}
         </div>

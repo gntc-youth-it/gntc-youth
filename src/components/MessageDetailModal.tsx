@@ -1,17 +1,16 @@
 import React, { useEffect } from 'react';
-import { RollingPaperMessage } from '../types/christmas';
-import { formatRelativeTime } from '../utils/christmasStorage';
+import { Ornament } from '../types/christmas';
 import './MessageDetailModal.css';
 
 interface MessageDetailModalProps {
   isOpen: boolean;
-  message: RollingPaperMessage | null;
+  ornament: Ornament | null;
   onClose: () => void;
 }
 
 const MessageDetailModal: React.FC<MessageDetailModalProps> = ({
   isOpen,
-  message,
+  ornament,
   onClose,
 }) => {
   // ESC 키 또는 Enter 키로 닫기
@@ -25,7 +24,7 @@ const MessageDetailModal: React.FC<MessageDetailModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !message) return null;
+  if (!isOpen || !ornament) return null;
 
   return (
     <div className="detail-modal-overlay" onClick={onClose}>
@@ -39,14 +38,11 @@ const MessageDetailModal: React.FC<MessageDetailModalProps> = ({
         </div>
 
         <div className="detail-modal-header">
-          <span className="detail-modal-author">{message.authorName}</span>
-          <span className="detail-modal-time">
-            {formatRelativeTime(message.createdAt)}
-          </span>
+          <span className="detail-modal-author">{ornament.writerName}</span>
         </div>
 
         <div className="detail-modal-body">
-          <p className="detail-modal-message">{message.message}</p>
+          <p className="detail-modal-message">{ornament.message}</p>
         </div>
 
         <button className="detail-modal-close" onClick={onClose}>

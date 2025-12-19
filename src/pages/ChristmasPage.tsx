@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isLoggedIn, getUserInfoFromToken } from '../utils/api';
-import { RollingPaperMessage } from '../types/christmas';
+import { Ornament } from '../types/christmas';
+import { fetchOrnaments, createOrnament } from '../utils/christmasApi';
 import {
-  getMessages,
-  saveMessage,
   generateRandomPosition,
   getRandomOrnamentType,
 } from '../utils/christmasStorage';
@@ -13,14 +12,27 @@ import MessageModal from '../components/MessageModal';
 import MessageDetailModal from '../components/MessageDetailModal';
 import './ChristmasPage.css';
 
+const POLLING_USER_ID = 2;
+const POLLING_INTERVAL = 5000;
+
 const ChristmasPage: React.FC = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string>('');
-  const [messages, setMessages] = useState<RollingPaperMessage[]>([]);
+  const [ornaments, setOrnaments] = useState<Ornament[]>([]);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
-  const [selectedMessage, setSelectedMessage] =
-    useState<RollingPaperMessage | null>(null);
+  const [selectedOrnament, setSelectedOrnament] = useState<Ornament | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadOrnaments = useCallback(async () => {
+    try {
+      const loadedOrnaments = await fetchOrnaments();
+      setOrnaments(loadedOrnaments);
+    } catch (error) {
+      console.error('Failed to fetch ornaments:', error);
+    }
+  }, []);
 
   useEffect(() => {
     // 로그인 체크
@@ -30,34 +42,50 @@ const ChristmasPage: React.FC = () => {
       return;
     }
 
-    // 사용자 정보 가져오기
-    const userInfo = getUserInfoFromToken();
-    if (userInfo) {
-      setUserName(userInfo.name);
-    }
+    // 오너먼트 초기 로드
+    const initialLoad = async () => {
+      await loadOrnaments();
+      setIsLoading(false);
+    };
+    initialLoad();
 
-    // 메시지 로드
-    const loadedMessages = getMessages();
-    setMessages(loadedMessages);
-    setIsLoading(false);
-  }, [navigate]);
+    // user_id가 2인 경우에만 폴링
+    const userInfo = getUserInfoFromToken();
+    if (userInfo?.id === POLLING_USER_ID) {
+      const intervalId = setInterval(loadOrnaments, POLLING_INTERVAL);
+      return () => clearInterval(intervalId);
+    }
+  }, [navigate, loadOrnaments]);
 
   // 메시지 작성 완료 핸들러
-  const handleWriteMessage = (messageText: string) => {
-    const existingPositions = messages.map((m) => m.position);
-    const newMessage = saveMessage({
-      authorName: userName,
-      message: messageText,
-      ornamentType: getRandomOrnamentType(),
-      position: generateRandomPosition(existingPositions),
-    });
-    setMessages([...messages, newMessage]);
-    setIsWriteModalOpen(false);
+  const handleWriteMessage = async (writerName: string, messageText: string) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const existingPositions = ornaments.map((o) => o.position);
+      const position = generateRandomPosition(existingPositions);
+      const type = getRandomOrnamentType();
+
+      const newOrnament = await createOrnament(
+        writerName,
+        type,
+        messageText,
+        position
+      );
+      setOrnaments([...ornaments, newOrnament]);
+      setIsWriteModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create ornament:', error);
+      alert('메시지 저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 오너먼트 클릭 핸들러
-  const handleOrnamentClick = (message: RollingPaperMessage) => {
-    setSelectedMessage(message);
+  const handleOrnamentClick = (ornament: Ornament) => {
+    setSelectedOrnament(ornament);
   };
 
   // 눈송이 배열 생성 (50개)
@@ -103,12 +131,12 @@ const ChristmasPage: React.FC = () => {
         {/* 헤더 */}
         <header className="christmas-header">
           <h1 className="christmas-title">Merry Christmas</h1>
-          <p className="christmas-subtitle">GNTC 청년부</p>
+          <p className="christmas-subtitle">GNTC 청년봉사선교회</p>
         </header>
 
         {/* 크리스마스 트리 */}
         <ChristmasTree
-          messages={messages}
+          ornaments={ornaments}
           onOrnamentClick={handleOrnamentClick}
         />
 
@@ -121,6 +149,7 @@ const ChristmasPage: React.FC = () => {
         <button
           className="write-message-button"
           onClick={() => setIsWriteModalOpen(true)}
+          disabled={isSubmitting}
         >
           <svg
             viewBox="0 0 24 24"
@@ -140,7 +169,7 @@ const ChristmasPage: React.FC = () => {
 
         {/* 메시지 개수 표시 */}
         <p className="christmas-message-count">
-          {messages.length}개의 메시지가 트리에 걸려있어요
+          {ornaments.length}개의 메시지가 트리에 걸려있어요
         </p>
 
         {/* 홈으로 돌아가기 링크 */}
@@ -158,9 +187,9 @@ const ChristmasPage: React.FC = () => {
 
       {/* 메시지 상세 모달 */}
       <MessageDetailModal
-        isOpen={selectedMessage !== null}
-        message={selectedMessage}
-        onClose={() => setSelectedMessage(null)}
+        isOpen={selectedOrnament !== null}
+        ornament={selectedOrnament}
+        onClose={() => setSelectedOrnament(null)}
       />
     </div>
   );

@@ -1,9 +1,9 @@
 import React from 'react';
-import { RollingPaperMessage, OrnamentType } from '../types/christmas';
+import { Ornament as OrnamentData, OrnamentType } from '../types/christmas';
 import './Ornament.css';
 
 interface OrnamentProps {
-  message: RollingPaperMessage;
+  ornament: OrnamentData;
   onClick: () => void;
 }
 
@@ -99,22 +99,22 @@ const OrnamentIcon: React.FC<{ type: OrnamentType }> = ({ type }) => {
   }
 };
 
-const Ornament: React.FC<OrnamentProps> = ({ message, onClick }) => {
-  const { ornamentType, position, authorName } = message;
+const Ornament: React.FC<OrnamentProps> = ({ ornament, onClick }) => {
+  const { type, position, writerName } = ornament;
 
   return (
     <button
-      className={`ornament ornament-${ornamentType}`}
+      className={`ornament ornament-${type}`}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
       }}
       onClick={onClick}
-      title={`${authorName}님의 메시지`}
-      aria-label={`${authorName}님이 남긴 메시지 보기`}
+      title={`${writerName}님의 메시지`}
+      aria-label={`${writerName}님이 남긴 메시지 보기`}
     >
       <span className="ornament-icon">
-        <OrnamentIcon type={ornamentType} />
+        <OrnamentIcon type={type} />
       </span>
       <span className="ornament-glow"></span>
     </button>
