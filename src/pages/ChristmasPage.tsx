@@ -25,10 +25,30 @@ const ChristmasPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadOrnaments = useCallback(async () => {
+  const loadOrnaments = useCallback(async (isInitial = false) => {
     try {
       const loadedOrnaments = await fetchOrnaments();
-      setOrnaments(loadedOrnaments);
+
+      if (isInitial) {
+        setOrnaments(loadedOrnaments);
+        return;
+      }
+
+      // 폴링 시에는 변경사항이 있을 때만 업데이트
+      setOrnaments((prev) => {
+        const prevIds = prev.map((o) => o.id).sort((a, b) => a - b);
+        const newIds = loadedOrnaments.map((o) => o.id).sort((a, b) => a - b);
+
+        // id 목록이 같으면 변경 없음 - 이전 상태 유지
+        if (
+          prevIds.length === newIds.length &&
+          prevIds.every((id, idx) => id === newIds[idx])
+        ) {
+          return prev;
+        }
+
+        return loadedOrnaments;
+      });
     } catch (error) {
       console.error('Failed to fetch ornaments:', error);
     }
@@ -44,7 +64,7 @@ const ChristmasPage: React.FC = () => {
 
     // 오너먼트 초기 로드
     const initialLoad = async () => {
-      await loadOrnaments();
+      await loadOrnaments(true);
       setIsLoading(false);
     };
     initialLoad();
@@ -52,7 +72,7 @@ const ChristmasPage: React.FC = () => {
     // user_id가 2인 경우에만 폴링
     const userInfo = getUserInfoFromToken();
     if (userInfo?.id === POLLING_USER_ID) {
-      const intervalId = setInterval(loadOrnaments, POLLING_INTERVAL);
+      const intervalId = setInterval(() => loadOrnaments(false), POLLING_INTERVAL);
       return () => clearInterval(intervalId);
     }
   }, [navigate, loadOrnaments]);
@@ -101,7 +121,7 @@ const ChristmasPage: React.FC = () => {
     return (
       <div className="christmas-page">
         <div className="christmas-loading">
-          <div className="loading-spinner"></div>
+          <div className="christmas-spinner"></div>
           <p>로딩 중...</p>
         </div>
       </div>
