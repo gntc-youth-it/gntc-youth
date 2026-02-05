@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Main.css';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 
@@ -343,15 +343,12 @@ const CHURCHES = [
 ] as const;
 
 const Main: React.FC = () => {
-  // scrollY를 ref로 관리하여 불필요한 리렌더링 방지
-  const scrollYRef = useRef(0);
   const [isTocVisible, setIsTocVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("anyang");
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      scrollYRef.current = window.scrollY;
       setIsTocVisible(window.scrollY > 100);
     };
 
@@ -360,34 +357,27 @@ const Main: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // 기도제목 섹션이 화면에 보이는지 확인
     const observer = new IntersectionObserver(
       ([entry]) => {
-        console.log('Intersection Observer triggered:', entry.isIntersecting);
         if (entry.isIntersecting) {
           setIsVisible(true);
-          console.log('Setting isVisible to true');
+          observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.1 } // threshold를 낮춰서 더 쉽게 트리거되도록
+      { threshold: 0.1 }
     );
 
     const prayerSection = document.getElementById('prayer');
     if (prayerSection) {
       observer.observe(prayerSection);
-      console.log('Observer attached to prayer section');
-    } else {
-      console.log('Prayer section not found');
     }
 
     return () => observer.disconnect();
   }, []);
 
-  // 컴포넌트 마운트 후 1초 뒤에 강제로 visible 상태로 설정 (fallback)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isVisible) {
-        console.log('Fallback: forcing visible state');
         setIsVisible(true);
       }
     }, 1000);
@@ -537,8 +527,6 @@ const Main: React.FC = () => {
                         playsInline
                         className="church-video"
                         onError={(e) => {
-                          console.log('Video failed to load:', e);
-                          // 동영상 로드 실패 시 fallback 이미지 표시
                           const videoElement = e.target as HTMLVideoElement;
                           const fallbackImg = document.createElement('img');
                           fallbackImg.src = 'https://cdn.gntc-youth.com/assets/anyang-church-fallback.jpg';
