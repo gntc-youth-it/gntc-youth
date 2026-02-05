@@ -33,7 +33,10 @@ export const testLogin = async (email: string): Promise<TestLoginResponse> => {
   }
 
   const data: TestLoginResponse = await response.json()
-  const accessToken = data.accessToken || (data as unknown as { access_token?: string }).access_token || ''
+  const accessToken = data.accessToken || data.access_token
+  if (!accessToken) {
+    throw new Error('로그인 응답에 액세스 토큰이 없습니다.')
+  }
   setAccessToken(accessToken)
 
   return data

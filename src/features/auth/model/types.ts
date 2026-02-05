@@ -7,7 +7,8 @@ export interface UserInfo {
 }
 
 export interface TestLoginResponse {
-  accessToken: string
+  accessToken?: string
+  access_token?: string // snake_case 지원
   refreshToken: string
   userId: number
   email: string
