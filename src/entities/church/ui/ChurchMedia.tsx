@@ -1,4 +1,5 @@
 import { Church } from '../model'
+import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 
 interface ChurchMediaProps {
   church: Church
@@ -18,7 +19,7 @@ export const ChurchMedia = ({ church, className }: ChurchMediaProps) => {
         onError={(e) => {
           const videoElement = e.target as HTMLVideoElement
           const fallbackImg = document.createElement('img')
-          fallbackImg.src = 'https://cdn.gntc-youth.com/assets/anyang-church-fallback.jpg'
+          fallbackImg.src = FALLBACK_IMAGE_URL
           fallbackImg.alt = `${church.name}성전 청년봉사선교회`
           fallbackImg.className = className || ''
           videoElement.parentNode?.replaceChild(fallbackImg, videoElement)
