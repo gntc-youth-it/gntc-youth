@@ -1,7 +1,7 @@
 import { API_BASE_URL, apiRequest } from '../../../shared/api'
 import { isLocalDevelopment } from '../../../shared/config'
 import { setAccessToken } from '../lib'
-import type { TestLoginResponse } from '../model/types'
+import { normalizeTestLoginResponse, type TestLoginResponse } from '../model/types'
 
 export const logoutApi = async (): Promise<void> => {
   await apiRequest('/api/auth/logout', {
@@ -32,12 +32,9 @@ export const testLogin = async (email: string): Promise<TestLoginResponse> => {
     throw new Error(errorData.message || '테스트 로그인에 실패했습니다.')
   }
 
-  const data: TestLoginResponse = await response.json()
-  const accessToken = data.accessToken || data.access_token
-  if (!accessToken) {
-    throw new Error('로그인 응답에 액세스 토큰이 없습니다.')
-  }
-  setAccessToken(accessToken)
+  const rawData = await response.json()
+  const data = normalizeTestLoginResponse(rawData)
+  setAccessToken(data.accessToken)
 
   return data
 }
