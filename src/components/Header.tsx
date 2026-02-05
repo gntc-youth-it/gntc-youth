@@ -14,7 +14,7 @@ const Header: React.FC = () => {
   };
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen(prev => !prev);
   };
 
   const closeSidebar = () => {
