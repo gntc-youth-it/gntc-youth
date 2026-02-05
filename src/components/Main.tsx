@@ -352,9 +352,7 @@ const Main: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       scrollYRef.current = window.scrollY;
-      // 실제 UI 변경이 필요한 경우에만 state 업데이트
-      const shouldShowToc = window.scrollY > 100;
-      setIsTocVisible(prev => prev !== shouldShowToc ? shouldShowToc : prev);
+      setIsTocVisible(window.scrollY > 100);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
