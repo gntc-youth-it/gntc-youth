@@ -27,23 +27,23 @@ const decodeJWT = (token: string): any => {
 };
 
 /**
- * Access Token 가져오기
+ * Access Token 가져오기 (내부 사용)
  */
-export const getAccessToken = (): string | null => {
+const getAccessToken = (): string | null => {
   return localStorage.getItem('accessToken');
 };
 
 /**
- * Access Token 저장
+ * Access Token 저장 (내부 사용)
  */
-export const setAccessToken = (token: string): void => {
+const setAccessToken = (token: string): void => {
   localStorage.setItem('accessToken', token);
 };
 
 /**
- * Access Token 삭제
+ * Access Token 삭제 (내부 사용)
  */
-export const removeAccessToken = (): void => {
+const removeAccessToken = (): void => {
   localStorage.removeItem('accessToken');
 };
 
@@ -55,9 +55,9 @@ export const isLoggedIn = (): boolean => {
 };
 
 /**
- * HTTP 에러 클래스
+ * HTTP 에러 클래스 (내부 사용)
  */
-export class HttpError extends Error {
+class HttpError extends Error {
   constructor(public status: number, message: string, public code?: string | number) {
     super(message);
     this.name = 'HttpError';
@@ -71,9 +71,9 @@ let isRefreshing = false;
 let refreshPromise: Promise<string> | null = null;
 
 /**
- * Access Token 갱신
+ * Access Token 갱신 (내부 사용)
  */
-export const refreshAccessToken = async (): Promise<string> => {
+const refreshAccessToken = async (): Promise<string> => {
   // 이미 갱신 중이면 기존 Promise 반환
   if (isRefreshing && refreshPromise) {
     console.log('[Refresh] Already refreshing, waiting for existing promise...');
@@ -121,9 +121,9 @@ export const refreshAccessToken = async (): Promise<string> => {
 };
 
 /**
- * API 요청 헬퍼 함수
+ * API 요청 헬퍼 함수 (내부 사용)
  */
-export const apiRequest = async <T>(
+const apiRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
