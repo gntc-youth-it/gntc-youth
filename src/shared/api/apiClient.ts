@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './config'
+import { getAccessToken, setAccessToken, removeAccessToken } from '../lib'
 
 export class HttpError extends Error {
   constructor(
@@ -13,18 +14,6 @@ export class HttpError extends Error {
 
 let isRefreshing = false
 let refreshPromise: Promise<string> | null = null
-
-const getAccessToken = (): string | null => {
-  return localStorage.getItem('accessToken')
-}
-
-const setAccessToken = (token: string): void => {
-  localStorage.setItem('accessToken', token)
-}
-
-const removeAccessToken = (): void => {
-  localStorage.removeItem('accessToken')
-}
 
 const refreshAccessToken = async (): Promise<string> => {
   if (isRefreshing && refreshPromise) {

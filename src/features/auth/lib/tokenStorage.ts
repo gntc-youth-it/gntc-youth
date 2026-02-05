@@ -1,19 +1,9 @@
 import { decodeJWT } from './jwt'
 import type { UserInfo } from '../model/types'
+import { getAccessToken } from '../../../shared/lib'
 
-const ACCESS_TOKEN_KEY = 'accessToken'
-
-export const getAccessToken = (): string | null => {
-  return localStorage.getItem(ACCESS_TOKEN_KEY)
-}
-
-export const setAccessToken = (token: string): void => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token)
-}
-
-export const removeAccessToken = (): void => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY)
-}
+// Re-export from shared for convenience
+export { getAccessToken, setAccessToken, removeAccessToken } from '../../../shared/lib'
 
 export const isLoggedIn = (): boolean => {
   return !!getAccessToken()
