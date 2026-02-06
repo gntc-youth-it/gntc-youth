@@ -1,0 +1,57 @@
+import { decodeJWT } from '../jwt'
+
+// 테스트용 JWT 생성 헬퍼
+const createTestJWT = (payload: Record<string, unknown>): string => {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const jsonStr = JSON.stringify(payload)
+  // UTF-8 인코딩 (한글 등 비ASCII 문자 지원)
+  const body = btoa(unescape(encodeURIComponent(jsonStr)))
+  return `${header}.${body}.fake-signature`
+}
+
+describe('decodeJWT', () => {
+  it('유효한 JWT의 페이로드를 반환한다', () => {
+    const payload = { sub: '1', name: 'Test User', email: 'test@test.com' }
+    const token = createTestJWT(payload)
+
+    expect(decodeJWT(token)).toEqual(payload)
+  })
+
+  it('다양한 필드를 가진 페이로드를 처리한다', () => {
+    const payload = {
+      sub: '42',
+      name: 'Admin',
+      role: 'ADMIN',
+      provider: 'kakao',
+      iat: 1700000000,
+      exp: 1700003600,
+    }
+    const token = createTestJWT(payload)
+
+    expect(decodeJWT(token)).toEqual(payload)
+  })
+
+  it('한글이 포함된 페이로드를 처리한다', () => {
+    const payload = { sub: '1', name: '홍길동' }
+    const token = createTestJWT(payload)
+
+    expect(decodeJWT(token)).toEqual(payload)
+  })
+
+  it('잘못된 토큰이면 null을 반환한다', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+
+    expect(decodeJWT('invalid-token')).toBeNull()
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to decode JWT')
+
+    consoleSpy.mockRestore()
+  })
+
+  it('빈 문자열이면 null을 반환한다', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+
+    expect(decodeJWT('')).toBeNull()
+
+    consoleSpy.mockRestore()
+  })
+})
