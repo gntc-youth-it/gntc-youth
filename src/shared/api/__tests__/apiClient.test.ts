@@ -129,15 +129,12 @@ describe('apiRequest', () => {
       json: () => Promise.resolve({ message: 'Server Error', code: 'ERR_500' }),
     })
 
-    try {
-      await apiRequest('/api/test')
-      expect(true).toBe(false) // 여기에 도달하면 안 됨
-    } catch (error) {
-      expect(error).toBeInstanceOf(HttpError)
-      expect((error as HttpError).status).toBe(500)
-      expect((error as HttpError).message).toBe('Server Error')
-      expect((error as HttpError).code).toBe('ERR_500')
-    }
+    await expect(apiRequest('/api/test')).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'Server Error',
+      code: 'ERR_500',
+    })
   })
 
   it('에러 응답의 JSON 파싱 실패 시 기본 메시지를 사용한다', async () => {
@@ -147,12 +144,11 @@ describe('apiRequest', () => {
       json: () => Promise.reject(new Error('not json')),
     })
 
-    try {
-      await apiRequest('/api/test')
-      expect(true).toBe(false)
-    } catch (error) {
-      expect((error as HttpError).message).toBe('API Error: 502')
-    }
+    await expect(apiRequest('/api/test')).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 502,
+      message: 'API Error: 502',
+    })
   })
 
   describe('401 토큰 갱신', () => {

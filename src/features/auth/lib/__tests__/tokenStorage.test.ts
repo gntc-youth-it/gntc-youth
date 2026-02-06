@@ -1,10 +1,9 @@
 import { isLoggedIn, getUserInfoFromToken } from '../tokenStorage'
 
-// 테스트용 JWT 생성 헬퍼
+// 테스트용 JWT 생성 헬퍼 (base64url 인코딩)
 const createTestJWT = (payload: Record<string, unknown>): string => {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const jsonStr = JSON.stringify(payload)
-  const body = btoa(unescape(encodeURIComponent(jsonStr)))
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
   return `${header}.${body}.fake-signature`
 }
 
