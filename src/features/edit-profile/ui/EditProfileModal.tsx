@@ -5,10 +5,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../shared/ui'
-import { CHURCHES } from '../../../entities/church'
 import { GenderSelector } from './GenderSelector'
-import { getMyProfile, saveProfile } from '../api'
-import type { ProfileFormData, UserProfileRequest } from '../model/types'
+import { getMyProfile, saveProfile, getChurches } from '../api'
+import type { ProfileFormData, UserProfileRequest, ChurchResponse } from '../model/types'
 
 interface EditProfileModalProps {
   open: boolean
@@ -36,6 +35,7 @@ const formatPhoneNumber = (value: string): string => {
 
 export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
+  const [churches, setChurches] = useState<ChurchResponse[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +44,11 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
     setIsLoading(true)
     setError(null)
     try {
-      const profile = await getMyProfile()
+      const [profile, churchList] = await Promise.all([
+        getMyProfile(),
+        getChurches(),
+      ])
+      setChurches(churchList.churches)
       setFormData({
         name: profile.name || '',
         churchId: profile.churchId || '',
@@ -151,8 +155,8 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
                   className={inputClassName}
                 >
                   <option value="">성전을 선택하세요</option>
-                  {CHURCHES.map((church) => (
-                    <option key={church.id} value={church.id}>
+                  {churches.map((church) => (
+                    <option key={church.code} value={church.code}>
                       {church.name}
                     </option>
                   ))}
