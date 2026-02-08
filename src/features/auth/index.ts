@@ -6,4 +6,4 @@ export { AuthProvider, useAuth } from './model'
 export { isLoggedIn, getUserInfoFromToken, setAccessToken } from './lib'
 
 // API
-export { logoutApi, redirectToKakaoLogin, testLogin } from './api'
+export { logoutApi, redirectToKakaoLogin, testLogin, refreshTokenApi } from './api'

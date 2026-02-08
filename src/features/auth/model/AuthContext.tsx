@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useCallback, PropsWithChildren } from 'react'
 import type { UserInfo, AuthContextValue } from './types'
 import { getUserInfoFromToken, setAccessToken, removeAccessToken } from '../lib'
-import { logoutApi } from '../api'
+import { logoutApi, refreshTokenApi } from '../api'
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
@@ -36,8 +36,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    await refreshTokenApi()
+    const userInfo = getUserInfoFromToken()
+    if (userInfo) {
+      setUser(userInfo)
+    }
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

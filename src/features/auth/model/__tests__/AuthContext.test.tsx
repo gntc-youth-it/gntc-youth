@@ -10,26 +10,32 @@ jest.mock('../../lib', () => ({
 
 jest.mock('../../api', () => ({
   logoutApi: jest.fn(),
+  refreshTokenApi: jest.fn(),
 }))
 
 import { getUserInfoFromToken, setAccessToken, removeAccessToken } from '../../lib'
-import { logoutApi } from '../../api'
+import { logoutApi, refreshTokenApi } from '../../api'
 
 const mockGetUserInfo = getUserInfoFromToken as jest.MockedFunction<typeof getUserInfoFromToken>
 const mockLogoutApi = logoutApi as jest.MockedFunction<typeof logoutApi>
+const mockRefreshTokenApi = refreshTokenApi as jest.MockedFunction<typeof refreshTokenApi>
 
 // AuthProvider 내부 상태를 확인하기 위한 테스트 컴포넌트
 const TestComponent = () => {
-  const { user, isLoggedIn, login, logout } = useAuth()
+  const { user, isLoggedIn, login, logout, refreshUser } = useAuth()
   return (
     <div>
       <span data-testid="logged-in">{String(isLoggedIn)}</span>
       <span data-testid="user-name">{user?.name ?? 'none'}</span>
+      <span data-testid="user-church">{user?.churchId ?? 'none'}</span>
       <button data-testid="login-btn" onClick={() => login('test-token')}>
         Login
       </button>
       <button data-testid="logout-btn" onClick={logout}>
         Logout
+      </button>
+      <button data-testid="refresh-btn" onClick={refreshUser}>
+        Refresh
       </button>
     </div>
   )
@@ -40,6 +46,7 @@ describe('AuthProvider', () => {
     jest.clearAllMocks()
     mockGetUserInfo.mockReturnValue(null)
     mockLogoutApi.mockResolvedValue(undefined)
+    mockRefreshTokenApi.mockResolvedValue('new-token')
   })
 
   it('초기 상태는 로그아웃 상태이다', () => {
@@ -129,5 +136,26 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId('user-name')).toHaveTextContent('none')
 
     consoleSpy.mockRestore()
+  })
+
+  it('refreshUser 호출 시 토큰을 갱신하고 사용자 상태를 업데이트한다', async () => {
+    mockGetUserInfo
+      .mockReturnValueOnce({ id: 1, name: '홍길동' }) // 초기 로드
+      .mockReturnValueOnce({ id: 1, name: '홍길동', churchId: 'anyang' }) // refresh 후
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    )
+
+    expect(screen.getByTestId('user-church')).toHaveTextContent('none')
+
+    await act(async () => {
+      screen.getByTestId('refresh-btn').click()
+    })
+
+    expect(mockRefreshTokenApi).toHaveBeenCalled()
+    expect(screen.getByTestId('user-church')).toHaveTextContent('anyang')
   })
 })

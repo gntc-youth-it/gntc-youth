@@ -4,6 +4,7 @@ export interface UserInfo {
   email?: string
   role?: string
   provider?: string
+  churchId?: string
 }
 
 // API 원본 응답 (snake_case)
@@ -43,4 +44,5 @@ export interface AuthContextValue {
   isLoggedIn: boolean
   login: (token: string) => void
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }

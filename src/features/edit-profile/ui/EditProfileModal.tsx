@@ -13,6 +13,7 @@ import type { ProfileFormData, UserProfileRequest } from '../model/types'
 interface EditProfileModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSaveSuccess?: () => void
 }
 
 const initialFormData: ProfileFormData = {
@@ -33,7 +34,7 @@ const formatPhoneNumber = (value: string): string => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
 }
 
-export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
+export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -81,6 +82,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
         gender: formData.gender,
       }
       await saveProfile(request)
+      onSaveSuccess?.()
       onOpenChange(false)
     } catch (error) {
       console.error('프로필 저장에 실패했습니다:', error)

@@ -1,15 +1,34 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
-import { EditProfileModal } from '../../../features/edit-profile'
+import { EditProfileModal, ProfileCompletionModal } from '../../../features/edit-profile'
 
 export const Header = () => {
   const navigate = useNavigate()
-  const { user, isLoggedIn, logout } = useAuth()
+  const { user, isLoggedIn, logout, refreshUser } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // 로그인 상태에서 교회 정보가 없으면 프로필 완성 모달 표시
+  useEffect(() => {
+    if (isLoggedIn && user && !user.churchId) {
+      const dismissed = sessionStorage.getItem('profileCompletionDismissed')
+      if (!dismissed) {
+        setIsCompletionModalOpen(true)
+      }
+    }
+  }, [isLoggedIn, user])
+
+  const handleProfileSaveSuccess = async () => {
+    try {
+      await refreshUser()
+    } catch {
+      console.error('토큰 갱신에 실패했습니다.')
+    }
+  }
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -299,10 +318,18 @@ export const Header = () => {
         </ul>
       </nav>
 
+      {/* Profile Completion Modal */}
+      <ProfileCompletionModal
+        open={isCompletionModalOpen}
+        onOpenChange={setIsCompletionModalOpen}
+        onConfirm={() => setIsProfileModalOpen(true)}
+      />
+
       {/* Edit Profile Modal */}
       <EditProfileModal
         open={isProfileModalOpen}
         onOpenChange={setIsProfileModalOpen}
+        onSaveSuccess={handleProfileSaveSuccess}
       />
     </header>
   )

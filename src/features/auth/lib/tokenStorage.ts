@@ -26,5 +26,6 @@ export const getUserInfoFromToken = (): UserInfo | null => {
     email: payload.email as string | undefined,
     role: payload.role as string | undefined,
     provider: payload.provider as string | undefined,
+    churchId: payload.church as string | undefined,
   }
 }
