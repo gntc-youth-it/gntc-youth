@@ -207,4 +207,25 @@ describe('EditProfileModal', () => {
 
     expect(screen.getByText('성전을 선택하세요')).toBeInTheDocument()
   })
+
+  it('API에서 불러온 성전 목록을 드롭다운에 렌더링한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('안양')).toBeInTheDocument()
+    expect(screen.getByText('수원')).toBeInTheDocument()
+    expect(screen.getByText('광주')).toBeInTheDocument()
+  })
+
+  it('성전 목록 API 실패 시 에러 메시지를 표시한다', async () => {
+    mockGetChurches.mockRejectedValue(new Error('Network error'))
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByText('프로필 정보를 불러오는데 실패했습니다.')).toBeInTheDocument()
+    })
+  })
 })
