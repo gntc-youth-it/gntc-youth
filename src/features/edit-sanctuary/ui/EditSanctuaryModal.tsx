@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ export const EditSanctuaryModal = ({
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open && church) {
@@ -41,11 +42,10 @@ export const EditSanctuaryModal = ({
   }, [open, church])
 
   const handlePrayerChange = (index: number, value: string) => {
-    setFormData((prev) => {
-      const prayers = [...prev.prayers]
-      prayers[index] = value
-      return { ...prev, prayers }
-    })
+    setFormData((prev) => ({
+      ...prev,
+      prayers: prev.prayers.map((prayer, i) => (i === index ? value : prayer)),
+    }))
   }
 
   const handleAddPrayer = () => {
@@ -74,13 +74,31 @@ export const EditSanctuaryModal = ({
     setError(null)
     try {
       // TODO: API 연동
-      console.log('Save sanctuary data:', { churchId: church?.id, ...formData })
+      console.log('Save sanctuary data:', { churchId: church?.id, ...formData, prayers: nonEmptyPrayers })
       onOpenChange(false)
-    } catch {
+    } catch (err) {
+      console.error('성전 정보 저장에 실패했습니다:', err)
       setError('성전 정보 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const isVideo = file.type.startsWith('video/')
+    const previewUrl = URL.createObjectURL(file)
+    setFormData((prev) => ({
+      ...prev,
+      media: previewUrl,
+      mediaType: isVideo ? 'video' : 'image',
+    }))
   }
 
   const handleCancel = () => {
@@ -161,8 +179,16 @@ export const EditSanctuaryModal = ({
 
               {/* Upload Button */}
               <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,video/mp4,video/quicktime"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 <button
                   type="button"
+                  onClick={handleUploadClick}
                   className="w-full h-11 flex items-center justify-center gap-2 bg-white border border-[#3B5BDB] rounded-md text-sm font-medium text-[#3B5BDB] hover:bg-blue-50 transition-colors"
                 >
                   <svg
@@ -273,8 +299,7 @@ export const EditSanctuaryModal = ({
                     <button
                       type="button"
                       onClick={() => handleRemovePrayer(index)}
-                      disabled={formData.prayers.length <= 1}
-                      className="flex-shrink-0 p-2 text-[#DC2626] hover:bg-red-50 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="flex-shrink-0 p-2 text-[#DC2626] hover:bg-red-50 rounded transition-colors"
                     >
                       <svg
                         width="16"
