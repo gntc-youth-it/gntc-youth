@@ -16,28 +16,28 @@ describe('GenderSelector', () => {
     expect(screen.getByText('자매')).toBeInTheDocument()
   })
 
-  it('형제 카드 클릭 시 onChange("male")를 호출한다', async () => {
+  it('형제 카드 클릭 시 onChange("MALE")를 호출한다', async () => {
     const user = userEvent.setup()
     render(<GenderSelector value={null} onChange={mockOnChange} />)
 
     await user.click(screen.getByTestId('gender-male'))
 
-    expect(mockOnChange).toHaveBeenCalledWith('male')
+    expect(mockOnChange).toHaveBeenCalledWith('MALE')
     expect(mockOnChange).toHaveBeenCalledTimes(1)
   })
 
-  it('자매 카드 클릭 시 onChange("female")를 호출한다', async () => {
+  it('자매 카드 클릭 시 onChange("FEMALE")를 호출한다', async () => {
     const user = userEvent.setup()
     render(<GenderSelector value={null} onChange={mockOnChange} />)
 
     await user.click(screen.getByTestId('gender-female'))
 
-    expect(mockOnChange).toHaveBeenCalledWith('female')
+    expect(mockOnChange).toHaveBeenCalledWith('FEMALE')
     expect(mockOnChange).toHaveBeenCalledTimes(1)
   })
 
-  it('male 선택 시 형제 카드에 활성 스타일이 적용된다', () => {
-    render(<GenderSelector value="male" onChange={mockOnChange} />)
+  it('MALE 선택 시 형제 카드에 활성 스타일이 적용된다', () => {
+    render(<GenderSelector value="MALE" onChange={mockOnChange} />)
 
     const maleCard = screen.getByTestId('gender-male')
     const femaleCard = screen.getByTestId('gender-female')
@@ -46,8 +46,8 @@ describe('GenderSelector', () => {
     expect(femaleCard.className).not.toContain('border-[#3B5BDB]')
   })
 
-  it('female 선택 시 자매 카드에 활성 스타일이 적용된다', () => {
-    render(<GenderSelector value="female" onChange={mockOnChange} />)
+  it('FEMALE 선택 시 자매 카드에 활성 스타일이 적용된다', () => {
+    render(<GenderSelector value="FEMALE" onChange={mockOnChange} />)
 
     const maleCard = screen.getByTestId('gender-male')
     const femaleCard = screen.getByTestId('gender-female')

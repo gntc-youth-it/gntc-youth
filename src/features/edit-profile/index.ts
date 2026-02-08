@@ -1,2 +1,2 @@
 export { EditProfileModal } from './ui'
-export type { ProfileFormData } from './model/types'
+export type { ProfileFormData, UserProfileResponse, UserProfileRequest } from './model/types'

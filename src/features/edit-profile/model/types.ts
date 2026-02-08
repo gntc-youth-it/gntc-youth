@@ -1,7 +1,25 @@
+export interface UserProfileResponse {
+  name: string
+  churchId: string | null
+  churchName: string | null
+  generation: number | null
+  phoneNumber: string | null
+  gender: string | null
+  genderDisplay: string | null
+}
+
+export interface UserProfileRequest {
+  name: string
+  churchId: string | null
+  generation: number | null
+  phoneNumber: string | null
+  gender: string | null
+}
+
 export interface ProfileFormData {
   name: string
-  temple: string
+  churchId: string
   generation: string
-  phone: string
-  gender: 'male' | 'female' | null
+  phoneNumber: string
+  gender: 'MALE' | 'FEMALE' | null
 }

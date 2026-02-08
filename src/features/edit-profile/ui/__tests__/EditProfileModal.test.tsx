@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { EditProfileModal } from '../EditProfileModal'
+import { getMyProfile, saveProfile } from '../../api'
 
 // Radix Dialog는 Portal을 사용하므로 모킹
 jest.mock('@radix-ui/react-dialog', () => {
@@ -11,11 +12,31 @@ jest.mock('@radix-ui/react-dialog', () => {
   }
 })
 
+jest.mock('../../api', () => ({
+  getMyProfile: jest.fn(),
+  saveProfile: jest.fn(),
+}))
+
+const mockGetMyProfile = getMyProfile as jest.MockedFunction<typeof getMyProfile>
+const mockSaveProfile = saveProfile as jest.MockedFunction<typeof saveProfile>
+
+const mockProfileResponse = {
+  name: '홍길동',
+  churchId: 'anyang',
+  churchName: '안양',
+  generation: 15,
+  phoneNumber: '010-1234-5678',
+  gender: 'MALE',
+  genderDisplay: '형제',
+}
+
 describe('EditProfileModal', () => {
   const mockOnOpenChange = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockGetMyProfile.mockResolvedValue(mockProfileResponse)
+    mockSaveProfile.mockResolvedValue(mockProfileResponse)
   })
 
   const renderModal = (open = true) => {
@@ -24,7 +45,7 @@ describe('EditProfileModal', () => {
     )
   }
 
-  it('open=true일 때 모달 제목을 렌더링한다', () => {
+  it('open=true일 때 모달 제목을 렌더링한다', async () => {
     renderModal()
 
     expect(screen.getByText('내 정보 수정')).toBeInTheDocument()
@@ -33,116 +54,146 @@ describe('EditProfileModal', () => {
     ).toBeInTheDocument()
   })
 
-  it('모든 폼 필드 라벨을 렌더링한다', () => {
+  it('모달 열림 시 프로필 데이터를 불러온다', async () => {
     renderModal()
 
+    await waitFor(() => {
+      expect(mockGetMyProfile).toHaveBeenCalledTimes(1)
+    })
+
+    expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('15')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('010-1234-5678')).toBeInTheDocument()
+  })
+
+  it('로딩 중일 때 로딩 표시를 보여준다', () => {
+    mockGetMyProfile.mockImplementation(() => new Promise(() => {}))
+    renderModal()
+
+    expect(screen.getByText('불러오는 중...')).toBeInTheDocument()
+  })
+
+  it('프로필 불러오기 실패 시 에러 메시지를 표시한다', async () => {
+    mockGetMyProfile.mockRejectedValue(new Error('Network error'))
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByText('프로필 정보를 불러오는데 실패했습니다.')).toBeInTheDocument()
+    })
+  })
+
+  it('모든 폼 필드 라벨을 렌더링한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
     expect(screen.getByText(/이름/)).toBeInTheDocument()
-    expect(screen.getByText(/성전/)).toBeInTheDocument()
+    expect(screen.getAllByText(/성전/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/기수/)).toBeInTheDocument()
     expect(screen.getByText('전화번호')).toBeInTheDocument()
     expect(screen.getByText(/성별/)).toBeInTheDocument()
   })
 
-  it('이름 입력 필드에 값을 입력할 수 있다', async () => {
+  it('이름 입력 필드에 값을 수정할 수 있다', async () => {
     const user = userEvent.setup()
     renderModal()
 
-    const nameInput = screen.getByPlaceholderText('이름을 입력하세요')
-    await user.type(nameInput, '홍길동')
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
 
-    expect(nameInput).toHaveValue('홍길동')
+    const nameInput = screen.getByDisplayValue('홍길동')
+    await user.clear(nameInput)
+    await user.type(nameInput, '김철수')
+
+    expect(nameInput).toHaveValue('김철수')
   })
 
-  it('성전 입력 필드에 값을 입력할 수 있다', async () => {
-    const user = userEvent.setup()
+  it('성별 선택 카드(형제/자매)를 렌더링한다', async () => {
     renderModal()
 
-    const templeInput = screen.getByPlaceholderText('성전을 입력하세요')
-    await user.type(templeInput, '서울 성전')
-
-    expect(templeInput).toHaveValue('서울 성전')
-  })
-
-  it('기수 입력 필드에 값을 입력할 수 있다', async () => {
-    const user = userEvent.setup()
-    renderModal()
-
-    const generationInput = screen.getByPlaceholderText('기수를 입력하세요')
-    await user.type(generationInput, '15기')
-
-    expect(generationInput).toHaveValue('15기')
-  })
-
-  it('전화번호 입력 필드에 값을 입력할 수 있다', async () => {
-    const user = userEvent.setup()
-    renderModal()
-
-    const phoneInput = screen.getByPlaceholderText('010-0000-0000')
-    await user.type(phoneInput, '010-1234-5678')
-
-    expect(phoneInput).toHaveValue('010-1234-5678')
-  })
-
-  it('성별 선택 카드(형제/자매)를 렌더링한다', () => {
-    renderModal()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
 
     expect(screen.getByText('형제')).toBeInTheDocument()
     expect(screen.getByText('자매')).toBeInTheDocument()
   })
 
-  it('성별 카드를 클릭하면 선택 상태가 변경된다', async () => {
+  it('저장하기 버튼 클릭 시 saveProfile API를 호출한다', async () => {
     const user = userEvent.setup()
     renderModal()
 
-    const maleCard = screen.getByTestId('gender-male')
-    await user.click(maleCard)
-
-    expect(maleCard.className).toContain('border-[#3B5BDB]')
-  })
-
-  it('취소 버튼 클릭 시 폼을 초기화하고 onOpenChange(false)를 호출한다', async () => {
-    const user = userEvent.setup()
-    renderModal()
-
-    // 입력값 채우기
-    const nameInput = screen.getByPlaceholderText('이름을 입력하세요')
-    await user.type(nameInput, '홍길동')
-    expect(nameInput).toHaveValue('홍길동')
-
-    // 취소 클릭
-    await user.click(screen.getByText('취소'))
-
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
-    // 폼이 초기화되어 입력값이 빈 문자열
-    expect(nameInput).toHaveValue('')
-  })
-
-  it('저장하기 버튼 클릭 시 폼 데이터를 console.log하고 모달을 닫는다', async () => {
-    const user = userEvent.setup()
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
-    renderModal()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
 
     await user.click(screen.getByText('저장하기'))
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '프로필 저장 데이터:',
-      expect.objectContaining({
-        name: '',
-        temple: '',
-        generation: '',
-        phone: '',
-        gender: null,
+    await waitFor(() => {
+      expect(mockSaveProfile).toHaveBeenCalledWith({
+        name: '홍길동',
+        churchId: 'anyang',
+        generation: 15,
+        phoneNumber: '010-1234-5678',
+        gender: 'MALE',
       })
-    )
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    })
 
-    consoleSpy.mockRestore()
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('취소 버튼과 저장하기 버튼을 렌더링한다', () => {
+  it('저장 실패 시 에러 메시지를 표시한다', async () => {
+    const user = userEvent.setup()
+    mockSaveProfile.mockRejectedValue(new Error('Save failed'))
     renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByText('저장하기'))
+
+    await waitFor(() => {
+      expect(screen.getByText('프로필 저장에 실패했습니다.')).toBeInTheDocument()
+    })
+
+    expect(mockOnOpenChange).not.toHaveBeenCalledWith(false)
+  })
+
+  it('취소 버튼 클릭 시 모달을 닫는다', async () => {
+    const user = userEvent.setup()
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByText('취소'))
+
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('취소 버튼과 저장하기 버튼을 렌더링한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
 
     expect(screen.getByText('취소')).toBeInTheDocument()
     expect(screen.getByText('저장하기')).toBeInTheDocument()
+  })
+
+  it('성전 선택 드롭다운을 렌더링한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('성전을 선택하세요')).toBeInTheDocument()
   })
 })
