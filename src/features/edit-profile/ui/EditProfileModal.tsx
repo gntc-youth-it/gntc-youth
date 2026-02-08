@@ -75,6 +75,17 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
   }
 
   const handleSave = async () => {
+    const missingFields: string[] = []
+    if (!formData.name.trim()) missingFields.push('이름')
+    if (!formData.churchId) missingFields.push('성전')
+    if (!formData.generation) missingFields.push('기수')
+    if (!formData.gender) missingFields.push('성별')
+
+    if (missingFields.length > 0) {
+      setError(`필수 항목을 입력해주세요: ${missingFields.join(', ')}`)
+      return
+    }
+
     setIsSaving(true)
     setError(null)
     try {
