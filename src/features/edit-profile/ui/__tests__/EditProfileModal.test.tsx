@@ -137,7 +137,7 @@ describe('EditProfileModal', () => {
         name: '홍길동',
         churchId: 'anyang',
         generation: 15,
-        phoneNumber: '01012345678',
+        phoneNumber: '010-1234-5678',
         gender: 'MALE',
       })
     })

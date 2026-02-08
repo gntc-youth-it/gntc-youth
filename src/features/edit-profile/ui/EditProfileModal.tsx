@@ -77,7 +77,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
         name: formData.name,
         churchId: formData.churchId || null,
         generation: formData.generation ? Number(formData.generation) : null,
-        phoneNumber: formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '') : null,
+        phoneNumber: formData.phoneNumber || null,
         gender: formData.gender,
       }
       await saveProfile(request)
