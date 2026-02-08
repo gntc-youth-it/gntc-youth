@@ -1,11 +1,18 @@
 import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
 import { CHURCHES, ChurchMedia, PrayerList } from '../../../entities/church'
+import { useAuth } from '../../../features/auth'
+import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { usePrayerAnimation } from '../model/usePrayerAnimation'
 
 export const PrayerSection = () => {
   const [activeTab, setActiveTab] = useState('anyang')
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { isVisible, resetAnimation } = usePrayerAnimation()
+  const { user } = useAuth()
+
+  const isMaster = user?.role === 'MASTER'
+  const activeChurch = CHURCHES.find((c) => c.id === activeTab) ?? null
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -62,9 +69,35 @@ export const PrayerSection = () => {
 
                 {/* Details */}
                 <div className="w-full max-w-3xl text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-8">
-                    {church.name}성전 청년봉사선교회
-                  </h3>
+                  <div className="flex items-center justify-center gap-3 mb-8">
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      {church.name}성전 청년봉사선교회
+                    </h3>
+                    {isMaster && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
+                            stroke="currentColor"
+                            strokeWidth="1.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        수정
+                      </button>
+                    )}
+                  </div>
 
                   <div className="text-left">
                     <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
@@ -76,6 +109,14 @@ export const PrayerSection = () => {
           ))}
         </Tabs>
       </div>
+
+      {isMaster && (
+        <EditSanctuaryModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          church={activeChurch}
+        />
+      )}
     </section>
   )
 }
