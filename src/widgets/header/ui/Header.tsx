@@ -52,9 +52,9 @@ export const Header = () => {
       }
     }
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('click', handleClickOutside)
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [isMenuOpen])
 
   useEffect(() => {

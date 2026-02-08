@@ -58,7 +58,7 @@ export const GenderSelector = ({ value, onChange }: GenderSelectorProps) => {
         </div>
         <span
           className={cn(
-            'text-base font-medium',
+            'text-base font-semibold',
             value === 'female' ? 'text-[#3B5BDB]' : 'text-gray-500'
           )}
         >

@@ -21,6 +21,9 @@ const initialFormData: ProfileFormData = {
   gender: null,
 }
 
+const inputClassName =
+  'w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+
 export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
 
@@ -34,6 +37,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
   }
 
   const handleCancel = () => {
+    setFormData(initialFormData)
     onOpenChange(false)
   }
 
@@ -62,7 +66,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="이름을 입력하세요"
-              className="w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClassName}
             />
           </div>
 
@@ -76,7 +80,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
               value={formData.temple}
               onChange={(e) => handleChange('temple', e.target.value)}
               placeholder="성전을 입력하세요"
-              className="w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClassName}
             />
           </div>
 
@@ -90,7 +94,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
               value={formData.generation}
               onChange={(e) => handleChange('generation', e.target.value)}
               placeholder="기수를 입력하세요"
-              className="w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClassName}
             />
           </div>
 
@@ -102,7 +106,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
               value={formData.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
               placeholder="010-0000-0000"
-              className="w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClassName}
             />
           </div>
 

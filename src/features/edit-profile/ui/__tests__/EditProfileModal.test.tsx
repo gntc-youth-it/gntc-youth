@@ -100,13 +100,21 @@ describe('EditProfileModal', () => {
     expect(maleCard.className).toContain('border-[#3B5BDB]')
   })
 
-  it('취소 버튼 클릭 시 onOpenChange(false)를 호출한다', async () => {
+  it('취소 버튼 클릭 시 폼을 초기화하고 onOpenChange(false)를 호출한다', async () => {
     const user = userEvent.setup()
     renderModal()
 
+    // 입력값 채우기
+    const nameInput = screen.getByPlaceholderText('이름을 입력하세요')
+    await user.type(nameInput, '홍길동')
+    expect(nameInput).toHaveValue('홍길동')
+
+    // 취소 클릭
     await user.click(screen.getByText('취소'))
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    // 폼이 초기화되어 입력값이 빈 문자열
+    expect(nameInput).toHaveValue('')
   })
 
   it('저장하기 버튼 클릭 시 폼 데이터를 console.log하고 모달을 닫는다', async () => {
