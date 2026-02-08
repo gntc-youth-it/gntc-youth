@@ -1,2 +1,8 @@
 export { cn } from './cn'
 export { getAccessToken, setAccessToken, removeAccessToken } from './token'
+export { compressImage } from './compressImage'
+export type { ImageCompressionOptions, CompressedImageResult } from './compressImage'
+export { compressVideo, isVideoCompressionSupported } from './compressVideo'
+export type { VideoCompressionOptions, CompressedVideoResult } from './compressVideo'
+export { uploadToS3 } from './uploadToS3'
+export type { UploadToS3Options } from './uploadToS3'
