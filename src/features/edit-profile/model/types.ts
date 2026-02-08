@@ -16,6 +16,15 @@ export interface UserProfileRequest {
   gender: string | null
 }
 
+export interface ChurchResponse {
+  code: string
+  name: string
+}
+
+export interface ChurchListResponse {
+  churches: ChurchResponse[]
+}
+
 export interface ProfileFormData {
   name: string
   churchId: string
