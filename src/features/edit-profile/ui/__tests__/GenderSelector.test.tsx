@@ -52,8 +52,8 @@ describe('GenderSelector', () => {
     const maleCard = screen.getByTestId('gender-male')
     const femaleCard = screen.getByTestId('gender-female')
 
-    expect(femaleCard.className).toContain('border-[#3B5BDB]')
-    expect(maleCard.className).not.toContain('border-[#3B5BDB]')
+    expect(femaleCard.className).toContain('border-[#E64980]')
+    expect(maleCard.className).not.toContain('border-[#E64980]')
   })
 
   it('아무것도 선택되지 않았을 때 두 카드 모두 비활성 스타일이다', () => {
