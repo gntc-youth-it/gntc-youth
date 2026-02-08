@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { EditProfileModal } from '../EditProfileModal'
-import { getMyProfile, saveProfile } from '../../api'
+import { getMyProfile, saveProfile, getChurches } from '../../api'
 
 // Radix Dialog는 Portal을 사용하므로 모킹
 jest.mock('@radix-ui/react-dialog', () => {
@@ -15,10 +15,12 @@ jest.mock('@radix-ui/react-dialog', () => {
 jest.mock('../../api', () => ({
   getMyProfile: jest.fn(),
   saveProfile: jest.fn(),
+  getChurches: jest.fn(),
 }))
 
 const mockGetMyProfile = getMyProfile as jest.MockedFunction<typeof getMyProfile>
 const mockSaveProfile = saveProfile as jest.MockedFunction<typeof saveProfile>
+const mockGetChurches = getChurches as jest.MockedFunction<typeof getChurches>
 
 const mockProfileResponse = {
   name: '홍길동',
@@ -33,10 +35,19 @@ const mockProfileResponse = {
 describe('EditProfileModal', () => {
   const mockOnOpenChange = jest.fn()
 
+  const mockChurchesResponse = {
+    churches: [
+      { code: 'anyang', name: '안양' },
+      { code: 'suwon', name: '수원' },
+      { code: 'gwangju', name: '광주' },
+    ],
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockGetMyProfile.mockResolvedValue(mockProfileResponse)
     mockSaveProfile.mockResolvedValue(mockProfileResponse)
+    mockGetChurches.mockResolvedValue(mockChurchesResponse)
   })
 
   const renderModal = (open = true) => {
