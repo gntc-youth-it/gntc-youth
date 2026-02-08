@@ -26,6 +26,13 @@ const initialFormData: ProfileFormData = {
 const inputClassName =
   'w-full h-11 px-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
 
+const formatPhoneNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
 export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(false)
@@ -41,7 +48,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
         name: profile.name || '',
         churchId: profile.churchId || '',
         generation: profile.generation != null ? String(profile.generation) : '',
-        phoneNumber: profile.phoneNumber || '',
+        phoneNumber: formatPhoneNumber(profile.phoneNumber || ''),
         gender: (profile.gender === 'MALE' || profile.gender === 'FEMALE') ? profile.gender : null,
       })
     } catch (error) {
@@ -70,7 +77,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
         name: formData.name,
         churchId: formData.churchId || null,
         generation: formData.generation ? Number(formData.generation) : null,
-        phoneNumber: formData.phoneNumber || null,
+        phoneNumber: formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '') : null,
         gender: formData.gender,
       }
       await saveProfile(request)
@@ -170,7 +177,7 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
                 <input
                   type="tel"
                   value={formData.phoneNumber}
-                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
+                  onChange={(e) => handleChange('phoneNumber', formatPhoneNumber(e.target.value))}
                   placeholder="010-0000-0000"
                   className={inputClassName}
                 />
