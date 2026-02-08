@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
-import { EditProfileModal, ProfileCompletionModal } from '../../../features/edit-profile'
+import { EditProfileModal, ProfileCompletionModal, PROFILE_COMPLETION_DISMISSED_KEY } from '../../../features/edit-profile'
 
 export const Header = () => {
   const navigate = useNavigate()
@@ -15,7 +15,7 @@ export const Header = () => {
   // 로그인 상태에서 교회 정보가 없으면 프로필 완성 모달 표시
   useEffect(() => {
     if (isLoggedIn && user && !user.churchId) {
-      const dismissed = sessionStorage.getItem('profileCompletionDismissed')
+      const dismissed = sessionStorage.getItem(PROFILE_COMPLETION_DISMISSED_KEY)
       if (!dismissed) {
         setIsCompletionModalOpen(true)
       }

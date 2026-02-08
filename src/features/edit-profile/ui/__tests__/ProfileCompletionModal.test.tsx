@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ProfileCompletionModal } from '../ProfileCompletionModal'
+import { PROFILE_COMPLETION_DISMISSED_KEY } from '../../model/constants'
 
 jest.mock('@radix-ui/react-dialog', () => {
   const actual = jest.requireActual('@radix-ui/react-dialog')
@@ -46,7 +47,7 @@ describe('ProfileCompletionModal', () => {
 
     await user.click(screen.getByText('다음에 할게요'))
 
-    expect(sessionStorage.getItem('profileCompletionDismissed')).toBe('true')
+    expect(sessionStorage.getItem(PROFILE_COMPLETION_DISMISSED_KEY)).toBe('true')
     expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false)
   })
 

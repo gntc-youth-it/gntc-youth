@@ -4,6 +4,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../shared/ui'
+import { PROFILE_COMPLETION_DISMISSED_KEY } from '../model/constants'
 
 interface ProfileCompletionModalProps {
   open: boolean
@@ -22,7 +23,7 @@ export const ProfileCompletionModal = ({
   }
 
   const handleDismiss = () => {
-    sessionStorage.setItem('profileCompletionDismissed', 'true')
+    sessionStorage.setItem(PROFILE_COMPLETION_DISMISSED_KEY, 'true')
     onOpenChange(false)
   }
 
