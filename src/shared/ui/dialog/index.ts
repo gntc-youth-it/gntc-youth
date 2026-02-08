@@ -1,4 +1,3 @@
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
 export {
   Dialog,
   DialogTrigger,
@@ -8,4 +7,4 @@ export {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from './dialog'
+} from './Dialog'
