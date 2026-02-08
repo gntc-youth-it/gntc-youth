@@ -3,7 +3,6 @@ export const ACCEPTED_IMAGE_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
-  'image/heic',
 ]
 
 export const ACCEPTED_VIDEO_TYPES = [

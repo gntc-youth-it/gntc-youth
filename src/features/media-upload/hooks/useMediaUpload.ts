@@ -9,7 +9,7 @@ import {
   IMAGE_COMPRESSION_OPTIONS,
   VIDEO_COMPRESSION_OPTIONS,
 } from '../model/constants'
-import type { MediaUploadState, MediaFileType } from '../model/types'
+import type { MediaUploadState, MediaFileType, FileValidationResult } from '../model/types'
 
 const initialState: MediaUploadState = {
   stage: 'idle',
@@ -28,7 +28,7 @@ function detectFileType(file: File): MediaFileType | null {
   return null
 }
 
-function validateFile(file: File): { valid: boolean; error?: string; fileType: MediaFileType | null } {
+function validateFile(file: File): FileValidationResult {
   const fileType = detectFileType(file)
 
   if (!fileType) {
@@ -162,7 +162,8 @@ export function useMediaUpload() {
       // 2. Presigned URL 요청
       setState((prev) => ({ ...prev, stage: 'uploading', uploadProgress: 0 }))
 
-      const fileName = file.name.replace(/\.[^/.]+$/, '') + (fileType === 'image' ? '.webp' : '.mp4')
+      const ext = contentType.split('/')[1] || (fileType === 'image' ? 'webp' : 'mp4')
+      const fileName = file.name.replace(/\.[^/.]+$/, '') + `.${ext}`
       const { uploadUrl, fileUrl } = await getPresignedUrl(fileName, contentType, compressedBlob.size)
 
       if (abortedRef.current) return
@@ -194,7 +195,7 @@ export function useMediaUpload() {
         error: message,
       }))
     }
-  }, [state])
+  }, [state.file, state.fileType])
 
   return {
     state,

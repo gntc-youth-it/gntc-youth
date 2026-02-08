@@ -26,5 +26,5 @@ export interface PresignedUrlResponse {
 export interface FileValidationResult {
   valid: boolean
   error?: string
-  fileType: MediaFileType | 'unknown'
+  fileType: MediaFileType | null
 }
