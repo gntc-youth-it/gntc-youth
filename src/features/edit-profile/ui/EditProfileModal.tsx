@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
 } from '../../../shared/ui'
+import { CHURCHES } from '../../../entities/church'
 import { GenderSelector } from './GenderSelector'
-import type { ProfileFormData } from '../model/types'
+import { getMyProfile, saveProfile } from '../api'
+import type { ProfileFormData, UserProfileRequest } from '../model/types'
 
 interface EditProfileModalProps {
   open: boolean
@@ -15,9 +17,9 @@ interface EditProfileModalProps {
 
 const initialFormData: ProfileFormData = {
   name: '',
-  temple: '',
+  churchId: '',
   generation: '',
-  phone: '',
+  phoneNumber: '',
   gender: null,
 }
 
@@ -26,18 +28,62 @@ const inputClassName =
 
 export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchProfile = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const profile = await getMyProfile()
+      setFormData({
+        name: profile.name || '',
+        churchId: profile.churchId || '',
+        generation: profile.generation != null ? String(profile.generation) : '',
+        phoneNumber: profile.phoneNumber || '',
+        gender: (profile.gender as 'MALE' | 'FEMALE') || null,
+      })
+    } catch {
+      setError('프로필 정보를 불러오는데 실패했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      fetchProfile()
+    }
+  }, [open, fetchProfile])
 
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    console.log('프로필 저장 데이터:', formData)
-    onOpenChange(false)
+  const handleSave = async () => {
+    setIsSaving(true)
+    setError(null)
+    try {
+      const request: UserProfileRequest = {
+        name: formData.name,
+        churchId: formData.churchId || null,
+        generation: formData.generation ? Number(formData.generation) : null,
+        phoneNumber: formData.phoneNumber || null,
+        gender: formData.gender,
+      }
+      await saveProfile(request)
+      onOpenChange(false)
+    } catch {
+      setError('프로필 저장에 실패했습니다.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancel = () => {
     setFormData(initialFormData)
+    setError(null)
     onOpenChange(false)
   }
 
@@ -54,93 +100,115 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
           </DialogDescription>
         </div>
 
-        {/* Form */}
-        <div className="flex flex-col gap-6 bg-gray-50 rounded-xl p-8">
-          {/* 이름 */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              이름 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="이름을 입력하세요"
-              className={inputClassName}
-            />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 text-gray-500">
+            불러오는 중...
           </div>
+        ) : (
+          <>
+            {/* Error */}
+            {error && (
+              <p className="text-sm text-red-500 bg-red-50 px-4 py-3 rounded-md">
+                {error}
+              </p>
+            )}
 
-          {/* 성전 */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              성전 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.temple}
-              onChange={(e) => handleChange('temple', e.target.value)}
-              placeholder="성전을 입력하세요"
-              className={inputClassName}
-            />
-          </div>
+            {/* Form */}
+            <div className="flex flex-col gap-6 bg-gray-50 rounded-xl p-8">
+              {/* 이름 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  이름 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  placeholder="이름을 입력하세요"
+                  className={inputClassName}
+                />
+              </div>
 
-          {/* 기수 */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              기수 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.generation}
-              onChange={(e) => handleChange('generation', e.target.value)}
-              placeholder="기수를 입력하세요"
-              className={inputClassName}
-            />
-          </div>
+              {/* 성전 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  성전 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.churchId}
+                  onChange={(e) => handleChange('churchId', e.target.value)}
+                  className={inputClassName}
+                >
+                  <option value="">성전을 선택하세요</option>
+                  {CHURCHES.map((church) => (
+                    <option key={church.id} value={church.id}>
+                      {church.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* 전화번호 */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">전화번호</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              placeholder="010-0000-0000"
-              className={inputClassName}
-            />
-          </div>
+              {/* 기수 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  기수 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.generation}
+                  onChange={(e) => handleChange('generation', e.target.value)}
+                  placeholder="기수를 입력하세요"
+                  className={inputClassName}
+                />
+              </div>
 
-          {/* 성별 */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              성별 <span className="text-red-500">*</span>
-            </label>
-            <GenderSelector
-              value={formData.gender}
-              onChange={(gender) =>
-                setFormData((prev) => ({ ...prev, gender }))
-              }
-            />
-          </div>
-        </div>
+              {/* 전화번호 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">전화번호</label>
+                <input
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
+                  placeholder="010-0000-0000"
+                  className={inputClassName}
+                />
+              </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-6 py-3 text-sm font-semibold text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-8 py-3 text-sm font-semibold text-white bg-[#3B5BDB] rounded-md hover:bg-[#364FC7] transition-colors"
-          >
-            저장하기
-          </button>
-        </div>
+              {/* 성별 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  성별 <span className="text-red-500">*</span>
+                </label>
+                <GenderSelector
+                  value={formData.gender}
+                  onChange={(gender) =>
+                    setFormData((prev) => ({ ...prev, gender }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="px-6 py-3 text-sm font-semibold text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-8 py-3 text-sm font-semibold text-white bg-[#3B5BDB] rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-50"
+              >
+                {isSaving ? '저장 중...' : '저장하기'}
+              </button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
