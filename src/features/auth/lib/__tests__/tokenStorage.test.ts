@@ -74,7 +74,28 @@ describe('tokenStorage', () => {
         email: undefined,
         role: undefined,
         provider: undefined,
+        churchId: undefined,
       })
+    })
+
+    it('church 클레임에서 churchId를 추출한다', () => {
+      const token = createTestJWT({
+        sub: '10',
+        name: '홍길동',
+        church: 'anyang',
+      })
+      localStorage.setItem('accessToken', token)
+
+      const result = getUserInfoFromToken()
+      expect(result?.churchId).toBe('anyang')
+    })
+
+    it('church 클레임이 없으면 churchId는 undefined이다', () => {
+      const token = createTestJWT({ sub: '1', name: 'Test' })
+      localStorage.setItem('accessToken', token)
+
+      const result = getUserInfoFromToken()
+      expect(result?.churchId).toBeUndefined()
     })
   })
 })

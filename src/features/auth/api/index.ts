@@ -1,1 +1,1 @@
-export { logoutApi, redirectToKakaoLogin, testLogin } from './authApi'
+export { logoutApi, redirectToKakaoLogin, testLogin, refreshTokenApi } from './authApi'

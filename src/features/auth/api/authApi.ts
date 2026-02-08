@@ -3,6 +3,46 @@ import { isLocalDevelopment } from '../../../shared/config'
 import { setAccessToken } from '../lib'
 import { normalizeTestLoginResponse, type TestLoginResponse } from '../model/types'
 
+export const refreshTokenApi = (() => {
+  let isRefreshing = false
+  let refreshPromise: Promise<string> | null = null
+
+  return async (): Promise<string> => {
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise
+    }
+
+    isRefreshing = true
+    refreshPromise = (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        })
+
+        if (!response.ok) {
+          throw new Error('Token refresh failed')
+        }
+
+        const data = await response.json()
+        const newAccessToken = data.access_token || data.accessToken
+
+        if (!newAccessToken) {
+          throw new Error('No access token in refresh response')
+        }
+
+        setAccessToken(newAccessToken)
+        return newAccessToken
+      } finally {
+        isRefreshing = false
+        refreshPromise = null
+      }
+    })()
+
+    return refreshPromise
+  }
+})()
+
 export const logoutApi = async (): Promise<void> => {
   await apiRequest('/api/auth/logout', {
     method: 'POST',
