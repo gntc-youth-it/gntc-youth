@@ -42,9 +42,10 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
         churchId: profile.churchId || '',
         generation: profile.generation != null ? String(profile.generation) : '',
         phoneNumber: profile.phoneNumber || '',
-        gender: (profile.gender as 'MALE' | 'FEMALE') || null,
+        gender: (profile.gender === 'MALE' || profile.gender === 'FEMALE') ? profile.gender : null,
       })
-    } catch {
+    } catch (error) {
+      console.error('프로필 정보를 불러오는데 실패했습니다:', error)
       setError('프로필 정보를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)
@@ -74,7 +75,8 @@ export const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) 
       }
       await saveProfile(request)
       onOpenChange(false)
-    } catch {
+    } catch (error) {
+      console.error('프로필 저장에 실패했습니다:', error)
       setError('프로필 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)
