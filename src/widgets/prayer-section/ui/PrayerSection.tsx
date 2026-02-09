@@ -1,22 +1,47 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
-import { CHURCHES, ChurchMedia, PrayerList } from '../../../entities/church'
+import { CHURCHES, ChurchMedia, PrayerList, useChurches } from '../../../entities/church'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { usePrayerAnimation } from '../model/usePrayerAnimation'
 
 export const PrayerSection = () => {
-  const [activeTab, setActiveTab] = useState('anyang')
+  const { churches, isLoading } = useChurches()
+  const [activeTab, setActiveTab] = useState('')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { isVisible, resetAnimation } = usePrayerAnimation()
   const { user } = useAuth()
 
   const isMaster = user?.role === 'MASTER'
-  const activeChurch = CHURCHES.find((c) => c.id === activeTab) ?? null
+
+  // CHURCHES 배열을 Map으로 변환하여 O(1) 조회
+  const churchDataMap = useMemo(
+    () => new Map(CHURCHES.map((c) => [c.id, c])),
+    []
+  )
+
+  // API에서 받은 첫 번째 성전을 기본 탭으로 설정
+  const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
+
+  // 선택된 성전의 상세 정보 (기도제목, 미디어 등)는 기존 CHURCHES 데이터에서 조회
+  const activeChurch = churchDataMap.get(effectiveTab) ?? null
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
     resetAnimation()
+  }
+
+  if (isLoading) {
+    return (
+      <section id="prayer" className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-pulse space-y-4">
+            <div className="h-10 bg-gray-200 rounded w-80 mx-auto" />
+            <div className="h-6 bg-gray-200 rounded w-96 mx-auto" />
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -31,15 +56,16 @@ export const PrayerSection = () => {
         </h2>
 
         <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-          34개 성전의 청년봉사선교회를 위한 기도제목입니다. 각 성전을 클릭하여 기도제목을 확인하세요.
+          {churches.length}개 성전의 청년봉사선교회를 위한 기도제목입니다. 각 성전을 클릭하여
+          기도제목을 확인하세요.
         </p>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={effectiveTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="flex flex-wrap justify-center gap-2 bg-white/90 border border-gray-200 rounded-xl p-4 shadow-lg backdrop-blur-sm mb-8 max-h-[200px] overflow-y-auto md:max-h-none md:overflow-visible">
-            {CHURCHES.map((church) => (
+            {churches.map((church) => (
               <TabsTrigger
-                key={church.id}
-                value={church.id}
+                key={church.code}
+                value={church.code}
                 className="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-900 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 {church.name}
@@ -47,66 +73,76 @@ export const PrayerSection = () => {
             ))}
           </TabsList>
 
-          {CHURCHES.map((church) => (
-            <TabsContent
-              key={church.id}
-              value={church.id}
-              className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
-            >
-              <div
-                className={`flex flex-col items-center gap-8 transition-all duration-500 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-                style={{ transitionDelay: '0.3s' }}
+          {churches.map((church) => {
+            const churchData = churchDataMap.get(church.code)
+
+            return (
+              <TabsContent
+                key={church.code}
+                value={church.code}
+                className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
               >
-                {/* Media */}
-                <div className="w-full flex justify-center">
-                  <ChurchMedia
-                    church={church}
-                    className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
-                  />
-                </div>
+                <div
+                  className={`flex flex-col items-center gap-8 transition-all duration-500 ${
+                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{ transitionDelay: '0.3s' }}
+                >
+                  {/* Media */}
+                  {churchData && (
+                    <div className="w-full flex justify-center">
+                      <ChurchMedia
+                        church={churchData}
+                        className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
+                      />
+                    </div>
+                  )}
 
-                {/* Details */}
-                <div className="w-full max-w-3xl text-center">
-                  <div className="flex items-center justify-center gap-3 mb-8">
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {church.name}성전 청년봉사선교회
-                    </h3>
-                    {isMaster && (
-                      <button
-                        type="button"
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
+                  {/* Details */}
+                  <div className="w-full max-w-3xl text-center">
+                    <div className="flex items-center justify-center gap-3 mb-8">
+                      <h3 className="text-2xl font-bold text-gray-900">
+                        {church.name}성전 청년봉사선교회
+                      </h3>
+                      {isMaster && (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditModalOpen(true)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
                         >
-                          <path
-                            d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
-                            stroke="currentColor"
-                            strokeWidth="1.2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        수정
-                      </button>
-                    )}
-                  </div>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
+                              stroke="currentColor"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          수정
+                        </button>
+                      )}
+                    </div>
 
-                  <div className="text-left">
-                    <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
-                    <PrayerList prayers={church.prayers} isVisible={isVisible} />
+                    <div className="text-left">
+                      <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
+                      {churchData ? (
+                        <PrayerList prayers={churchData.prayers} isVisible={isVisible} />
+                      ) : (
+                        <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-          ))}
+              </TabsContent>
+            )
+          })}
         </Tabs>
       </div>
 

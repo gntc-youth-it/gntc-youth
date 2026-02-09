@@ -1,3 +1,6 @@
 export type { Church } from './model'
+export type { ChurchItem } from './api'
 export { CHURCHES } from './model'
+export { useChurches } from './model'
+export { getChurches } from './api'
 export { ChurchMedia, PrayerList } from './ui'

@@ -69,10 +69,10 @@ describe('EditProfileModal', () => {
     renderModal()
 
     await waitFor(() => {
-      expect(mockGetMyProfile).toHaveBeenCalledTimes(1)
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
     })
 
-    expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    expect(mockGetMyProfile).toHaveBeenCalledTimes(1)
     expect(screen.getByDisplayValue('15')).toBeInTheDocument()
     expect(screen.getByDisplayValue('010-1234-5678')).toBeInTheDocument()
   })
