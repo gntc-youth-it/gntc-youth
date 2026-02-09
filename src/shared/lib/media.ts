@@ -1,3 +1,5 @@
+import { CDN_BASE_URL } from '../config'
+
 const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm']
 
 export const isVideoUrl = (url: string): boolean => {
@@ -7,4 +9,9 @@ export const isVideoUrl = (url: string): boolean => {
 
 export const getMediaType = (url: string): 'video' | 'image' => {
   return isVideoUrl(url) ? 'video' : 'image'
+}
+
+export const buildCdnUrl = (path: string): string => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${CDN_BASE_URL}${normalizedPath}`
 }
