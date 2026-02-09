@@ -43,17 +43,16 @@ export const useChurchInfo = (churchId: string) => {
 
         const data = await promise
         cache.set(churchId, data)
-        inflight.delete(churchId)
 
         if (!cancelled) {
           setChurchInfo(data)
         }
       } catch (err) {
-        inflight.delete(churchId)
         if (!cancelled) {
           setError(err as Error)
         }
       } finally {
+        inflight.delete(churchId)
         if (!cancelled) {
           setIsLoading(false)
         }
