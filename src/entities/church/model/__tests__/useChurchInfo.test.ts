@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { useChurchInfo } from '../useChurchInfo'
+import { useChurchInfo, clearChurchInfoCache } from '../useChurchInfo'
 
 const mockGetChurchInfo = jest.fn()
 
@@ -10,6 +10,7 @@ jest.mock('../../api', () => ({
 describe('useChurchInfo', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    clearChurchInfoCache()
   })
 
   it('churchId가 빈 문자열이면 API를 호출하지 않는다', () => {

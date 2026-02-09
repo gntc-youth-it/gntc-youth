@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../shared/ui'
-import { useChurchInfo } from '../../../entities/church'
+import { useChurchInfo, clearChurchInfoCache } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
 import { getMediaType, buildCdnUrl } from '../../../shared/lib'
 import type { SanctuaryFormData } from '../model/types'
@@ -25,7 +25,7 @@ export const EditSanctuaryModal = ({
   churchId,
   churchName,
 }: EditSanctuaryModalProps) => {
-  const { churchInfo } = useChurchInfo(churchId)
+  const { churchInfo } = useChurchInfo(open ? churchId : '')
   const [formData, setFormData] = useState<SanctuaryFormData>({
     prayers: [],
     media: '',
@@ -85,6 +85,7 @@ export const EditSanctuaryModal = ({
     try {
       // TODO: API 연동
       console.log('Save sanctuary data:', { churchId, ...formData, prayers: nonEmptyPrayers })
+      clearChurchInfoCache(churchId)
       onOpenChange(false)
     } catch (err) {
       console.error('성전 정보 저장에 실패했습니다:', err)

@@ -72,27 +72,9 @@ export const apiRequest = async <T>(
   })
 
   if (response.status === 401) {
+    let newAccessToken: string
     try {
-      const newAccessToken = await refreshAccessToken()
-
-      const retryHeaders = {
-        ...headers,
-        Authorization: `Bearer ${newAccessToken}`,
-      }
-
-      const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: retryHeaders,
-        credentials: 'include',
-      })
-
-      if (!retryResponse.ok) {
-        const errorData = await retryResponse.json().catch(() => ({}))
-        const message = errorData.message || `API Error: ${retryResponse.status}`
-        throw new HttpError(retryResponse.status, message, errorData.code)
-      }
-
-      return retryResponse.json()
+      newAccessToken = await refreshAccessToken()
     } catch {
       removeAccessToken()
 
@@ -104,6 +86,25 @@ export const apiRequest = async <T>(
       window.location.href = '/login'
       throw new HttpError(401, 'Session expired. Please login again.')
     }
+
+    const retryHeaders = {
+      ...headers,
+      Authorization: `Bearer ${newAccessToken}`,
+    }
+
+    const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: retryHeaders,
+      credentials: 'include',
+    })
+
+    if (!retryResponse.ok) {
+      const errorData = await retryResponse.json().catch(() => ({}))
+      const message = errorData.message || `API Error: ${retryResponse.status}`
+      throw new HttpError(retryResponse.status, message, errorData.code)
+    }
+
+    return retryResponse.json()
   }
 
   if (!response.ok) {
