@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
 import { CHURCHES, ChurchMedia, PrayerList, useChurches } from '../../../entities/church'
 import { useAuth } from '../../../features/auth'
@@ -14,11 +14,17 @@ export const PrayerSection = () => {
 
   const isMaster = user?.role === 'MASTER'
 
+  // CHURCHES 배열을 Map으로 변환하여 O(1) 조회
+  const churchDataMap = useMemo(
+    () => new Map(CHURCHES.map((c) => [c.id, c])),
+    []
+  )
+
   // API에서 받은 첫 번째 성전을 기본 탭으로 설정
   const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
 
   // 선택된 성전의 상세 정보 (기도제목, 미디어 등)는 기존 CHURCHES 데이터에서 조회
-  const activeChurch = CHURCHES.find((c) => c.id === effectiveTab) ?? null
+  const activeChurch = churchDataMap.get(effectiveTab) ?? null
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -68,7 +74,7 @@ export const PrayerSection = () => {
           </TabsList>
 
           {churches.map((church) => {
-            const churchData = CHURCHES.find((c) => c.id === church.code)
+            const churchData = churchDataMap.get(church.code)
 
             return (
               <TabsContent

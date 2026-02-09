@@ -12,13 +12,14 @@ describe('useChurches', () => {
     jest.clearAllMocks()
   })
 
-  it('초기 상태는 로딩 중이고 빈 배열이다', () => {
+  it('초기 상태는 로딩 중이고 빈 배열이며 에러가 없다', () => {
     mockGetChurches.mockReturnValue(new Promise(() => {}))
 
     const { result } = renderHook(() => useChurches())
 
     expect(result.current.isLoading).toBe(true)
     expect(result.current.churches).toEqual([])
+    expect(result.current.error).toBeNull()
   })
 
   it('교회 목록을 성공적으로 가져온다', async () => {
@@ -38,7 +39,7 @@ describe('useChurches', () => {
     expect(result.current.churches).toEqual(mockChurches)
   })
 
-  it('API 실패 시 빈 배열을 유지하고 로딩을 해제한다', async () => {
+  it('API 실패 시 빈 배열을 유지하고 에러를 설정한다', async () => {
     mockGetChurches.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => useChurches())
@@ -48,5 +49,7 @@ describe('useChurches', () => {
     })
 
     expect(result.current.churches).toEqual([])
+    expect(result.current.error).toBeInstanceOf(Error)
+    expect(result.current.error?.message).toBe('Network error')
   })
 })

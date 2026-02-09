@@ -5,6 +5,7 @@ import { getChurches } from '../api'
 export const useChurches = () => {
   const [churches, setChurches] = useState<ChurchItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -15,8 +16,10 @@ export const useChurches = () => {
         if (!cancelled) {
           setChurches(data)
         }
-      } catch {
-        // 실패 시 빈 배열 유지
+      } catch (err) {
+        if (!cancelled) {
+          setError(err as Error)
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false)
@@ -31,5 +34,5 @@ export const useChurches = () => {
     }
   }, [])
 
-  return { churches, isLoading }
+  return { churches, isLoading, error }
 }
