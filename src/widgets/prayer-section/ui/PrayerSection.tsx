@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
 import { ChurchMedia, PrayerList, useChurches, useChurchInfo } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
-import { CDN_BASE_URL } from '../../../shared/config'
+import { buildCdnUrl } from '../../../shared/lib'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { usePrayerAnimation } from '../model/usePrayerAnimation'
@@ -23,7 +23,7 @@ const ChurchTabContent = ({
   const { churchInfo, isLoading } = useChurchInfo(churchCode)
 
   const mediaUrl = churchInfo?.groupPhotoPath
-    ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
+    ? buildCdnUrl(churchInfo.groupPhotoPath)
     : null
 
   const prayers = [...(churchInfo?.prayerTopics ?? [])]
