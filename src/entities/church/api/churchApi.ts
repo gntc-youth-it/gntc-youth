@@ -9,7 +9,23 @@ interface ChurchListResponse {
   churches: ChurchItem[]
 }
 
+export interface PrayerTopicResponse {
+  id: number
+  content: string
+  sortOrder: number
+}
+
+export interface ChurchInfoResponse {
+  churchId: string
+  groupPhotoPath: string | null
+  prayerTopics: PrayerTopicResponse[]
+}
+
 export const getChurches = async (): Promise<ChurchItem[]> => {
   const response = await apiRequest<ChurchListResponse>('/churches')
   return response.churches
+}
+
+export const getChurchInfo = async (churchId: string): Promise<ChurchInfoResponse> => {
+  return apiRequest<ChurchInfoResponse>(`/churches/${churchId}/info`)
 }

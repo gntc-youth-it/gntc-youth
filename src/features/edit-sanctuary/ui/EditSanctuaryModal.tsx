@@ -5,13 +5,23 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../shared/ui'
-import type { Church } from '../../../entities/church/model/types'
+import { useChurchInfo } from '../../../entities/church'
+import type { PrayerTopicResponse } from '../../../entities/church'
+import { CDN_BASE_URL } from '../../../shared/config'
 import type { SanctuaryFormData } from '../model/types'
+
+const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm']
+
+const detectMediaType = (url: string): 'video' | 'image' => {
+  const pathname = url.split('?')[0].toLowerCase()
+  return VIDEO_EXTENSIONS.some((ext) => pathname.endsWith(ext)) ? 'video' : 'image'
+}
 
 interface EditSanctuaryModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  church: Church | null
+  churchId: string
+  churchName: string
 }
 
 const MAX_PRAYERS = 5
@@ -19,8 +29,10 @@ const MAX_PRAYERS = 5
 export const EditSanctuaryModal = ({
   open,
   onOpenChange,
-  church,
+  churchId,
+  churchName,
 }: EditSanctuaryModalProps) => {
+  const { churchInfo } = useChurchInfo(churchId)
   const [formData, setFormData] = useState<SanctuaryFormData>({
     prayers: [],
     media: '',
@@ -31,15 +43,20 @@ export const EditSanctuaryModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (open && church) {
+    if (open && churchInfo) {
+      const mediaUrl = churchInfo.groupPhotoPath
+        ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
+        : ''
       setFormData({
-        prayers: [...church.prayers],
-        media: church.media,
-        mediaType: church.mediaType,
+        prayers: churchInfo.prayerTopics
+          .sort((a: PrayerTopicResponse, b: PrayerTopicResponse) => a.sortOrder - b.sortOrder)
+          .map((t: PrayerTopicResponse) => t.content),
+        media: mediaUrl,
+        mediaType: mediaUrl ? detectMediaType(mediaUrl) : 'image',
       })
       setError(null)
     }
-  }, [open, church])
+  }, [open, churchInfo])
 
   const handlePrayerChange = (index: number, value: string) => {
     setFormData((prev) => ({
@@ -74,7 +91,7 @@ export const EditSanctuaryModal = ({
     setError(null)
     try {
       // TODO: API 연동
-      console.log('Save sanctuary data:', { churchId: church?.id, ...formData, prayers: nonEmptyPrayers })
+      console.log('Save sanctuary data:', { churchId, ...formData, prayers: nonEmptyPrayers })
       onOpenChange(false)
     } catch (err) {
       console.error('성전 정보 저장에 실패했습니다:', err)
@@ -106,7 +123,7 @@ export const EditSanctuaryModal = ({
     onOpenChange(false)
   }
 
-  if (!church) return null
+  if (!churchId) return null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

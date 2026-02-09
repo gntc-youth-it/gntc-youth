@@ -1,2 +1,2 @@
-export { getChurches } from './churchApi'
-export type { ChurchItem } from './churchApi'
+export { getChurches, getChurchInfo } from './churchApi'
+export type { ChurchItem, ChurchInfoResponse, PrayerTopicResponse } from './churchApi'
