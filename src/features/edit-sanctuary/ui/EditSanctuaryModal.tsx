@@ -7,8 +7,7 @@ import {
 } from '../../../shared/ui'
 import { useChurchInfo } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
-import { CDN_BASE_URL } from '../../../shared/config'
-import { getMediaType } from '../../../shared/lib'
+import { getMediaType, buildCdnUrl } from '../../../shared/lib'
 import type { SanctuaryFormData } from '../model/types'
 
 interface EditSanctuaryModalProps {
@@ -39,7 +38,7 @@ export const EditSanctuaryModal = ({
   useEffect(() => {
     if (open && churchInfo) {
       const mediaUrl = churchInfo.groupPhotoPath
-        ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
+        ? buildCdnUrl(churchInfo.groupPhotoPath)
         : ''
       setFormData({
         prayers: [...churchInfo.prayerTopics]
