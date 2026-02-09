@@ -1,16 +1,17 @@
-import { Church } from '../model'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
+import { isVideoUrl } from '../../../shared/lib'
 
 interface ChurchMediaProps {
-  church: Church
+  mediaUrl: string
+  churchName: string
   className?: string
 }
 
-export const ChurchMedia = ({ church, className }: ChurchMediaProps) => {
-  if (church.mediaType === 'video') {
+export const ChurchMedia = ({ mediaUrl, churchName, className }: ChurchMediaProps) => {
+  if (isVideoUrl(mediaUrl)) {
     return (
       <video
-        src={church.media}
+        src={mediaUrl}
         autoPlay
         loop
         muted
@@ -20,7 +21,7 @@ export const ChurchMedia = ({ church, className }: ChurchMediaProps) => {
           const videoElement = e.target as HTMLVideoElement
           const fallbackImg = document.createElement('img')
           fallbackImg.src = FALLBACK_IMAGE_URL
-          fallbackImg.alt = `${church.name}성전 청년봉사선교회`
+          fallbackImg.alt = `${churchName}성전 청년봉사선교회`
           fallbackImg.className = className || ''
           videoElement.parentNode?.replaceChild(fallbackImg, videoElement)
         }}
@@ -30,8 +31,8 @@ export const ChurchMedia = ({ church, className }: ChurchMediaProps) => {
 
   return (
     <img
-      src={church.media}
-      alt={`${church.name}성전 청년봉사선교회`}
+      src={mediaUrl}
+      alt={`${churchName}성전 청년봉사선교회`}
       className={className}
     />
   )

@@ -1,9 +1,105 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
-import { CHURCHES, ChurchMedia, PrayerList, useChurches } from '../../../entities/church'
+import { ChurchMedia, PrayerList, useChurches, useChurchInfo } from '../../../entities/church'
+import type { PrayerTopicResponse } from '../../../entities/church'
+import { CDN_BASE_URL } from '../../../shared/config'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { usePrayerAnimation } from '../model/usePrayerAnimation'
+
+const ChurchTabContent = ({
+  churchCode,
+  churchName,
+  isVisible,
+  isMaster,
+  onEditClick,
+}: {
+  churchCode: string
+  churchName: string
+  isVisible: boolean
+  isMaster: boolean
+  onEditClick: () => void
+}) => {
+  const { churchInfo, isLoading } = useChurchInfo(churchCode)
+
+  const mediaUrl = churchInfo?.groupPhotoPath
+    ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
+    : null
+
+  const prayers = [...(churchInfo?.prayerTopics ?? [])]
+    .sort((a: PrayerTopicResponse, b: PrayerTopicResponse) => a.sortOrder - b.sortOrder)
+    .map((t: PrayerTopicResponse) => t.content)
+
+  return (
+    <div
+      className={`flex flex-col items-center gap-8 transition-all duration-500 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+      style={{ transitionDelay: '0.3s' }}
+    >
+      {isLoading ? (
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-xl h-64 bg-gray-200 rounded-2xl animate-pulse" />
+        </div>
+      ) : (
+        <>
+          {/* Media */}
+          {mediaUrl && (
+            <div className="w-full flex justify-center">
+              <ChurchMedia
+                mediaUrl={mediaUrl}
+                churchName={churchName}
+                className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
+              />
+            </div>
+          )}
+
+          {/* Details */}
+          <div className="w-full max-w-3xl text-center">
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {churchName}성전 청년봉사선교회
+              </h3>
+              {isMaster && (
+                <button
+                  type="button"
+                  onClick={onEditClick}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  수정
+                </button>
+              )}
+            </div>
+
+            <div className="text-left">
+              <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
+              {prayers.length > 0 ? (
+                <PrayerList prayers={prayers} isVisible={isVisible} />
+              ) : (
+                <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export const PrayerSection = () => {
   const { churches, isLoading } = useChurches()
@@ -14,17 +110,10 @@ export const PrayerSection = () => {
 
   const isMaster = user?.role === 'MASTER'
 
-  // CHURCHES 배열을 Map으로 변환하여 O(1) 조회
-  const churchDataMap = useMemo(
-    () => new Map(CHURCHES.map((c) => [c.id, c])),
-    []
-  )
-
   // API에서 받은 첫 번째 성전을 기본 탭으로 설정
   const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
 
-  // 선택된 성전의 상세 정보 (기도제목, 미디어 등)는 기존 CHURCHES 데이터에서 조회
-  const activeChurch = churchDataMap.get(effectiveTab) ?? null
+  const activeChurchName = churches.find((c) => c.code === effectiveTab)?.name ?? ''
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -73,76 +162,21 @@ export const PrayerSection = () => {
             ))}
           </TabsList>
 
-          {churches.map((church) => {
-            const churchData = churchDataMap.get(church.code)
-
-            return (
-              <TabsContent
-                key={church.code}
-                value={church.code}
-                className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
-              >
-                <div
-                  className={`flex flex-col items-center gap-8 transition-all duration-500 ${
-                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                  }`}
-                  style={{ transitionDelay: '0.3s' }}
-                >
-                  {/* Media */}
-                  {churchData && (
-                    <div className="w-full flex justify-center">
-                      <ChurchMedia
-                        church={churchData}
-                        className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {/* Details */}
-                  <div className="w-full max-w-3xl text-center">
-                    <div className="flex items-center justify-center gap-3 mb-8">
-                      <h3 className="text-2xl font-bold text-gray-900">
-                        {church.name}성전 청년봉사선교회
-                      </h3>
-                      {isMaster && (
-                        <button
-                          type="button"
-                          onClick={() => setIsEditModalOpen(true)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 14 14"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
-                              stroke="currentColor"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          수정
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="text-left">
-                      <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
-                      {churchData ? (
-                        <PrayerList prayers={churchData.prayers} isVisible={isVisible} />
-                      ) : (
-                        <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            )
-          })}
+          {churches.map((church) => (
+            <TabsContent
+              key={church.code}
+              value={church.code}
+              className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
+            >
+              <ChurchTabContent
+                churchCode={church.code}
+                churchName={church.name}
+                isVisible={isVisible}
+                isMaster={isMaster}
+                onEditClick={() => setIsEditModalOpen(true)}
+              />
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
 
@@ -150,7 +184,8 @@ export const PrayerSection = () => {
         <EditSanctuaryModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
-          church={activeChurch}
+          churchId={effectiveTab}
+          churchName={activeChurchName}
         />
       )}
     </section>
