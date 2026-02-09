@@ -1,11 +1,5 @@
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-
-const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm']
-
-const isVideoUrl = (url: string): boolean => {
-  const pathname = url.split('?')[0].toLowerCase()
-  return VIDEO_EXTENSIONS.some((ext) => pathname.endsWith(ext))
-}
+import { isVideoUrl } from '../../../shared/lib'
 
 interface ChurchMediaProps {
   mediaUrl: string

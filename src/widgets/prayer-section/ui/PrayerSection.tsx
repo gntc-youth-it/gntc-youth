@@ -26,9 +26,9 @@ const ChurchTabContent = ({
     ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
     : null
 
-  const prayers = churchInfo?.prayerTopics
-    ?.sort((a: PrayerTopicResponse, b: PrayerTopicResponse) => a.sortOrder - b.sortOrder)
-    .map((t: PrayerTopicResponse) => t.content) ?? []
+  const prayers = [...(churchInfo?.prayerTopics ?? [])]
+    .sort((a: PrayerTopicResponse, b: PrayerTopicResponse) => a.sortOrder - b.sortOrder)
+    .map((t: PrayerTopicResponse) => t.content)
 
   return (
     <div

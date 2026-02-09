@@ -8,14 +8,8 @@ import {
 import { useChurchInfo } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
 import { CDN_BASE_URL } from '../../../shared/config'
+import { getMediaType } from '../../../shared/lib'
 import type { SanctuaryFormData } from '../model/types'
-
-const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm']
-
-const detectMediaType = (url: string): 'video' | 'image' => {
-  const pathname = url.split('?')[0].toLowerCase()
-  return VIDEO_EXTENSIONS.some((ext) => pathname.endsWith(ext)) ? 'video' : 'image'
-}
 
 interface EditSanctuaryModalProps {
   open: boolean
@@ -48,11 +42,11 @@ export const EditSanctuaryModal = ({
         ? `${CDN_BASE_URL}${churchInfo.groupPhotoPath}`
         : ''
       setFormData({
-        prayers: churchInfo.prayerTopics
+        prayers: [...churchInfo.prayerTopics]
           .sort((a: PrayerTopicResponse, b: PrayerTopicResponse) => a.sortOrder - b.sortOrder)
           .map((t: PrayerTopicResponse) => t.content),
         media: mediaUrl,
-        mediaType: mediaUrl ? detectMediaType(mediaUrl) : 'image',
+        mediaType: mediaUrl ? getMediaType(mediaUrl) : 'image',
       })
       setError(null)
     }

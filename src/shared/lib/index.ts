@@ -7,3 +7,4 @@ export type { VideoCompressionOptions, CompressedVideoResult } from './compressV
 export { uploadToS3 } from './uploadToS3'
 export type { UploadToS3Options } from './uploadToS3'
 export { useCountUp } from './useCountUp'
+export { isVideoUrl, getMediaType } from './media'
