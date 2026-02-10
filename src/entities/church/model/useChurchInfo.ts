@@ -25,6 +25,9 @@ export const useChurchInfo = (churchId: string) => {
   useEffect(() => {
     if (!churchId) return
 
+    setError(null)
+    setNotFound(false)
+
     if (cache.has(churchId)) {
       setChurchInfo(cache.get(churchId)!)
       setIsLoading(false)
@@ -33,8 +36,6 @@ export const useChurchInfo = (churchId: string) => {
 
     let cancelled = false
     setIsLoading(true)
-    setError(null)
-    setNotFound(false)
 
     const fetchChurchInfo = async () => {
       try {
