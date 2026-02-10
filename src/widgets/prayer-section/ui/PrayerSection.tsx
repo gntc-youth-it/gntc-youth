@@ -256,8 +256,7 @@ export const PrayerSection = () => {
   const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
 
   const isMaster = user?.role === 'MASTER'
-  const isLeaderOfChurch = user?.role === 'LEADER' && user?.churchId === effectiveTab
-  const canEdit = isMaster || isLeaderOfChurch
+  const canEditActiveChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === effectiveTab)
 
   const activeChurchName = churches.find((c) => c.code === effectiveTab)?.name ?? ''
 
@@ -308,25 +307,28 @@ export const PrayerSection = () => {
             ))}
           </TabsList>
 
-          {churches.map((church) => (
-            <TabsContent
-              key={church.code}
-              value={church.code}
-              className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
-            >
-              <ChurchTabContent
-                churchCode={church.code}
-                churchName={church.name}
-                isVisible={isVisible}
-                canEdit={canEdit}
-                onEditClick={() => setIsEditModalOpen(true)}
-              />
-            </TabsContent>
-          ))}
+          {churches.map((church) => {
+            const canEditThisChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === church.code)
+            return (
+              <TabsContent
+                key={church.code}
+                value={church.code}
+                className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
+              >
+                <ChurchTabContent
+                  churchCode={church.code}
+                  churchName={church.name}
+                  isVisible={isVisible}
+                  canEdit={canEditThisChurch}
+                  onEditClick={() => setIsEditModalOpen(true)}
+                />
+              </TabsContent>
+            )
+          })}
         </Tabs>
       </div>
 
-      {canEdit && (
+      {canEditActiveChurch && (
         <EditSanctuaryModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
