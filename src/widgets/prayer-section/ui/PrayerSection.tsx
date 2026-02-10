@@ -11,13 +11,13 @@ const ChurchTabContent = ({
   churchCode,
   churchName,
   isVisible,
-  isMaster,
+  canEdit,
   onEditClick,
 }: {
   churchCode: string
   churchName: string
   isVisible: boolean
-  isMaster: boolean
+  canEdit: boolean
   onEditClick: () => void
 }) => {
   const { churchInfo, isLoading, notFound } = useChurchInfo(churchCode)
@@ -92,7 +92,7 @@ const ChurchTabContent = ({
           </p>
         </div>
 
-        {isMaster && (
+        {canEdit && (
           <button
             type="button"
             onClick={onEditClick}
@@ -150,7 +150,7 @@ const ChurchTabContent = ({
             <h3 className="text-2xl font-bold text-gray-900">
               {churchName}성전 청년봉사선교회
             </h3>
-            {isMaster && (
+            {canEdit && (
               <button
                 type="button"
                 onClick={onEditClick}
@@ -175,7 +175,7 @@ const ChurchTabContent = ({
               </button>
             )}
           </div>
-          {isMaster && (
+          {canEdit && (
             <button
               type="button"
               onClick={onEditClick}
@@ -252,10 +252,11 @@ export const PrayerSection = () => {
   const { isVisible, resetAnimation } = usePrayerAnimation()
   const { user } = useAuth()
 
-  const isMaster = user?.role === 'MASTER'
-
   // API에서 받은 첫 번째 성전을 기본 탭으로 설정
   const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
+
+  const isMaster = user?.role === 'MASTER'
+  const canEditActiveChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === effectiveTab)
 
   const activeChurchName = churches.find((c) => c.code === effectiveTab)?.name ?? ''
 
@@ -306,25 +307,28 @@ export const PrayerSection = () => {
             ))}
           </TabsList>
 
-          {churches.map((church) => (
-            <TabsContent
-              key={church.code}
-              value={church.code}
-              className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
-            >
-              <ChurchTabContent
-                churchCode={church.code}
-                churchName={church.name}
-                isVisible={isVisible}
-                isMaster={isMaster}
-                onEditClick={() => setIsEditModalOpen(true)}
-              />
-            </TabsContent>
-          ))}
+          {churches.map((church) => {
+            const canEditThisChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === church.code)
+            return (
+              <TabsContent
+                key={church.code}
+                value={church.code}
+                className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg"
+              >
+                <ChurchTabContent
+                  churchCode={church.code}
+                  churchName={church.name}
+                  isVisible={isVisible}
+                  canEdit={canEditThisChurch}
+                  onEditClick={() => setIsEditModalOpen(true)}
+                />
+              </TabsContent>
+            )
+          })}
         </Tabs>
       </div>
 
-      {isMaster && (
+      {canEditActiveChurch && (
         <EditSanctuaryModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
