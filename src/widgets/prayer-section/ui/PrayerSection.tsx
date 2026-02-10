@@ -253,9 +253,8 @@ export const PrayerSection = () => {
   const { user } = useAuth()
 
   // 로그인한 사용자의 성전을 기본 탭으로, 없으면 첫 번째 성전
-  const defaultTab = user?.churchId && churches.some((c) => c.code === user.churchId)
-    ? user.churchId
-    : churches.length > 0 ? churches[0].code : ''
+  const userChurch = churches.find((c) => c.code === user?.churchId)
+  const defaultTab = userChurch?.code ?? churches[0]?.code ?? ''
   const effectiveTab = activeTab || defaultTab
 
   const isMaster = user?.role === 'MASTER'
