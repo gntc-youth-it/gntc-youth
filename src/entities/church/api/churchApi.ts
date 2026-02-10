@@ -17,6 +17,7 @@ export interface PrayerTopicResponse {
 
 export interface ChurchInfoResponse {
   churchId: string
+  groupPhotoFileId: number | null
   groupPhotoPath: string | null
   prayerTopics: PrayerTopicResponse[]
 }
