@@ -56,63 +56,59 @@ const ChurchTabContent = ({
         </div>
       )}
 
-      {!isLoading && (
-        <>
-          {/* 미디어: 로딩 중에는 h-0으로 숨기되 DOM에는 존재하여 로드 진행 */}
-          {mediaUrl && (
-            <div className={`w-full flex justify-center ${showSkeleton ? 'h-0 overflow-hidden' : ''}`}>
-              <ChurchMedia
-                mediaUrl={mediaUrl}
-                churchName={churchName}
-                className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
-                onLoad={handleMediaLoad}
-              />
-            </div>
-          )}
+      {/* 미디어: 로딩 중에는 h-0으로 숨기되 DOM에는 존재하여 로드 진행 */}
+      {!isLoading && mediaUrl && (
+        <div className={`w-full flex justify-center ${showSkeleton ? 'h-0 overflow-hidden' : ''}`}>
+          <ChurchMedia
+            mediaUrl={mediaUrl}
+            churchName={churchName}
+            className="w-full max-w-xl rounded-2xl shadow-xl object-cover"
+            onLoad={handleMediaLoad}
+          />
+        </div>
+      )}
 
-          {!showSkeleton && (
-            <div className="w-full max-w-3xl text-center">
-              <div className="flex items-center justify-center gap-3 mb-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {churchName}성전 청년봉사선교회
-                </h3>
-                {isMaster && (
-                  <button
-                    type="button"
-                    onClick={onEditClick}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    수정
-                  </button>
-                )}
-              </div>
+      {!showSkeleton && (
+        <div className="w-full max-w-3xl text-center">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <h3 className="text-2xl font-bold text-gray-900">
+              {churchName}성전 청년봉사선교회
+            </h3>
+            {isMaster && (
+              <button
+                type="button"
+                onClick={onEditClick}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                수정
+              </button>
+            )}
+          </div>
 
-              <div className="text-left">
-                <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
-                {prayers.length > 0 ? (
-                  <PrayerList prayers={prayers} isVisible={isVisible} />
-                ) : (
-                  <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
-                )}
-              </div>
-            </div>
-          )}
-        </>
+          <div className="text-left">
+            <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
+            {prayers.length > 0 ? (
+              <PrayerList prayers={prayers} isVisible={isVisible} />
+            ) : (
+              <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

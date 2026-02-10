@@ -38,7 +38,13 @@ export const ChurchMedia = ({ mediaUrl, churchName, className, onLoad }: ChurchM
       alt={`${churchName}성전 청년봉사선교회`}
       className={className}
       onLoad={onLoad}
-      onError={onLoad}
+      onError={(e) => {
+        onLoad?.()
+        const imgElement = e.target as HTMLImageElement
+        if (imgElement.src !== FALLBACK_IMAGE_URL) {
+          imgElement.src = FALLBACK_IMAGE_URL
+        }
+      }}
     />
   )
 }
