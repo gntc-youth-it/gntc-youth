@@ -252,8 +252,10 @@ export const PrayerSection = () => {
   const { isVisible, resetAnimation } = usePrayerAnimation()
   const { user } = useAuth()
 
-  // API에서 받은 첫 번째 성전을 기본 탭으로 설정
-  const effectiveTab = activeTab || (churches.length > 0 ? churches[0].code : '')
+  // 로그인한 사용자의 성전을 기본 탭으로, 없으면 첫 번째 성전
+  const userChurch = churches.find((c) => c.code === user?.churchId)
+  const defaultTab = userChurch?.code ?? churches[0]?.code ?? ''
+  const effectiveTab = activeTab || defaultTab
 
   const isMaster = user?.role === 'MASTER'
   const canEditActiveChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === effectiveTab)

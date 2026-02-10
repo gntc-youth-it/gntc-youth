@@ -117,20 +117,20 @@ describe('PrayerSection 수정 버튼 권한', () => {
     expect(screen.getByText('성전 정보 수정하기')).toBeInTheDocument()
   })
 
-  it('LEADER이지만 다른 성전 소속이면 수정 버튼이 노출되지 않는다', () => {
+  it('LEADER이지만 목록에 없는 성전 소속이면 수정 버튼이 노출되지 않는다', () => {
     mockUseAuth.mockReturnValue({
       ...baseAuthValue,
-      user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'SUWON' },
+      user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'BUSAN' },
     })
 
     render(<PrayerSection />)
 
-    // 기본 탭이 ANYANG인데 사용자는 SUWON 소속
+    // BUSAN은 목록에 없으므로 기본 탭은 ANYANG → 수정 버튼 없음
     expect(screen.queryByText('수정')).not.toBeInTheDocument()
     expect(screen.queryByText('성전 정보 수정하기')).not.toBeInTheDocument()
   })
 
-  it('LEADER가 자기 성전 탭으로 전환하면 수정 버튼이 노출된다', async () => {
+  it('LEADER는 본인 성전이 자동 선택되어 수정 버튼이 노출된다', async () => {
     const user = userEvent.setup()
     mockUseAuth.mockReturnValue({
       ...baseAuthValue,
@@ -139,15 +139,15 @@ describe('PrayerSection 수정 버튼 권한', () => {
 
     render(<PrayerSection />)
 
-    // 초기: ANYANG 탭 → 수정 버튼 없음
-    expect(screen.queryByText('수정')).not.toBeInTheDocument()
-
-    // SUWON 탭 클릭
-    await user.click(screen.getByText('수원'))
-
-    // 자기 성전 탭이므로 수정 버튼 노출
+    // 초기: 본인 성전(SUWON)이 자동 선택되어 수정 버튼 노출
     expect(screen.getByText('수정')).toBeInTheDocument()
     expect(screen.getByText('성전 정보 수정하기')).toBeInTheDocument()
+
+    // ANYANG 탭 클릭 → 다른 성전이므로 수정 버튼 사라짐
+    await user.click(screen.getByText('안양'))
+
+    expect(screen.queryByText('수정')).not.toBeInTheDocument()
+    expect(screen.queryByText('성전 정보 수정하기')).not.toBeInTheDocument()
   })
 
   it('LEADER가 다른 성전 탭으로 전환하면 수정 버튼이 사라진다', async () => {
@@ -246,10 +246,10 @@ describe('PrayerSection 수정 버튼 권한', () => {
       expect(screen.getByText('성전 정보 작성하기')).toBeInTheDocument()
     })
 
-    it('다른 성전 LEADER는 404 상태에서 작성 버튼이 노출되지 않는다', () => {
+    it('목록에 없는 성전 LEADER는 404 상태에서 작성 버튼이 노출되지 않는다', () => {
       mockUseAuth.mockReturnValue({
         ...baseAuthValue,
-        user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'SUWON' },
+        user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'BUSAN' },
       })
 
       render(<PrayerSection />)
