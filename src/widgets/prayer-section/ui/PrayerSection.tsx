@@ -20,7 +20,7 @@ const ChurchTabContent = ({
   isMaster: boolean
   onEditClick: () => void
 }) => {
-  const { churchInfo, isLoading } = useChurchInfo(churchCode)
+  const { churchInfo, isLoading, notFound } = useChurchInfo(churchCode)
   const [mediaLoaded, setMediaLoaded] = useState(false)
 
   const mediaUrl = churchInfo?.groupPhotoPath
@@ -42,6 +42,82 @@ const ChurchTabContent = ({
 
   // 미디어가 없으면 API 로딩만 대기, 미디어가 있으면 둘 다 대기
   const showSkeleton = isLoading || (mediaUrl != null && !mediaLoaded)
+
+  if (!isLoading && notFound) {
+    return (
+      <div
+        className={`flex flex-col items-center gap-8 py-8 transition-all duration-500 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+        style={{ transitionDelay: '0.3s' }}
+      >
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 2H6v7l6 3.5L18 9V2Z"
+            stroke="#D0D0D0"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M6 2H2v20h20V2h-4"
+            stroke="#D0D0D0"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 12.5V22"
+            stroke="#D0D0D0"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
+
+        <div className="flex flex-col items-center gap-3">
+          <h3 className="text-2xl font-bold text-gray-900">
+            성전 정보를 찾을 수 없어요
+          </h3>
+          <p className="text-base text-gray-500">
+            아직 등록된 성전 정보가 없습니다
+          </p>
+          <p className="text-sm text-gray-400">
+            성전 정보를 작성하여 교인들과 공유해보세요
+          </p>
+        </div>
+
+        {isMaster && (
+          <button
+            type="button"
+            onClick={onEditClick}
+            className="flex items-center gap-2 px-7 py-3.5 bg-blue-700 text-white text-sm font-semibold rounded-md hover:bg-blue-800 transition-colors"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            성전 정보 작성하기
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -129,7 +205,38 @@ const ChurchTabContent = ({
             {prayers.length > 0 ? (
               <PrayerList prayers={prayers} isVisible={isVisible} />
             ) : (
-              <p className="text-gray-500">기도제목이 아직 등록되지 않았습니다.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"
+                      stroke="#93C5FD"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
+                      stroke="#93C5FD"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-sm">
+                  아직 등록된 기도제목이 없습니다
+                </p>
+                <p className="text-gray-400 text-xs mt-1">
+                  기도제목이 등록되면 이곳에 표시됩니다
+                </p>
+              </div>
             )}
           </div>
         </div>
