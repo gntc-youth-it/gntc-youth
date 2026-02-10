@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useChurchInfo, clearChurchInfoCache } from '../useChurchInfo'
+import { HttpError } from '../../../../shared/api'
 
 const mockGetChurchInfo = jest.fn()
 
@@ -57,6 +58,49 @@ describe('useChurchInfo', () => {
     expect(result.current.churchInfo).toBeNull()
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.error?.message).toBe('Network error')
+    expect(result.current.notFound).toBe(false)
+  })
+
+  it('404 응답 시 notFound를 설정하고 error는 설정하지 않는다', async () => {
+    mockGetChurchInfo.mockRejectedValue(new HttpError(404, 'Not Found'))
+
+    const { result } = renderHook(() => useChurchInfo('anyang'))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.notFound).toBe(true)
+    expect(result.current.churchInfo).toBeNull()
+    expect(result.current.error).toBeNull()
+  })
+
+  it('404 이후 다른 성전으로 변경하면 notFound가 초기화된다', async () => {
+    mockGetChurchInfo.mockRejectedValueOnce(new HttpError(404, 'Not Found'))
+
+    const { result, rerender } = renderHook(
+      ({ churchId }) => useChurchInfo(churchId),
+      { initialProps: { churchId: 'anyang' } }
+    )
+
+    await waitFor(() => {
+      expect(result.current.notFound).toBe(true)
+    })
+
+    const mockResponse = {
+      churchId: 'suwon',
+      groupPhotoPath: '/uploads/suwon.jpg',
+      prayerTopics: [{ id: 1, content: '수원 기도제목', sortOrder: 1 }],
+    }
+    mockGetChurchInfo.mockResolvedValueOnce(mockResponse)
+    rerender({ churchId: 'suwon' })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.notFound).toBe(false)
+    expect(result.current.churchInfo).toEqual(mockResponse)
   })
 
   it('churchId가 변경되면 새로운 데이터를 가져온다', async () => {

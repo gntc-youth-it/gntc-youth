@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { ChurchInfoResponse } from '../api'
 import { getChurchInfo } from '../api'
+import { HttpError } from '../../../shared/api'
 
 const cache = new Map<string, ChurchInfoResponse>()
 const inflight = new Map<string, Promise<ChurchInfoResponse>>()
@@ -19,6 +20,7 @@ export const useChurchInfo = (churchId: string) => {
   )
   const [isLoading, setIsLoading] = useState(!cache.has(churchId) && !!churchId)
   const [error, setError] = useState<Error | null>(null)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (!churchId) return
@@ -32,6 +34,7 @@ export const useChurchInfo = (churchId: string) => {
     let cancelled = false
     setIsLoading(true)
     setError(null)
+    setNotFound(false)
 
     const fetchChurchInfo = async () => {
       try {
@@ -49,7 +52,11 @@ export const useChurchInfo = (churchId: string) => {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err as Error)
+          if (err instanceof HttpError && err.status === 404) {
+            setNotFound(true)
+          } else {
+            setError(err as Error)
+          }
         }
       } finally {
         inflight.delete(churchId)
@@ -66,5 +73,5 @@ export const useChurchInfo = (churchId: string) => {
     }
   }, [churchId])
 
-  return { churchInfo, isLoading, error }
+  return { churchInfo, isLoading, error, notFound }
 }
