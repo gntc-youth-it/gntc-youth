@@ -44,6 +44,7 @@ const mockUpdateChurchInfo = updateChurchInfo as jest.MockedFunction<typeof upda
 
 const mockChurchInfo = {
   churchId: 'ANYANG',
+  groupPhotoFileId: 7,
   groupPhotoPath: '/photos/anyang.jpg',
   prayerTopics: [
     { id: 1, content: '교회의 부흥을 위해', sortOrder: 1 },
@@ -135,11 +136,7 @@ describe('EditSanctuaryModal', () => {
       const user = userEvent.setup()
       renderModal()
 
-      // 첫 번째 삭제 버튼 클릭
-      const deleteButtons = screen.getAllByRole('button').filter(
-        (btn) => btn.querySelector('polyline[points="3 6 5 6 21 6"]')
-      )
-      await user.click(deleteButtons[0])
+      await user.click(screen.getByLabelText('기도제목 1 삭제'))
 
       expect(screen.queryByDisplayValue('교회의 부흥을 위해')).not.toBeInTheDocument()
       expect(screen.getByDisplayValue('청년들의 신앙 성장을 위해')).toBeInTheDocument()
@@ -167,7 +164,7 @@ describe('EditSanctuaryModal', () => {
   })
 
   describe('저장 - 기도제목만', () => {
-    it('기도제목만 수정하고 저장하면 fileId를 null로 전송한다', async () => {
+    it('기도제목만 수정하고 저장하면 기존 groupPhotoFileId를 유지한다', async () => {
       const user = userEvent.setup()
       renderModal()
 
@@ -175,7 +172,7 @@ describe('EditSanctuaryModal', () => {
 
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
-          groupPhotoFileId: null,
+          groupPhotoFileId: 7,
           prayerTopics: [
             { content: '교회의 부흥을 위해', sortOrder: 1 },
             { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -185,6 +182,30 @@ describe('EditSanctuaryModal', () => {
 
       expect(mockClearCache).toHaveBeenCalledWith('ANYANG')
       expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    })
+
+    it('기존 사진이 없는 성전에서 기도제목만 저장하면 null로 전송한다', async () => {
+      mockUseChurchInfo.mockReturnValue({
+        churchInfo: {
+          ...mockChurchInfo,
+          groupPhotoFileId: null,
+          groupPhotoPath: null,
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useChurchInfo>)
+
+      const user = userEvent.setup()
+      renderModal()
+
+      await user.click(screen.getByText('저장하기'))
+
+      await waitFor(() => {
+        expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
+          groupPhotoFileId: null,
+          prayerTopics: expect.any(Array),
+        })
+      })
     })
 
     it('빈 기도제목만 있으면 에러를 표시한다', async () => {
@@ -222,9 +243,9 @@ describe('EditSanctuaryModal', () => {
       mockUploadToS3.mockResolvedValue(undefined)
 
       const user = userEvent.setup()
-      renderModal()
+      const { container } = renderModal()
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['image-data'], 'photo.jpg', { type: 'image/jpeg' })
       fireEvent.change(fileInput, { target: { files: [file] } })
 
@@ -279,9 +300,9 @@ describe('EditSanctuaryModal', () => {
       mockUploadToS3.mockResolvedValue(undefined)
 
       const user = userEvent.setup()
-      renderModal()
+      const { container } = renderModal()
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['video-data'], 'clip.mp4', { type: 'video/mp4' })
       fireEvent.change(fileInput, { target: { files: [file] } })
 
@@ -320,9 +341,9 @@ describe('EditSanctuaryModal', () => {
       mockUploadToS3.mockResolvedValue(undefined)
 
       const user = userEvent.setup()
-      renderModal()
+      const { container } = renderModal()
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['video-data'], 'clip.mov', { type: 'video/quicktime' })
       fireEvent.change(fileInput, { target: { files: [file] } })
 
@@ -362,9 +383,9 @@ describe('EditSanctuaryModal', () => {
       mockCompressImage.mockRejectedValue(new Error('이미지 압축에 실패했습니다.'))
 
       const user = userEvent.setup()
-      renderModal()
+      const { container } = renderModal()
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['img'], 'photo.jpg', { type: 'image/jpeg' })
       fireEvent.change(fileInput, { target: { files: [file] } })
 
@@ -388,9 +409,9 @@ describe('EditSanctuaryModal', () => {
       mockUploadToS3.mockRejectedValue(new Error('네트워크 오류로 업로드에 실패했습니다.'))
 
       const user = userEvent.setup()
-      renderModal()
+      const { container } = renderModal()
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['img'], 'photo.jpg', { type: 'image/jpeg' })
       fireEvent.change(fileInput, { target: { files: [file] } })
 

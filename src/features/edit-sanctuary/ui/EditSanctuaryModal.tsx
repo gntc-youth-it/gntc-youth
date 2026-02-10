@@ -8,6 +8,7 @@ import {
 import { useChurchInfo, clearChurchInfoCache } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
 import { getMediaType, buildCdnUrl, compressImage, compressVideo, isVideoCompressionSupported, uploadToS3 } from '../../../shared/lib'
+import { IMAGE_COMPRESSION_OPTIONS, VIDEO_COMPRESSION_OPTIONS } from '../../media-upload/model/constants'
 import { getFilePresignedUrl, updateChurchInfo } from '../api'
 import type { SanctuaryFormData } from '../model/types'
 
@@ -35,6 +36,7 @@ export const EditSanctuaryModal = ({
     mediaType: 'image',
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [originalFileId, setOriginalFileId] = useState<number | null>(null)
   const [saveStage, setSaveStage] = useState<SaveStage>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +56,7 @@ export const EditSanctuaryModal = ({
         media: mediaUrl,
         mediaType: mediaUrl ? getMediaType(mediaUrl) : 'image',
       })
+      setOriginalFileId(churchInfo.groupPhotoFileId ?? null)
       setSelectedFile(null)
       setSaveStage('idle')
       setUploadProgress(0)
@@ -91,76 +94,58 @@ export const EditSanctuaryModal = ({
     }
 
     setError(null)
-    let fileId: number | null = null
+    let fileId: number | null = originalFileId
 
     try {
       // 1. 새 파일이 선택된 경우 압축 + 업로드
       if (selectedFile) {
         const isImage = selectedFile.type.startsWith('image/')
 
+        let uploadBlob: Blob
+        let uploadContentType: string
+
         if (isImage) {
           // 이미지 압축
           setSaveStage('compressing')
-          const compressed = await compressImage(selectedFile, {
-            maxWidth: 1920,
-            maxHeight: 1920,
-            quality: 0.8,
-          })
-
-          // Presigned URL 발급
-          setSaveStage('uploading')
-          setUploadProgress(0)
-          const ext = compressed.blob.type.split('/')[1] || 'webp'
-          const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + `.${ext}`
-          const { fileId: uploadedFileId, presignedUrl } = await getFilePresignedUrl(
-            filename,
-            compressed.blob.type,
-            compressed.blob.size
-          )
-
-          // S3 업로드
-          await uploadToS3(presignedUrl, compressed.blob, compressed.blob.type, {
-            onProgress: setUploadProgress,
-          })
-
-          fileId = uploadedFileId
+          const compressed = await compressImage(selectedFile, IMAGE_COMPRESSION_OPTIONS)
+          uploadBlob = compressed.blob
+          uploadContentType = compressed.blob.type
         } else {
           // 영상 압축
           setSaveStage('compressing')
           setUploadProgress(0)
 
-          let videoBlob: Blob
-          let videoContentType: string
-
           if (isVideoCompressionSupported()) {
             const result = await compressVideo(selectedFile, {
-              crf: 28,
-              maxWidth: 1280,
+              ...VIDEO_COMPRESSION_OPTIONS,
               onProgress: setUploadProgress,
             })
-            videoBlob = result.blob
-            videoContentType = 'video/mp4'
+            uploadBlob = result.blob
+            uploadContentType = 'video/mp4'
           } else {
-            videoBlob = selectedFile
-            videoContentType = selectedFile.type
+            uploadBlob = selectedFile
+            uploadContentType = selectedFile.type
           }
-
-          // Presigned URL 발급 + S3 업로드
-          setSaveStage('uploading')
-          setUploadProgress(0)
-          const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + '.mp4'
-          const { fileId: uploadedFileId, presignedUrl } = await getFilePresignedUrl(
-            filename,
-            videoContentType,
-            videoBlob.size
-          )
-
-          await uploadToS3(presignedUrl, videoBlob, videoContentType, {
-            onProgress: setUploadProgress,
-          })
-
-          fileId = uploadedFileId
         }
+
+        // Presigned URL 발급 + S3 업로드
+        setSaveStage('uploading')
+        setUploadProgress(0)
+        const ext = isImage
+          ? (uploadContentType.split('/')[1] || 'webp')
+          : 'mp4'
+        const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + `.${ext}`
+        const { fileId: uploadedFileId, presignedUrl } = await getFilePresignedUrl(
+          filename,
+          uploadContentType,
+          uploadBlob.size
+        )
+
+        await uploadToS3(presignedUrl, uploadBlob, uploadContentType, {
+          onProgress: setUploadProgress,
+        })
+
+        fileId = uploadedFileId
       }
 
       // 2. 성전 정보 저장
@@ -306,7 +291,9 @@ export const EditSanctuaryModal = ({
                       </div>
                       <span className="text-white text-xs font-medium">
                         {saveStage === 'compressing'
-                          ? `압축 중... ${uploadProgress}%`
+                          ? (selectedFile?.type.startsWith('video/')
+                            ? `영상 압축 중... ${uploadProgress}%`
+                            : '이미지 압축 중...')
                           : `업로드 중... ${uploadProgress}%`}
                       </span>
                     </div>
@@ -439,6 +426,7 @@ export const EditSanctuaryModal = ({
                       type="button"
                       onClick={() => handleRemovePrayer(index)}
                       disabled={isSaving}
+                      aria-label={`기도제목 ${index + 1} 삭제`}
                       className="flex-shrink-0 p-2 text-[#DC2626] hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                     >
                       <svg
