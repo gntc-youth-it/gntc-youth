@@ -7,7 +7,8 @@ import {
 } from '../../../shared/ui'
 import { useChurchInfo, clearChurchInfoCache } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
-import { getMediaType, buildCdnUrl } from '../../../shared/lib'
+import { getMediaType, buildCdnUrl, compressImage, compressVideo, isVideoCompressionSupported, uploadToS3 } from '../../../shared/lib'
+import { getFilePresignedUrl, updateChurchInfo } from '../api'
 import type { SanctuaryFormData } from '../model/types'
 
 interface EditSanctuaryModalProps {
@@ -17,7 +18,9 @@ interface EditSanctuaryModalProps {
   churchName: string
 }
 
-const MAX_PRAYERS = 5
+const MAX_PRAYERS = 10
+
+type SaveStage = 'idle' | 'compressing' | 'uploading' | 'saving'
 
 export const EditSanctuaryModal = ({
   open,
@@ -31,9 +34,13 @@ export const EditSanctuaryModal = ({
     media: '',
     mediaType: 'image',
   })
-  const [isSaving, setIsSaving] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [saveStage, setSaveStage] = useState<SaveStage>('idle')
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isSaving = saveStage !== 'idle'
 
   useEffect(() => {
     if (open && churchInfo) {
@@ -47,6 +54,9 @@ export const EditSanctuaryModal = ({
         media: mediaUrl,
         mediaType: mediaUrl ? getMediaType(mediaUrl) : 'image',
       })
+      setSelectedFile(null)
+      setSaveStage('idle')
+      setUploadProgress(0)
       setError(null)
     }
   }, [open, churchInfo])
@@ -80,18 +90,98 @@ export const EditSanctuaryModal = ({
       return
     }
 
-    setIsSaving(true)
     setError(null)
+    let fileId: number | null = null
+
     try {
-      // TODO: API 연동
-      console.log('Save sanctuary data:', { churchId, ...formData, prayers: nonEmptyPrayers })
+      // 1. 새 파일이 선택된 경우 압축 + 업로드
+      if (selectedFile) {
+        const isImage = selectedFile.type.startsWith('image/')
+
+        if (isImage) {
+          // 이미지 압축
+          setSaveStage('compressing')
+          const compressed = await compressImage(selectedFile, {
+            maxWidth: 1920,
+            maxHeight: 1920,
+            quality: 0.8,
+          })
+
+          // Presigned URL 발급
+          setSaveStage('uploading')
+          setUploadProgress(0)
+          const ext = compressed.blob.type.split('/')[1] || 'webp'
+          const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + `.${ext}`
+          const { fileId: uploadedFileId, presignedUrl } = await getFilePresignedUrl(
+            filename,
+            compressed.blob.type,
+            compressed.blob.size
+          )
+
+          // S3 업로드
+          await uploadToS3(presignedUrl, compressed.blob, compressed.blob.type, {
+            onProgress: setUploadProgress,
+          })
+
+          fileId = uploadedFileId
+        } else {
+          // 영상 압축
+          setSaveStage('compressing')
+          setUploadProgress(0)
+
+          let videoBlob: Blob
+          let videoContentType: string
+
+          if (isVideoCompressionSupported()) {
+            const result = await compressVideo(selectedFile, {
+              crf: 28,
+              maxWidth: 1280,
+              onProgress: setUploadProgress,
+            })
+            videoBlob = result.blob
+            videoContentType = 'video/mp4'
+          } else {
+            videoBlob = selectedFile
+            videoContentType = selectedFile.type
+          }
+
+          // Presigned URL 발급 + S3 업로드
+          setSaveStage('uploading')
+          setUploadProgress(0)
+          const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + '.mp4'
+          const { fileId: uploadedFileId, presignedUrl } = await getFilePresignedUrl(
+            filename,
+            videoContentType,
+            videoBlob.size
+          )
+
+          await uploadToS3(presignedUrl, videoBlob, videoContentType, {
+            onProgress: setUploadProgress,
+          })
+
+          fileId = uploadedFileId
+        }
+      }
+
+      // 2. 성전 정보 저장
+      setSaveStage('saving')
+      await updateChurchInfo(churchId, {
+        groupPhotoFileId: fileId,
+        prayerTopics: nonEmptyPrayers.map((content, index) => ({
+          content,
+          sortOrder: index + 1,
+        })),
+      })
+
       clearChurchInfoCache(churchId)
       onOpenChange(false)
     } catch (err) {
       console.error('성전 정보 저장에 실패했습니다:', err)
-      setError('성전 정보 저장에 실패했습니다.')
+      const message = err instanceof Error ? err.message : '성전 정보 저장에 실패했습니다.'
+      setError(message)
     } finally {
-      setIsSaving(false)
+      setSaveStage('idle')
+      setUploadProgress(0)
     }
   }
 
@@ -105,16 +195,36 @@ export const EditSanctuaryModal = ({
 
     const isVideo = file.type.startsWith('video/')
     const previewUrl = URL.createObjectURL(file)
+    setSelectedFile(file)
     setFormData((prev) => ({
       ...prev,
       media: previewUrl,
       mediaType: isVideo ? 'video' : 'image',
     }))
+    setError(null)
+
+    // input 초기화 (같은 파일 재선택 가능하도록)
+    event.target.value = ''
   }
 
   const handleCancel = () => {
     setError(null)
     onOpenChange(false)
+  }
+
+  const getSaveButtonText = () => {
+    switch (saveStage) {
+      case 'compressing':
+        return selectedFile?.type.startsWith('video/')
+          ? `영상 압축 중... ${uploadProgress}%`
+          : '이미지 압축 중...'
+      case 'uploading':
+        return `업로드 중... ${uploadProgress}%`
+      case 'saving':
+        return '저장 중...'
+      default:
+        return '저장하기'
+    }
   }
 
   if (!churchId) return null
@@ -154,7 +264,7 @@ export const EditSanctuaryModal = ({
               {/* Current Media */}
               <div className="flex flex-col gap-3">
                 <span className="text-sm text-[#666666]">현재 파일</span>
-                <div className="w-full h-[200px] bg-[#E5E7EB] rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="w-full h-[200px] bg-[#E5E7EB] rounded-lg flex items-center justify-center overflow-hidden relative">
                   {formData.media ? (
                     formData.mediaType === 'video' ? (
                       <video
@@ -185,6 +295,22 @@ export const EditSanctuaryModal = ({
                       <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                     </svg>
                   )}
+                  {/* 업로드 진행 오버레이 */}
+                  {(saveStage === 'compressing' || saveStage === 'uploading') && (
+                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                      <div className="w-3/4 h-2 bg-white/30 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-white rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-white text-xs font-medium">
+                        {saveStage === 'compressing'
+                          ? `압축 중... ${uploadProgress}%`
+                          : `업로드 중... ${uploadProgress}%`}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -200,7 +326,8 @@ export const EditSanctuaryModal = ({
                 <button
                   type="button"
                   onClick={handleUploadClick}
-                  className="w-full h-11 flex items-center justify-center gap-2 bg-white border border-[#3B5BDB] rounded-md text-sm font-medium text-[#3B5BDB] hover:bg-blue-50 transition-colors"
+                  disabled={isSaving}
+                  className="w-full h-11 flex items-center justify-center gap-2 bg-white border border-[#3B5BDB] rounded-md text-sm font-medium text-[#3B5BDB] hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg
                     width="16"
@@ -270,7 +397,7 @@ export const EditSanctuaryModal = ({
                 <button
                   type="button"
                   onClick={handleAddPrayer}
-                  disabled={formData.prayers.length >= MAX_PRAYERS}
+                  disabled={formData.prayers.length >= MAX_PRAYERS || isSaving}
                   className="flex items-center gap-1.5 px-3 py-2 bg-[#3B5BDB] text-white text-[13px] font-medium rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg
@@ -305,12 +432,14 @@ export const EditSanctuaryModal = ({
                       value={prayer}
                       onChange={(e) => handlePrayerChange(index, e.target.value)}
                       placeholder="기도제목을 입력하세요"
-                      className="flex-1 h-10 px-3 bg-[#F8F9FA] rounded-md text-sm text-[#333333] outline-none focus:ring-2 focus:ring-[#3B5BDB] focus:bg-white transition-all"
+                      disabled={isSaving}
+                      className="flex-1 h-10 px-3 bg-[#F8F9FA] rounded-md text-sm text-[#333333] outline-none focus:ring-2 focus:ring-[#3B5BDB] focus:bg-white transition-all disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemovePrayer(index)}
-                      className="flex-shrink-0 p-2 text-[#DC2626] hover:bg-red-50 rounded transition-colors"
+                      disabled={isSaving}
+                      className="flex-shrink-0 p-2 text-[#DC2626] hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                     >
                       <svg
                         width="16"
@@ -353,7 +482,7 @@ export const EditSanctuaryModal = ({
             disabled={isSaving}
             className="px-8 py-3 text-sm font-semibold text-white bg-[#3B5BDB] rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-50"
           >
-            {isSaving ? '저장 중...' : '저장하기'}
+            {getSaveButtonText()}
           </button>
         </div>
       </DialogContent>
