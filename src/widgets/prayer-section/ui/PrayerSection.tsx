@@ -78,7 +78,7 @@ const ChurchTabContent = ({
               <button
                 type="button"
                 onClick={onEditClick}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
               >
                 <svg
                   width="14"
@@ -99,6 +99,30 @@ const ChurchTabContent = ({
               </button>
             )}
           </div>
+          {isMaster && (
+            <button
+              type="button"
+              onClick={onEditClick}
+              className="w-full flex md:hidden items-center justify-center gap-2 py-3 mb-8 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 hover:text-gray-800 transition-colors"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10.08 1.92a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L5.4 12.6l-3.8.76.76-3.8L10.08 1.92Z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              성전 정보 수정하기
+            </button>
+          )}
 
           <div className="text-left">
             <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
