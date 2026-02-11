@@ -8,9 +8,11 @@ export const Header = () => {
   const { user, isLoggedIn, logout, refreshUser } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const adminMenuRef = useRef<HTMLLIElement>(null)
 
   // 로그인 상태에서 교회 정보가 없으면 프로필 완성 모달 표시
   useEffect(() => {
@@ -42,6 +44,12 @@ export const Header = () => {
     setIsSidebarOpen(false)
   }
 
+  const handleHomeNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    navigate('/')
+    scrollToTop()
+  }
+
   const handleNavClick = () => {
     closeSidebar()
   }
@@ -69,12 +77,15 @@ export const Header = () => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false)
       }
+      if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node)) {
+        setIsAdminMenuOpen(false)
+      }
     }
-    if (isMenuOpen) {
+    if (isMenuOpen || isAdminMenuOpen) {
       document.addEventListener('click', handleClickOutside)
     }
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [isMenuOpen])
+  }, [isMenuOpen, isAdminMenuOpen])
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -101,8 +112,8 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a
-            href="#home"
-            onClick={scrollToTop}
+            href="/"
+            onClick={handleHomeNavigation}
             className="flex items-center gap-2 text-gray-900 hover:text-blue-600 transition-colors"
           >
             <img
@@ -142,13 +153,12 @@ export const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             <ul className="flex items-center gap-6">
               <li>
-                <a href="#home" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                <a
+                  href="/"
+                  onClick={handleHomeNavigation}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
                   홈
-                </a>
-              </li>
-              <li>
-                <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                  소개
                 </a>
               </li>
               <li>
@@ -161,11 +171,39 @@ export const Header = () => {
                   갤러리
                 </a>
               </li>
-              <li>
-                <a href="#contact" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                  연락처
-                </a>
-              </li>
+              {user?.role === 'MASTER' && (
+                <li className="relative" ref={adminMenuRef}>
+                  <button
+                    onClick={() => setIsAdminMenuOpen((prev) => !prev)}
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
+                    data-testid="admin-menu-button"
+                  >
+                    관리자
+                    <svg
+                      className={`w-4 h-4 transition-transform ${isAdminMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isAdminMenuOpen && (
+                    <div className="absolute left-0 top-full mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50" data-testid="admin-dropdown-menu">
+                      <button
+                        onClick={() => {
+                          setIsAdminMenuOpen(false)
+                          navigate('/admin/users')
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-testid="admin-users-button"
+                      >
+                        사용자 관리
+                      </button>
+                    </div>
+                  )}
+                </li>
+              )}
             </ul>
 
             {/* Auth Section */}
@@ -272,20 +310,14 @@ export const Header = () => {
         <ul className="p-6 space-y-4">
           <li>
             <a
-              href="#home"
-              onClick={handleNavClick}
+              href="/"
+              onClick={(e) => {
+                handleHomeNavigation(e)
+                handleNavClick()
+              }}
               className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               홈
-            </a>
-          </li>
-          <li>
-            <a
-              href="#about"
-              onClick={handleNavClick}
-              className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              소개
             </a>
           </li>
           <li>
@@ -306,15 +338,22 @@ export const Header = () => {
               갤러리
             </a>
           </li>
-          <li>
-            <a
-              href="#contact"
-              onClick={handleNavClick}
-              className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              연락처
-            </a>
-          </li>
+          {user?.role === 'MASTER' && (
+            <li className="pt-4 border-t border-gray-200">
+              <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                관리자
+              </span>
+              <button
+                onClick={() => {
+                  handleNavClick()
+                  navigate('/admin/users')
+                }}
+                className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                사용자 관리
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 
