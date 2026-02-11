@@ -112,7 +112,7 @@ describe('Header 관리자 메뉴', () => {
 
     render(<Header />)
 
-    expect(screen.getAllByText('관리자').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByTestId('admin-menu-button')).toBeInTheDocument()
   })
 
   it('관리자 버튼 클릭 시 사용자 관리 드롭다운이 표시된다', async () => {
@@ -124,13 +124,10 @@ describe('Header 관리자 메뉴', () => {
 
     render(<Header />)
 
-    const adminButtons = screen.getAllByText('관리자')
-    const desktopAdminButton = adminButtons.find((el) => el.closest('button'))
-    expect(desktopAdminButton).toBeDefined()
+    await userEvent.click(screen.getByTestId('admin-menu-button'))
 
-    await userEvent.click(desktopAdminButton!)
-
-    expect(screen.getAllByText('사용자 관리').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByTestId('admin-dropdown-menu')).toBeInTheDocument()
+    expect(screen.getByTestId('admin-users-button')).toBeInTheDocument()
   })
 
   it('사용자 관리 클릭 시 /admin/users로 이동한다', async () => {
@@ -142,13 +139,8 @@ describe('Header 관리자 메뉴', () => {
 
     render(<Header />)
 
-    const adminButtons = screen.getAllByText('관리자')
-    const desktopAdminButton = adminButtons.find((el) => el.closest('button'))
-    await userEvent.click(desktopAdminButton!)
-
-    const userManagementButtons = screen.getAllByText('사용자 관리')
-    const dropdownButton = userManagementButtons.find((el) => el.closest('button'))
-    await userEvent.click(dropdownButton!)
+    await userEvent.click(screen.getByTestId('admin-menu-button'))
+    await userEvent.click(screen.getByTestId('admin-users-button'))
 
     expect(mockNavigate).toHaveBeenCalledWith('/admin/users')
   })

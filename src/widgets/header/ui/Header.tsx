@@ -44,6 +44,12 @@ export const Header = () => {
     setIsSidebarOpen(false)
   }
 
+  const handleHomeNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    navigate('/')
+    scrollToTop()
+  }
+
   const handleNavClick = () => {
     closeSidebar()
   }
@@ -107,11 +113,7 @@ export const Header = () => {
           {/* Logo */}
           <a
             href="/"
-            onClick={(e) => {
-              e.preventDefault()
-              navigate('/')
-              scrollToTop()
-            }}
+            onClick={handleHomeNavigation}
             className="flex items-center gap-2 text-gray-900 hover:text-blue-600 transition-colors"
           >
             <img
@@ -153,11 +155,7 @@ export const Header = () => {
               <li>
                 <a
                   href="/"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    navigate('/')
-                    scrollToTop()
-                  }}
+                  onClick={handleHomeNavigation}
                   className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 >
                   홈
@@ -178,6 +176,7 @@ export const Header = () => {
                   <button
                     onClick={() => setIsAdminMenuOpen((prev) => !prev)}
                     className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1"
+                    data-testid="admin-menu-button"
                   >
                     관리자
                     <svg
@@ -190,13 +189,14 @@ export const Header = () => {
                     </svg>
                   </button>
                   {isAdminMenuOpen && (
-                    <div className="absolute left-0 top-full mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute left-0 top-full mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50" data-testid="admin-dropdown-menu">
                       <button
                         onClick={() => {
                           setIsAdminMenuOpen(false)
                           navigate('/admin/users')
                         }}
                         className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-testid="admin-users-button"
                       >
                         사용자 관리
                       </button>
@@ -312,10 +312,8 @@ export const Header = () => {
             <a
               href="/"
               onClick={(e) => {
-                e.preventDefault()
+                handleHomeNavigation(e)
                 handleNavClick()
-                navigate('/')
-                scrollToTop()
               }}
               className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
