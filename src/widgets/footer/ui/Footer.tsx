@@ -16,13 +16,8 @@ export const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">빠른 링크</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#home" className="text-gray-400 hover:text-white transition-colors">
+                <a href="/" className="text-gray-400 hover:text-white transition-colors">
                   홈
-                </a>
-              </li>
-              <li>
-                <a href="#about" className="text-gray-400 hover:text-white transition-colors">
-                  소개
                 </a>
               </li>
               <li>
