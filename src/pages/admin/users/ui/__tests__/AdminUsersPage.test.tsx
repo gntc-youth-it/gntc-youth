@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AdminUsersPage } from '../AdminUsersPage'
 import { useAuth } from '../../../../../features/auth'
@@ -180,5 +180,30 @@ describe('AdminUsersPage 사용자 목록', () => {
     await userEvent.type(searchInput, '김철수')
 
     expect(searchInput).toHaveValue('김철수')
+  })
+
+  it('검색어 입력 300ms 후 디바운스되어 useAdminUsers에 name이 전달된다', async () => {
+    jest.useFakeTimers()
+
+    render(<AdminUsersPage />)
+
+    const searchInput = screen.getByPlaceholderText('이름으로 검색...')
+    await userEvent.setup({ advanceTimers: jest.advanceTimersByTime }).type(searchInput, '김철수')
+
+    // 디바운스 전에는 name 없이 호출
+    expect(mockUseAdminUsers).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: '' })
+    )
+
+    // 300ms 경과 후 리렌더링
+    act(() => {
+      jest.advanceTimersByTime(300)
+    })
+
+    expect(mockUseAdminUsers).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: '김철수', page: 0 })
+    )
+
+    jest.useRealTimers()
   })
 })

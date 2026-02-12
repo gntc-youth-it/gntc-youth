@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../features/auth'
 import { Header } from '../../../../widgets/header'
@@ -35,8 +35,6 @@ export const AdminUsersPage = () => {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedName, setDebouncedName] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const { data, isLoading, error } = useAdminUsers({
     page: currentPage,
     size: PAGE_SIZE,
@@ -46,13 +44,13 @@ export const AdminUsersPage = () => {
   const { users, totalElements, totalPages } = data
 
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
+    const timerId = setTimeout(() => {
       setDebouncedName(searchInput.trim())
       setCurrentPage(0)
     }, 300)
+
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      clearTimeout(timerId)
     }
   }, [searchInput])
 
