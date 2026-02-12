@@ -35,7 +35,7 @@ export const AdminUsersPage = () => {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedName, setDebouncedName] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data, isLoading, error } = useAdminUsers({
     page: currentPage,
