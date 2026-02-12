@@ -8,11 +8,27 @@ export interface AdminUserResponse {
   role: string
 }
 
-interface AdminUserListResponse {
+export interface AdminUserListResponse {
   users: AdminUserResponse[]
+  totalElements: number
+  totalPages: number
+  page: number
+  size: number
 }
 
-export const getAdminUsers = async (): Promise<AdminUserResponse[]> => {
-  const response = await apiRequest<AdminUserListResponse>('/admin/users')
-  return response.users
+interface GetAdminUsersParams {
+  page: number
+  size: number
+  name?: string
+}
+
+export const getAdminUsers = async (params: GetAdminUsersParams): Promise<AdminUserListResponse> => {
+  const searchParams = new URLSearchParams({
+    page: String(params.page),
+    size: String(params.size),
+  })
+  if (params.name) {
+    searchParams.set('name', params.name)
+  }
+  return apiRequest<AdminUserListResponse>(`/admin/users?${searchParams.toString()}`)
 }

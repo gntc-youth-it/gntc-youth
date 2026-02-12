@@ -37,6 +37,8 @@ const baseAuth = {
   refreshUser: jest.fn().mockResolvedValue(undefined),
 }
 
+const emptyData = { users: [], totalElements: 0, totalPages: 0, page: 0, size: 10 }
+
 const mockUsers = [
   { name: '김철수', churchName: '남대문', generation: 23, phoneNumber: '010-****-5678', role: 'MASTER' },
   { name: '이영희', churchName: '강남', generation: 22, phoneNumber: '010-****-5432', role: 'USER' },
@@ -46,7 +48,7 @@ const mockUsers = [
 beforeEach(() => {
   jest.clearAllMocks()
   mockUseAuth.mockReturnValue(baseAuth)
-  mockUseAdminUsers.mockReturnValue({ users: [], isLoading: false, error: null })
+  mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: null })
 })
 
 describe('AdminUsersPage 접근 권한', () => {
@@ -112,7 +114,7 @@ describe('AdminUsersPage 로딩/에러 상태', () => {
   })
 
   it('로딩 중에는 스피너가 표시된다', () => {
-    mockUseAdminUsers.mockReturnValue({ users: [], isLoading: true, error: null })
+    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: true, error: null })
 
     render(<AdminUsersPage />)
 
@@ -121,7 +123,7 @@ describe('AdminUsersPage 로딩/에러 상태', () => {
   })
 
   it('에러 시 에러 메시지가 표시된다', () => {
-    mockUseAdminUsers.mockReturnValue({ users: [], isLoading: false, error: new Error('Forbidden') })
+    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: new Error('Forbidden') })
 
     render(<AdminUsersPage />)
 
@@ -142,7 +144,11 @@ describe('AdminUsersPage 사용자 목록', () => {
       isLoggedIn: true,
       user: { id: 1, name: '관리자', role: 'MASTER' },
     })
-    mockUseAdminUsers.mockReturnValue({ users: mockUsers, isLoading: false, error: null })
+    mockUseAdminUsers.mockReturnValue({
+      data: { users: mockUsers, totalElements: 3, totalPages: 1, page: 0, size: 10 },
+      isLoading: false,
+      error: null,
+    })
   })
 
   it('사용자 목록이 테이블에 표시된다', () => {
@@ -167,21 +173,12 @@ describe('AdminUsersPage 사용자 목록', () => {
     expect(screen.getByText('전체 3명')).toBeInTheDocument()
   })
 
-  it('이름으로 검색이 동작한다', async () => {
+  it('검색 입력이 동작한다', async () => {
     render(<AdminUsersPage />)
 
     const searchInput = screen.getByPlaceholderText('이름으로 검색...')
     await userEvent.type(searchInput, '김철수')
 
-    expect(screen.getByText('전체 1명')).toBeInTheDocument()
-  })
-
-  it('검색 결과가 없으면 안내 메시지가 표시된다', async () => {
-    render(<AdminUsersPage />)
-
-    const searchInput = screen.getByPlaceholderText('이름으로 검색...')
-    await userEvent.type(searchInput, '존재하지않는이름')
-
-    expect(screen.getAllByText('검색 결과가 없습니다.').length).toBeGreaterThanOrEqual(1)
+    expect(searchInput).toHaveValue('김철수')
   })
 })
