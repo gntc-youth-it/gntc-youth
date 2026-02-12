@@ -1,19 +1,35 @@
 import { useState, useEffect } from 'react'
-import { type AdminUserResponse, getAdminUsers } from '../api/adminUserApi'
+import { type AdminUserListResponse, getAdminUsers } from '../api/adminUserApi'
 
-export const useAdminUsers = () => {
-  const [users, setUsers] = useState<AdminUserResponse[]>([])
+const EMPTY_RESPONSE: AdminUserListResponse = {
+  users: [],
+  totalElements: 0,
+  totalPages: 0,
+  page: 0,
+  size: 10,
+}
+
+interface UseAdminUsersParams {
+  page: number
+  size: number
+  name?: string
+}
+
+export const useAdminUsers = ({ page, size, name }: UseAdminUsersParams) => {
+  const [data, setData] = useState<AdminUserListResponse>(EMPTY_RESPONSE)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     let cancelled = false
+    setIsLoading(true)
 
     const fetchUsers = async () => {
       try {
-        const data = await getAdminUsers()
+        const response = await getAdminUsers({ page, size, name: name || undefined })
         if (!cancelled) {
-          setUsers(data)
+          setData(response)
+          setError(null)
         }
       } catch (err) {
         if (!cancelled) {
@@ -31,7 +47,7 @@ export const useAdminUsers = () => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [page, size, name])
 
-  return { users, isLoading, error }
+  return { data, isLoading, error }
 }

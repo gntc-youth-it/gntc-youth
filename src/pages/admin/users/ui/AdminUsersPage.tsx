@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../features/auth'
 import { Header } from '../../../../widgets/header'
 import { Footer } from '../../../../widgets/footer'
 import { useAdminUsers } from '../model/useAdminUsers'
 
-const ITEMS_PER_PAGE = 10
+const PAGE_SIZE = 10
 
 const getUserKey = (u: { name: string; churchName: string | null; generation: number | null }, index: number) =>
   `${u.name}-${u.churchName ?? ''}-${u.generation ?? ''}-${index}`
@@ -32,26 +32,30 @@ const getRoleBadge = (role: string) => {
 export const AdminUsersPage = () => {
   const { user, isLoggedIn } = useAuth()
   const navigate = useNavigate()
-  const { users, isLoading, error } = useAdminUsers()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
+  const [debouncedName, setDebouncedName] = useState('')
+  const [currentPage, setCurrentPage] = useState(0)
+  const { data, isLoading, error } = useAdminUsers({
+    page: currentPage,
+    size: PAGE_SIZE,
+    name: debouncedName,
+  })
 
-  const filteredUsers = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) return users
-    return users.filter((u) => u.name.toLowerCase().includes(query))
-  }, [searchQuery, users])
+  const { users, totalElements, totalPages } = data
 
-  const totalItems = filteredUsers.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE))
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  )
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedName(searchInput.trim())
+      setCurrentPage(0)
+    }, 300)
+
+    return () => {
+      clearTimeout(timerId)
+    }
+  }, [searchInput])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-    setCurrentPage(1)
+    setSearchInput(e.target.value)
   }
 
   // MASTER 권한 체크
@@ -110,7 +114,7 @@ export const AdminUsersPage = () => {
             <input
               type="text"
               placeholder="이름으로 검색..."
-              value={searchQuery}
+              value={searchInput}
               onChange={handleSearchChange}
               className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-md bg-white text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
@@ -142,7 +146,7 @@ export const AdminUsersPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {paginatedUsers.map((u, index) => {
+                    {users.map((u, index) => {
                       const roleBadge = getRoleBadge(u.role)
                       return (
                         <tr key={getUserKey(u, index)} className="hover:bg-gray-50 transition-colors">
@@ -158,10 +162,10 @@ export const AdminUsersPage = () => {
                         </tr>
                       )
                     })}
-                    {paginatedUsers.length === 0 && (
+                    {users.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">
-                          {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
+                          {debouncedName ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
                         </td>
                       </tr>
                     )}
@@ -171,7 +175,7 @@ export const AdminUsersPage = () => {
 
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
-                {paginatedUsers.map((u, index) => {
+                {users.map((u, index) => {
                   const roleBadge = getRoleBadge(u.role)
                   return (
                     <div key={getUserKey(u, index)} className="p-4 space-y-2">
@@ -188,9 +192,9 @@ export const AdminUsersPage = () => {
                     </div>
                   )
                 })}
-                {paginatedUsers.length === 0 && (
+                {users.length === 0 && (
                   <div className="p-8 text-center text-sm text-gray-400">
-                    {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
+                    {debouncedName ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
                   </div>
                 )}
               </div>
@@ -199,20 +203,20 @@ export const AdminUsersPage = () => {
         </div>
 
         {/* Pagination */}
-        {!isLoading && !error && totalItems > 0 && (
+        {!isLoading && !error && totalElements > 0 && (
           <div className="flex items-center justify-between mt-4">
-            <span className="text-sm text-gray-500">전체 {totalItems}명</span>
+            <span className="text-sm text-gray-500">전체 {totalElements}명</span>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
                 className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              {getPageNumbers(currentPage, totalPages).map((page, i) =>
+              {getPageNumbers(currentPage + 1, totalPages).map((page, i) =>
                 page === '...' ? (
                   <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-sm text-gray-400">
                     ...
@@ -220,9 +224,9 @@ export const AdminUsersPage = () => {
                 ) : (
                   <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => setCurrentPage(page - 1)}
                     className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                      page === currentPage
+                      page === currentPage + 1
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
@@ -232,8 +236,8 @@ export const AdminUsersPage = () => {
                 )
               )}
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage >= totalPages - 1}
                 className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
