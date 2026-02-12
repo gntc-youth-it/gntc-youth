@@ -7,6 +7,17 @@ import { useAdminUsers } from '../model/useAdminUsers'
 
 const ITEMS_PER_PAGE = 10
 
+const getUserKey = (u: { name: string; churchName: string | null; generation: number | null }, index: number) =>
+  `${u.name}-${u.churchName ?? ''}-${u.generation ?? ''}-${index}`
+
+const getPageNumbers = (currentPage: number, totalPages: number): (number | '...')[] => {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+
+  if (currentPage <= 3) return [1, 2, 3, 4, '...', totalPages]
+  if (currentPage >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
+}
+
 const getRoleBadge = (role: string) => {
   switch (role) {
     case 'MASTER':
@@ -26,8 +37,9 @@ export const AdminUsersPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
 
   const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users
-    return users.filter((u) => u.name.includes(searchQuery.trim()))
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return users
+    return users.filter((u) => u.name.toLowerCase().includes(query))
   }, [searchQuery, users])
 
   const totalItems = filteredUsers.length
@@ -133,7 +145,7 @@ export const AdminUsersPage = () => {
                     {paginatedUsers.map((u, index) => {
                       const roleBadge = getRoleBadge(u.role)
                       return (
-                        <tr key={`${u.name}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <tr key={getUserKey(u, index)} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 text-sm text-gray-900">{u.churchName ?? '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.name}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.generation ? `${u.generation}기` : '-'}</td>
@@ -162,7 +174,7 @@ export const AdminUsersPage = () => {
                 {paginatedUsers.map((u, index) => {
                   const roleBadge = getRoleBadge(u.role)
                   return (
-                    <div key={`${u.name}-${index}`} className="p-4 space-y-2">
+                    <div key={getUserKey(u, index)} className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">{u.name}</span>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${roleBadge.className}`}>
@@ -200,19 +212,25 @@ export const AdminUsersPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                    page === currentPage
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {getPageNumbers(currentPage, totalPages).map((page, i) =>
+                page === '...' ? (
+                  <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-sm text-gray-400">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
