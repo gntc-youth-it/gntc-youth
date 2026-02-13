@@ -1,4 +1,4 @@
-import { render, screen, act, waitFor } from '@testing-library/react'
+import { render, screen, act, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AdminUsersPage } from '../AdminUsersPage'
 import { useAuth } from '../../../../../features/auth'
@@ -276,9 +276,11 @@ describe('AdminUsersPage 권한 변경', () => {
     const selects = screen.getAllByRole('combobox')
     await userEvent.selectOptions(selects[0], 'LEADER')
 
-    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
-    expect(screen.getByText(/기존회장/)).toBeInTheDocument()
-    expect(screen.getByText(/이영희/)).toBeInTheDocument()
+    expect(await screen.findByTestId('role-change-modal')).toBeInTheDocument()
+    const modal = within(screen.getByTestId('role-change-modal'))
+    expect(modal.getByText('기존회장')).toBeInTheDocument()
+    expect(modal.getByText(/회장을/)).toBeInTheDocument()
+    expect(modal.getByText('이영희')).toBeInTheDocument()
   })
 
   it('일반 → 회장 변경 시 기존 회장이 없으면 단순 확인 모달이 표시된다', async () => {
@@ -293,10 +295,11 @@ describe('AdminUsersPage 권한 변경', () => {
     const selects = screen.getAllByRole('combobox')
     await userEvent.selectOptions(selects[0], 'LEADER')
 
-    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
-    expect(screen.getByText(/이영희/)).toBeInTheDocument()
-    expect(screen.getByText(/회장으로/)).toBeInTheDocument()
-    expect(screen.queryByText(/기존회장/)).not.toBeInTheDocument()
+    expect(await screen.findByTestId('role-change-modal')).toBeInTheDocument()
+    const modal = within(screen.getByTestId('role-change-modal'))
+    expect(modal.getByText('이영희')).toBeInTheDocument()
+    expect(modal.getByText(/회장으로/)).toBeInTheDocument()
+    expect(modal.queryByText('기존회장')).not.toBeInTheDocument()
   })
 
   it('회장 → 일반 변경 시 확인 모달이 표시된다', async () => {
@@ -306,9 +309,10 @@ describe('AdminUsersPage 권한 변경', () => {
     const selects = screen.getAllByRole('combobox')
     await userEvent.selectOptions(selects[1], 'USER')
 
-    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
-    expect(screen.getByText(/최지영/)).toBeInTheDocument()
-    expect(screen.getByText(/일반 사용자로/)).toBeInTheDocument()
+    expect(await screen.findByTestId('role-change-modal')).toBeInTheDocument()
+    const modal = within(screen.getByTestId('role-change-modal'))
+    expect(modal.getByText('최지영')).toBeInTheDocument()
+    expect(modal.getByText(/일반 사용자로/)).toBeInTheDocument()
   })
 
   it('취소 버튼 클릭 시 모달이 닫힌다', async () => {

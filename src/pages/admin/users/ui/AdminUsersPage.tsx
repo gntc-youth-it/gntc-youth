@@ -349,7 +349,7 @@ export const AdminUsersPage = () => {
       {/* Role Change Confirm Modal */}
       {roleChangeTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+          <div data-testid="role-change-modal" className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-3">권한 변경</h3>
             <div className="text-sm text-gray-700 space-y-2 mb-6">
               {roleChangeTarget.newRole === 'LEADER' ? (
