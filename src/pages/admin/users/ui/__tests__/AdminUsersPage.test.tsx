@@ -1,8 +1,9 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AdminUsersPage } from '../AdminUsersPage'
 import { useAuth } from '../../../../../features/auth'
 import { useAdminUsers } from '../../model/useAdminUsers'
+import { getChurchLeader, updateUserRole } from '../../api/adminUserApi'
 
 const mockNavigate = jest.fn()
 
@@ -26,8 +27,15 @@ jest.mock('../../model/useAdminUsers', () => ({
   useAdminUsers: jest.fn(),
 }))
 
+jest.mock('../../api/adminUserApi', () => ({
+  getChurchLeader: jest.fn(),
+  updateUserRole: jest.fn(),
+}))
+
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
 const mockUseAdminUsers = useAdminUsers as jest.MockedFunction<typeof useAdminUsers>
+const mockGetChurchLeader = getChurchLeader as jest.MockedFunction<typeof getChurchLeader>
+const mockUpdateUserRole = updateUserRole as jest.MockedFunction<typeof updateUserRole>
 
 const baseAuth = {
   user: null,
@@ -40,15 +48,15 @@ const baseAuth = {
 const emptyData = { users: [], totalElements: 0, totalPages: 0, page: 0, size: 10 }
 
 const mockUsers = [
-  { name: '김철수', churchName: '남대문', generation: 23, phoneNumber: '010-****-5678', role: 'MASTER' },
-  { name: '이영희', churchName: '강남', generation: 22, phoneNumber: '010-****-5432', role: 'USER' },
-  { name: '최지영', churchName: '서초', generation: 23, phoneNumber: '010-****-2222', role: 'LEADER' },
+  { id: 1, name: '김철수', churchId: 'NAMDAEMUN', churchName: '남대문', generation: 23, phoneNumber: '010-****-5678', role: 'MASTER' },
+  { id: 2, name: '이영희', churchId: 'GANGNAM', churchName: '강남', generation: 22, phoneNumber: '010-****-5432', role: 'USER' },
+  { id: 3, name: '최지영', churchId: 'SEOCHO', churchName: '서초', generation: 23, phoneNumber: '010-****-2222', role: 'LEADER' },
 ]
 
 beforeEach(() => {
   jest.clearAllMocks()
   mockUseAuth.mockReturnValue(baseAuth)
-  mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: null })
+  mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: null, refetch: jest.fn() })
 })
 
 describe('AdminUsersPage 접근 권한', () => {
@@ -114,7 +122,7 @@ describe('AdminUsersPage 로딩/에러 상태', () => {
   })
 
   it('로딩 중에는 스피너가 표시된다', () => {
-    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: true, error: null })
+    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: true, error: null, refetch: jest.fn() })
 
     render(<AdminUsersPage />)
 
@@ -123,7 +131,7 @@ describe('AdminUsersPage 로딩/에러 상태', () => {
   })
 
   it('에러 시 에러 메시지가 표시된다', () => {
-    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: new Error('Forbidden') })
+    mockUseAdminUsers.mockReturnValue({ data: emptyData, isLoading: false, error: new Error('Forbidden'), refetch: jest.fn() })
 
     render(<AdminUsersPage />)
 
@@ -148,6 +156,7 @@ describe('AdminUsersPage 사용자 목록', () => {
       data: { users: mockUsers, totalElements: 3, totalPages: 1, page: 0, size: 10 },
       isLoading: false,
       error: null,
+      refetch: jest.fn(),
     })
   })
 
@@ -205,5 +214,177 @@ describe('AdminUsersPage 사용자 목록', () => {
     )
 
     jest.useRealTimers()
+  })
+})
+
+describe('AdminUsersPage 권한 변경', () => {
+  const mockRefetch = jest.fn()
+
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({
+      ...baseAuth,
+      isLoggedIn: true,
+      user: { id: 1, name: '관리자', role: 'MASTER' },
+    })
+    mockUseAdminUsers.mockReturnValue({
+      data: { users: mockUsers, totalElements: 3, totalPages: 1, page: 0, size: 10 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    })
+  })
+
+  it('MASTER 사용자는 뱃지로, 성전이 있는 일반/회장은 셀렉트로 표시된다', () => {
+    render(<AdminUsersPage />)
+
+    // 이영희(USER) + 최지영(LEADER) × desktop/mobile = 4개
+    const selects = screen.getAllByRole('combobox')
+    expect(selects).toHaveLength(4)
+
+    // MASTER는 정적 뱃지
+    expect(screen.getAllByText('관리자').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('성전 정보가 없는 사용자는 셀렉트가 아닌 뱃지가 표시된다', () => {
+    const usersWithNoChurch = [
+      ...mockUsers,
+      { id: 4, name: '박민수', churchId: null, churchName: null, generation: null, phoneNumber: '010-****-3333', role: 'USER' },
+    ]
+    mockUseAdminUsers.mockReturnValue({
+      data: { users: usersWithNoChurch, totalElements: 4, totalPages: 1, page: 0, size: 10 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    })
+
+    render(<AdminUsersPage />)
+
+    // 박민수는 성전 없으므로 셀렉트 아닌 뱃지 → 여전히 4개
+    const selects = screen.getAllByRole('combobox')
+    expect(selects).toHaveLength(4)
+  })
+
+  it('일반 → 회장 변경 시 기존 회장이 있으면 기존 회장 정보가 모달에 표시된다', async () => {
+    mockGetChurchLeader.mockResolvedValue({
+      churchId: 'GANGNAM',
+      churchName: '강남',
+      leader: { id: 10, name: '기존회장', email: 'test@test.com' },
+    })
+
+    render(<AdminUsersPage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'LEADER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+    expect(screen.getByText(/기존회장/)).toBeInTheDocument()
+    expect(screen.getByText(/이영희/)).toBeInTheDocument()
+  })
+
+  it('일반 → 회장 변경 시 기존 회장이 없으면 단순 확인 모달이 표시된다', async () => {
+    mockGetChurchLeader.mockResolvedValue({
+      churchId: 'GANGNAM',
+      churchName: '강남',
+      leader: null,
+    })
+
+    render(<AdminUsersPage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'LEADER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+    expect(screen.getByText(/이영희/)).toBeInTheDocument()
+    expect(screen.getByText(/회장으로/)).toBeInTheDocument()
+    expect(screen.queryByText(/기존회장/)).not.toBeInTheDocument()
+  })
+
+  it('회장 → 일반 변경 시 확인 모달이 표시된다', async () => {
+    render(<AdminUsersPage />)
+
+    // selects[1]은 최지영(LEADER)의 데스크톱 셀렉트
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[1], 'USER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+    expect(screen.getByText(/최지영/)).toBeInTheDocument()
+    expect(screen.getByText(/일반 사용자로/)).toBeInTheDocument()
+  })
+
+  it('취소 버튼 클릭 시 모달이 닫힌다', async () => {
+    mockGetChurchLeader.mockResolvedValue({
+      churchId: 'GANGNAM',
+      churchName: '강남',
+      leader: null,
+    })
+
+    render(<AdminUsersPage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'LEADER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('취소'))
+
+    expect(screen.queryByText('권한 변경')).not.toBeInTheDocument()
+    expect(mockUpdateUserRole).not.toHaveBeenCalled()
+  })
+
+  it('변경 확인 시 API가 호출되고 목록이 갱신된다', async () => {
+    mockGetChurchLeader.mockResolvedValue({
+      churchId: 'GANGNAM',
+      churchName: '강남',
+      leader: null,
+    })
+    mockUpdateUserRole.mockResolvedValue({
+      userId: 2,
+      name: '이영희',
+      role: 'LEADER',
+      churchName: '강남',
+      previousLeader: null,
+    })
+
+    render(<AdminUsersPage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'LEADER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('변경'))
+
+    await waitFor(() => {
+      expect(mockUpdateUserRole).toHaveBeenCalledWith(2, 'LEADER')
+    })
+    expect(mockRefetch).toHaveBeenCalled()
+    expect(screen.queryByText('권한 변경')).not.toBeInTheDocument()
+  })
+
+  it('권한 변경 API 실패 시 에러 알림이 표시된다', async () => {
+    mockGetChurchLeader.mockResolvedValue({
+      churchId: 'GANGNAM',
+      churchName: '강남',
+      leader: null,
+    })
+    mockUpdateUserRole.mockRejectedValue(new Error('Forbidden'))
+
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {})
+
+    render(<AdminUsersPage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'LEADER')
+
+    expect(await screen.findByText('권한 변경')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('변경'))
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith('권한 변경에 실패했습니다.')
+    })
+    expect(mockRefetch).not.toHaveBeenCalled()
+
+    alertSpy.mockRestore()
   })
 })
