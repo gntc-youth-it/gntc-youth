@@ -19,6 +19,7 @@ export const useAdminUsers = ({ page, size, name }: UseAdminUsersParams) => {
   const [data, setData] = useState<AdminUserListResponse>(EMPTY_RESPONSE)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -47,7 +48,9 @@ export const useAdminUsers = ({ page, size, name }: UseAdminUsersParams) => {
     return () => {
       cancelled = true
     }
-  }, [page, size, name])
+  }, [page, size, name, refreshKey])
 
-  return { data, isLoading, error }
+  const refetch = () => setRefreshKey((k) => k + 1)
+
+  return { data, isLoading, error, refetch }
 }

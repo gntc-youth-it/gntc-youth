@@ -4,6 +4,7 @@ import { useAuth } from '../../../../features/auth'
 import { Header } from '../../../../widgets/header'
 import { Footer } from '../../../../widgets/footer'
 import { useAdminUsers } from '../model/useAdminUsers'
+import { type AdminUserResponse, getChurchLeader, updateUserRole } from '../api/adminUserApi'
 
 const PAGE_SIZE = 10
 
@@ -18,6 +19,11 @@ const getPageNumbers = (currentPage: number, totalPages: number): (number | '...
   return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
 }
 
+const ROLE_OPTIONS = [
+  { value: 'USER', label: '일반' },
+  { value: 'LEADER', label: '회장' },
+] as const
+
 const getRoleBadge = (role: string) => {
   switch (role) {
     case 'MASTER':
@@ -29,13 +35,60 @@ const getRoleBadge = (role: string) => {
   }
 }
 
+const canChangeRole = (user: { role: string; churchName: string | null }) =>
+  user.role !== 'MASTER' && user.churchName !== null
+
+interface RoleChangeTarget {
+  user: AdminUserResponse
+  newRole: 'USER' | 'LEADER'
+  currentLeaderName: string | null
+}
+
+const RoleDisplay = ({
+  user: u,
+  disabled,
+  onRoleSelect,
+  className,
+}: {
+  user: AdminUserResponse
+  disabled: boolean
+  onRoleSelect: (user: AdminUserResponse, role: string) => void
+  className: string
+}) => {
+  const roleBadge = getRoleBadge(u.role)
+  if (canChangeRole(u)) {
+    return (
+      <select
+        value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
+        onChange={(e) => onRoleSelect(u, e.target.value)}
+        disabled={disabled}
+        className={`appearance-none rounded-full text-xs font-semibold border-0 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-wait ${className}`}
+      >
+        {ROLE_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    )
+  }
+  return (
+    <span className={`inline-block rounded-full text-xs font-semibold ${className} ${roleBadge.className}`}>
+      {roleBadge.label}
+    </span>
+  )
+}
+
 export const AdminUsersPage = () => {
   const { user, isLoggedIn } = useAuth()
   const navigate = useNavigate()
   const [searchInput, setSearchInput] = useState('')
   const [debouncedName, setDebouncedName] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
-  const { data, isLoading, error } = useAdminUsers({
+  const [roleChangeTarget, setRoleChangeTarget] = useState<RoleChangeTarget | null>(null)
+  const [modalLoading, setModalLoading] = useState(false)
+  const [updating, setUpdating] = useState(false)
+  const { data, isLoading, error, refetch } = useAdminUsers({
     page: currentPage,
     size: PAGE_SIZE,
     name: debouncedName,
@@ -56,6 +109,51 @@ export const AdminUsersPage = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value)
+  }
+
+  const handleRoleSelect = async (targetUser: AdminUserResponse, newRole: string) => {
+    const currentRole = targetUser.role === 'LEADER' ? 'LEADER' : 'USER'
+    if (newRole === currentRole) return
+
+    if (newRole === 'LEADER' && targetUser.churchId) {
+      setModalLoading(true)
+      try {
+        const res = await getChurchLeader(targetUser.churchId)
+        setRoleChangeTarget({
+          user: targetUser,
+          newRole: 'LEADER',
+          currentLeaderName: res.leader?.name ?? null,
+        })
+      } catch {
+        alert('기존 회장 정보를 조회하는 데 실패했습니다. 잠시 후 다시 시도해주세요.')
+      } finally {
+        setModalLoading(false)
+      }
+    } else {
+      setRoleChangeTarget({
+        user: targetUser,
+        newRole: 'USER',
+        currentLeaderName: null,
+      })
+    }
+  }
+
+  const handleConfirm = async () => {
+    if (!roleChangeTarget) return
+    setUpdating(true)
+    try {
+      await updateUserRole(roleChangeTarget.user.id, roleChangeTarget.newRole)
+      refetch()
+    } catch {
+      alert('권한 변경에 실패했습니다.')
+    } finally {
+      setUpdating(false)
+      setRoleChangeTarget(null)
+    }
+  }
+
+  const handleCancel = () => {
+    setRoleChangeTarget(null)
   }
 
   // MASTER 권한 체크
@@ -146,22 +244,17 @@ export const AdminUsersPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map((u, index) => {
-                      const roleBadge = getRoleBadge(u.role)
-                      return (
+                    {users.map((u, index) => (
                         <tr key={getUserKey(u, index)} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 text-sm text-gray-900">{u.churchName ?? '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.name}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.generation ? `${u.generation}기` : '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.phoneNumber ?? '-'}</td>
                           <td className="px-6 py-4 text-center">
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${roleBadge.className}`}>
-                              {roleBadge.label}
-                            </span>
+                            <RoleDisplay user={u} disabled={modalLoading} onRoleSelect={handleRoleSelect} className="px-3 py-1" />
                           </td>
                         </tr>
-                      )
-                    })}
+                    ))}
                     {users.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">
@@ -175,23 +268,18 @@ export const AdminUsersPage = () => {
 
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
-                {users.map((u, index) => {
-                  const roleBadge = getRoleBadge(u.role)
-                  return (
+                {users.map((u, index) => (
                     <div key={getUserKey(u, index)} className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">{u.name}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${roleBadge.className}`}>
-                          {roleBadge.label}
-                        </span>
+                        <RoleDisplay user={u} disabled={modalLoading} onRoleSelect={handleRoleSelect} className="px-2.5 py-0.5" />
                       </div>
                       <div className="text-sm text-gray-500 space-y-0.5">
                         <p>{u.churchName ?? '-'} · {u.generation ? `${u.generation}기` : '-'}</p>
                         <p>{u.phoneNumber ?? '-'}</p>
                       </div>
                     </div>
-                  )
-                })}
+                ))}
                 {users.length === 0 && (
                   <div className="p-8 text-center text-sm text-gray-400">
                     {debouncedName ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
@@ -248,6 +336,58 @@ export const AdminUsersPage = () => {
           </div>
         )}
       </main>
+
+      {/* Role Change Confirm Modal */}
+      {roleChangeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div data-testid="role-change-modal" className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">권한 변경</h3>
+            <div className="text-sm text-gray-700 space-y-2 mb-6">
+              {roleChangeTarget.newRole === 'LEADER' ? (
+                roleChangeTarget.currentLeaderName ? (
+                  <>
+                    <p>
+                      현재 <span className="font-semibold">{roleChangeTarget.user.churchName}</span>의 회장은{' '}
+                      <span className="font-semibold">{roleChangeTarget.currentLeaderName}</span>님입니다.
+                    </p>
+                    <p>
+                      <span className="font-semibold">{roleChangeTarget.user.name}</span>님으로 회장을
+                      변경하시겠습니까?
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    <span className="font-semibold">{roleChangeTarget.user.name}</span>님을{' '}
+                    <span className="font-semibold">{roleChangeTarget.user.churchName}</span> 회장으로
+                    변경하시겠습니까?
+                  </p>
+                )
+              ) : (
+                <p>
+                  <span className="font-semibold">{roleChangeTarget.user.name}</span>님을 일반 사용자로
+                  변경하시겠습니까?
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancel}
+                disabled={updating}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={updating}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {updating ? '변경 중...' : '변경'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
