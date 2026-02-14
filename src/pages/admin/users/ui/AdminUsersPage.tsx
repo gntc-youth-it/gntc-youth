@@ -8,7 +8,7 @@ import { type AdminUserResponse, getChurchLeader, updateUserRole } from '../api/
 
 const PAGE_SIZE = 10
 
-const getUserKey = (u: { userId: number }) => `user-${u.userId}`
+const getUserKey = (u: AdminUserResponse) => `user-${u.userId}`
 
 const getPageNumbers = (currentPage: number, totalPages: number): (number | '...')[] => {
   if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
