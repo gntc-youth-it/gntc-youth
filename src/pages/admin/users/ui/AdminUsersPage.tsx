@@ -44,6 +44,41 @@ interface RoleChangeTarget {
   currentLeaderName: string | null
 }
 
+const RoleDisplay = ({
+  user: u,
+  disabled,
+  onRoleSelect,
+  className,
+}: {
+  user: AdminUserResponse
+  disabled: boolean
+  onRoleSelect: (user: AdminUserResponse, role: string) => void
+  className: string
+}) => {
+  const roleBadge = getRoleBadge(u.role)
+  if (canChangeRole(u)) {
+    return (
+      <select
+        value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
+        onChange={(e) => onRoleSelect(u, e.target.value)}
+        disabled={disabled}
+        className={`appearance-none rounded-full text-xs font-semibold border-0 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-wait ${className}`}
+      >
+        {ROLE_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    )
+  }
+  return (
+    <span className={`inline-block rounded-full text-xs font-semibold ${className} ${roleBadge.className}`}>
+      {roleBadge.label}
+    </span>
+  )
+}
+
 export const AdminUsersPage = () => {
   const { user, isLoggedIn } = useAuth()
   const navigate = useNavigate()
@@ -90,11 +125,7 @@ export const AdminUsersPage = () => {
           currentLeaderName: res.leader?.name ?? null,
         })
       } catch {
-        setRoleChangeTarget({
-          user: targetUser,
-          newRole: 'LEADER',
-          currentLeaderName: null,
-        })
+        alert('기존 회장 정보를 조회하는 데 실패했습니다. 잠시 후 다시 시도해주세요.')
       } finally {
         setModalLoading(false)
       }
@@ -213,37 +244,17 @@ export const AdminUsersPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map((u, index) => {
-                      const roleBadge = getRoleBadge(u.role)
-                      return (
+                    {users.map((u, index) => (
                         <tr key={getUserKey(u, index)} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 text-sm text-gray-900">{u.churchName ?? '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.name}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.generation ? `${u.generation}기` : '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.phoneNumber ?? '-'}</td>
                           <td className="px-6 py-4 text-center">
-                            {canChangeRole(u) ? (
-                              <select
-                                value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
-                                onChange={(e) => handleRoleSelect(u, e.target.value)}
-                                disabled={modalLoading}
-                                className="appearance-none px-3 py-1 rounded-full text-xs font-semibold border-0 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-wait"
-                              >
-                                {ROLE_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${roleBadge.className}`}>
-                                {roleBadge.label}
-                              </span>
-                            )}
+                            <RoleDisplay user={u} disabled={modalLoading} onRoleSelect={handleRoleSelect} className="px-3 py-1" />
                           </td>
                         </tr>
-                      )
-                    })}
+                    ))}
                     {users.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">
@@ -257,38 +268,18 @@ export const AdminUsersPage = () => {
 
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
-                {users.map((u, index) => {
-                  const roleBadge = getRoleBadge(u.role)
-                  return (
+                {users.map((u, index) => (
                     <div key={getUserKey(u, index)} className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">{u.name}</span>
-                        {canChangeRole(u) ? (
-                          <select
-                            value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
-                            onChange={(e) => handleRoleSelect(u, e.target.value)}
-                            disabled={modalLoading}
-                            className="appearance-none px-2.5 py-0.5 rounded-full text-xs font-semibold border-0 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-wait"
-                          >
-                            {ROLE_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${roleBadge.className}`}>
-                            {roleBadge.label}
-                          </span>
-                        )}
+                        <RoleDisplay user={u} disabled={modalLoading} onRoleSelect={handleRoleSelect} className="px-2.5 py-0.5" />
                       </div>
                       <div className="text-sm text-gray-500 space-y-0.5">
                         <p>{u.churchName ?? '-'} · {u.generation ? `${u.generation}기` : '-'}</p>
                         <p>{u.phoneNumber ?? '-'}</p>
                       </div>
                     </div>
-                  )
-                })}
+                ))}
                 {users.length === 0 && (
                   <div className="p-8 text-center text-sm text-gray-400">
                     {debouncedName ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
