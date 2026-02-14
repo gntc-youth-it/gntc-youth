@@ -63,7 +63,7 @@ const RoleDisplay = ({
           value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
           onChange={(e) => onRoleSelect(u, e.target.value)}
           disabled={disabled}
-          className={`appearance-none bg-transparent border-0 text-xs font-semibold cursor-pointer outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-wait ${roleBadge.className}`}
+          className={`appearance-none bg-transparent border-0 cursor-pointer outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-wait ${roleBadge.className}`}
         >
           {ROLE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
