@@ -48,9 +48,9 @@ const baseAuth = {
 const emptyData = { users: [], totalElements: 0, totalPages: 0, page: 0, size: 10 }
 
 const mockUsers = [
-  { id: 1, name: '김철수', churchId: 'NAMDAEMUN', churchName: '남대문', generation: 23, phoneNumber: '010-****-5678', role: 'MASTER' },
-  { id: 2, name: '이영희', churchId: 'GANGNAM', churchName: '강남', generation: 22, phoneNumber: '010-****-5432', role: 'USER' },
-  { id: 3, name: '최지영', churchId: 'SEOCHO', churchName: '서초', generation: 23, phoneNumber: '010-****-2222', role: 'LEADER' },
+  { userId: 1, name: '김철수', churchId: 'NAMDAEMUN', churchName: '남대문', generation: 23, phoneNumber: '010-****-5678', role: 'MASTER' },
+  { userId: 2, name: '이영희', churchId: 'GANGNAM', churchName: '강남', generation: 22, phoneNumber: '010-****-5432', role: 'USER' },
+  { userId: 3, name: '최지영', churchId: 'SEOCHO', churchName: '서초', generation: 23, phoneNumber: '010-****-2222', role: 'LEADER' },
 ]
 
 beforeEach(() => {
@@ -248,7 +248,7 @@ describe('AdminUsersPage 권한 변경', () => {
   it('성전 정보가 없는 사용자는 셀렉트가 아닌 뱃지가 표시된다', () => {
     const usersWithNoChurch = [
       ...mockUsers,
-      { id: 4, name: '박민수', churchId: null, churchName: null, generation: null, phoneNumber: '010-****-3333', role: 'USER' },
+      { userId: 4, name: '박민수', churchId: null, churchName: null, generation: null, phoneNumber: '010-****-3333', role: 'USER' },
     ]
     mockUseAdminUsers.mockReturnValue({
       data: { users: usersWithNoChurch, totalElements: 4, totalPages: 1, page: 0, size: 10 },

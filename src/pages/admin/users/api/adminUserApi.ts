@@ -1,7 +1,7 @@
 import { apiRequest } from '../../../../shared/api'
 
 export interface AdminUserResponse {
-  id: number
+  userId: number
   name: string
   churchId: string | null
   churchName: string | null
