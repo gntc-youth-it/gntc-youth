@@ -58,18 +58,23 @@ const RoleDisplay = ({
   const roleBadge = getRoleBadge(u.role)
   if (canChangeRole(u)) {
     return (
-      <select
-        value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
-        onChange={(e) => onRoleSelect(u, e.target.value)}
-        disabled={disabled}
-        className={`appearance-none rounded-full text-xs font-semibold border-0 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-wait ${className}`}
-      >
-        {ROLE_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <span className={`inline-flex items-center rounded-full text-xs font-semibold ${className} ${roleBadge.className}`}>
+        <select
+          value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
+          onChange={(e) => onRoleSelect(u, e.target.value)}
+          disabled={disabled}
+          className={`appearance-none bg-transparent border-0 text-xs font-semibold cursor-pointer outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-wait ${roleBadge.className}`}
+        >
+          {ROLE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <svg className="w-3 h-3 -ml-1 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </span>
     )
   }
   return (
@@ -132,7 +137,7 @@ export const AdminUsersPage = () => {
     } else {
       setRoleChangeTarget({
         user: targetUser,
-        newRole: 'USER',
+        newRole: newRole as 'USER' | 'LEADER',
         currentLeaderName: null,
       })
     }
