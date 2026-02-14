@@ -8,8 +8,7 @@ import { type AdminUserResponse, getChurchLeader, updateUserRole } from '../api/
 
 const PAGE_SIZE = 10
 
-const getUserKey = (u: { name: string; churchName: string | null; generation: number | null }, index: number) =>
-  `${u.name}-${u.churchName ?? ''}-${u.generation ?? ''}-${index}`
+const getUserKey = (u: AdminUserResponse) => `user-${u.userId}`
 
 const getPageNumbers = (currentPage: number, totalPages: number): (number | '...')[] => {
   if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -71,7 +70,7 @@ const RoleDisplay = ({
             </option>
           ))}
         </select>
-        <svg className="w-3 h-3 -ml-1 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3 h-3 ml-0.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </span>
@@ -147,7 +146,7 @@ export const AdminUsersPage = () => {
     if (!roleChangeTarget) return
     setUpdating(true)
     try {
-      await updateUserRole(roleChangeTarget.user.id, roleChangeTarget.newRole)
+      await updateUserRole(roleChangeTarget.user.userId, roleChangeTarget.newRole)
       refetch()
     } catch {
       alert('권한 변경에 실패했습니다.')
@@ -249,8 +248,8 @@ export const AdminUsersPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map((u, index) => (
-                        <tr key={getUserKey(u, index)} className="hover:bg-gray-50 transition-colors">
+                    {users.map((u) => (
+                        <tr key={getUserKey(u)} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 text-sm text-gray-900">{u.churchName ?? '-'}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.name}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{u.generation ? `${u.generation}기` : '-'}</td>
@@ -273,8 +272,8 @@ export const AdminUsersPage = () => {
 
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
-                {users.map((u, index) => (
-                    <div key={getUserKey(u, index)} className="p-4 space-y-2">
+                {users.map((u) => (
+                    <div key={getUserKey(u)} className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">{u.name}</span>
                         <RoleDisplay user={u} disabled={modalLoading} onRoleSelect={handleRoleSelect} className="px-2.5 py-0.5" />
