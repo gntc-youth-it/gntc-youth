@@ -86,9 +86,14 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
 // ─── Grid View Components ────────────────────────────────
 
 const GalleryGrid = ({ album }: { album: GalleryAlbum }) => {
-  const columns: string[][] = [[], [], [], []]
-  album.photos.forEach((photo, idx) => {
-    columns[idx % 4].push(buildCdnUrl(photo.url))
+  const columnCount = 4
+  const columns: string[][] = Array.from({ length: columnCount }, () => [])
+  const heights = new Array(columnCount).fill(0)
+
+  album.photos.forEach((photo) => {
+    const shortest = heights.indexOf(Math.min(...heights))
+    columns[shortest].push(buildCdnUrl(photo.url))
+    heights[shortest] += 1
   })
 
   return (
@@ -144,7 +149,7 @@ const GridContent = ({ albums }: { albums: GalleryAlbum[] }) => (
 
 const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const photos = album.photos.slice(0, 5)
+  const photos = album.photos
 
   const goTo = (idx: number) => {
     if (idx >= 0 && idx < photos.length) setCurrentIndex(idx)

@@ -7,6 +7,9 @@ const mockNavigate = jest.fn()
 
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  Link: ({ children, to, onClick, className }: { children: React.ReactNode; to: string; onClick?: () => void; className?: string }) => (
+    <a href={to} onClick={(e) => { e.preventDefault(); onClick?.(); mockNavigate(to) }} className={className}>{children}</a>
+  ),
 }))
 
 jest.mock('../../../../features/auth', () => ({
