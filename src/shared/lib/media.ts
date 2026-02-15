@@ -12,6 +12,7 @@ export const getMediaType = (url: string): 'video' | 'image' => {
 }
 
 export const buildCdnUrl = (path: string): string => {
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
   const normalizedPath = `/${path.replace(/^\/+/, '')}`
   return `${CDN_BASE_URL}${normalizedPath}`
 }

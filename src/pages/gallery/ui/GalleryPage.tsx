@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useGallery } from '../model/useGallery'
 import { buildCdnUrl } from '../../../shared/lib'
@@ -289,7 +288,6 @@ const FeedContent = ({ albums }: { albums: GalleryAlbum[] }) => (
 // ─── Main Page ───────────────────────────────────────────
 
 export const GalleryPage = () => {
-  const navigate = useNavigate()
   const { albums, isLoading, error, selectedCategory, setSelectedCategory } = useGallery()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
 
@@ -309,16 +307,6 @@ export const GalleryPage = () => {
                   은혜와진리교회 청년봉사선교회 · 사진 갤러리
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/')}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="닫기"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
             </div>
 
             {/* Nav bar: categories + view toggle */}
