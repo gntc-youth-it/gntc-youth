@@ -167,7 +167,14 @@ export const Header = () => {
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                <a
+                  href="/gallery"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    navigate('/gallery')
+                  }}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
                   갤러리
                 </a>
               </li>
@@ -331,8 +338,12 @@ export const Header = () => {
           </li>
           <li>
             <a
-              href="#gallery"
-              onClick={handleNavClick}
+              href="/gallery"
+              onClick={(e) => {
+                e.preventDefault()
+                handleNavClick()
+                navigate('/gallery')
+              }}
               className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               갤러리
