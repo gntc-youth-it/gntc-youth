@@ -26,7 +26,7 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="text-gray-400 hover:text-white transition-colors">
+                <a href="/gallery" className="text-gray-400 hover:text-white transition-colors">
                   갤러리
                 </a>
               </li>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
 import { EditProfileModal, ProfileCompletionModal, PROFILE_COMPLETION_DISMISSED_KEY } from '../../../features/edit-profile'
 
@@ -167,9 +167,12 @@ export const Header = () => {
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                <Link
+                  to="/gallery"
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
                   갤러리
-                </a>
+                </Link>
               </li>
               {user?.role === 'MASTER' && (
                 <li className="relative" ref={adminMenuRef}>
@@ -330,13 +333,13 @@ export const Header = () => {
             </a>
           </li>
           <li>
-            <a
-              href="#gallery"
+            <Link
+              to="/gallery"
               onClick={handleNavClick}
               className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               갤러리
-            </a>
+            </Link>
           </li>
           {user?.role === 'MASTER' && (
             <li className="pt-4 border-t border-gray-200">
