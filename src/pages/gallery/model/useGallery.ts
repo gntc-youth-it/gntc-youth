@@ -1,66 +1,6 @@
 import { useState, useMemo } from 'react'
-import type { GalleryAlbum, GalleryCategory } from './types'
-
-const MOCK_ALBUMS: GalleryAlbum[] = [
-  {
-    id: '1',
-    title: '2025 동계 수련회',
-    date: '2025.01.10 - 01.12',
-    dateFormatted: '2025년 1월 12일',
-    category: 'RETREAT',
-    photoCount: 8,
-    photos: [
-      { id: 'p1', url: 'https://picsum.photos/seed/retreat1/600/400' },
-      { id: 'p2', url: 'https://picsum.photos/seed/retreat2/600/500' },
-      { id: 'p3', url: 'https://picsum.photos/seed/retreat3/600/450' },
-      { id: 'p4', url: 'https://picsum.photos/seed/retreat4/600/350' },
-      { id: 'p5', url: 'https://picsum.photos/seed/retreat5/600/400' },
-      { id: 'p6', url: 'https://picsum.photos/seed/retreat6/600/500' },
-      { id: 'p7', url: 'https://picsum.photos/seed/retreat7/600/450' },
-      { id: 'p8', url: 'https://picsum.photos/seed/retreat8/600/380' },
-    ],
-    caption: '은혜 가득했던 동계 수련회! 함께한 모든 순간이 감사합니다 🙏',
-    tags: ['수련회', '은혜', '청년부'],
-    likeCount: 42,
-  },
-  {
-    id: '2',
-    title: '주일 예배 & 찬양',
-    date: '2025.01.05',
-    dateFormatted: '2025년 1월 5일',
-    category: 'ALL',
-    photoCount: 6,
-    photos: [
-      { id: 'p9', url: 'https://picsum.photos/seed/worship1/600/400' },
-      { id: 'p10', url: 'https://picsum.photos/seed/worship2/600/500' },
-      { id: 'p11', url: 'https://picsum.photos/seed/worship3/600/450' },
-      { id: 'p12', url: 'https://picsum.photos/seed/worship4/600/350' },
-      { id: 'p13', url: 'https://picsum.photos/seed/worship5/600/400' },
-      { id: 'p14', url: 'https://picsum.photos/seed/worship6/600/500' },
-    ],
-    caption: '주님을 찬양하는 아름다운 시간이었습니다 🎵',
-    tags: ['주일예배', '찬양', '감사'],
-    likeCount: 35,
-  },
-  {
-    id: '3',
-    title: '새해 첫 모임',
-    date: '2025.01.01',
-    dateFormatted: '2025년 1월 1일',
-    category: 'ALL',
-    photoCount: 5,
-    photos: [
-      { id: 'p15', url: 'https://picsum.photos/seed/newyear1/600/400' },
-      { id: 'p16', url: 'https://picsum.photos/seed/newyear2/600/500' },
-      { id: 'p17', url: 'https://picsum.photos/seed/newyear3/600/450' },
-      { id: 'p18', url: 'https://picsum.photos/seed/newyear4/600/350' },
-      { id: 'p19', url: 'https://picsum.photos/seed/newyear5/600/400' },
-    ],
-    caption: '새해 복 많이 받으세요! 올 한 해도 함께 은혜 안에서 성장해요 ✨',
-    tags: ['새해', '첫모임', '청년부'],
-    likeCount: 28,
-  },
-]
+import type { GalleryCategory } from './types'
+import { MOCK_ALBUMS } from './mockData'
 
 export const useGallery = () => {
   const [selectedCategory, setSelectedCategory] = useState<GalleryCategory>('ALL')
