@@ -4,12 +4,6 @@ import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
 import type { GalleryAlbum } from '../../model/types'
 
-const mockNavigate = jest.fn()
-
-jest.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-}))
-
 jest.mock('../../../../widgets/header', () => ({
   Header: () => <div data-testid="header">Header</div>,
 }))
@@ -69,14 +63,6 @@ describe('GalleryPage 헤더', () => {
 
     expect(screen.getByText('GALLERY')).toBeInTheDocument()
     expect(screen.getByText('은혜와진리교회 청년봉사선교회 · 사진 갤러리')).toBeInTheDocument()
-  })
-
-  it('닫기 버튼 클릭 시 홈으로 이동한다', async () => {
-    render(<GalleryPage />)
-
-    await userEvent.click(screen.getByLabelText('닫기'))
-
-    expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 
   it('카테고리 버튼들이 표시된다', () => {

@@ -1,4 +1,4 @@
-export type GalleryCategory = 'ALL' | 'RETREAT'
+export type GalleryCategory = 'ALL' | 'RETREAT' | 'WORSHIP' | 'GATHERING'
 
 export type ViewMode = 'grid' | 'feed'
 
