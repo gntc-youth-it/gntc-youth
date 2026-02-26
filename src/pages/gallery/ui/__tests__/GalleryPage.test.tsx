@@ -584,6 +584,89 @@ describe('GalleryPage 푸터', () => {
   })
 })
 
+describe('GalleryPage 이미지 라이트박스', () => {
+  it('그리드 뷰에서 사진 클릭 시 라이트박스가 열린다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+  })
+
+  it('라이트박스에 클릭한 이미지가 원본 크기로 표시된다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+
+    const lightboxImg = screen.getByAltText('확대 사진')
+    expect(lightboxImg).toHaveAttribute('src', 'https://cdn.gntc-youth.com/uploads/photo1.jpg')
+    expect(lightboxImg).toHaveClass('object-contain')
+  })
+
+  it('라이트박스 닫기 버튼 클릭 시 닫힌다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByLabelText('닫기'))
+
+    expect(screen.queryByAltText('확대 사진')).not.toBeInTheDocument()
+  })
+
+  it('ESC 키로 라이트박스가 닫힌다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByAltText('확대 사진')).not.toBeInTheDocument()
+  })
+
+  it('피드 뷰에서 사진 클릭 시 라이트박스가 열린다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getAllByAltText('사진 1')[0])
+
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+  })
+
+  it('배경 클릭 시 라이트박스가 닫힌다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByTestId('lightbox-overlay'))
+
+    expect(screen.queryByAltText('확대 사진')).not.toBeInTheDocument()
+  })
+
+  it('라이트박스가 열리면 배경 스크롤이 비활성화된다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+
+    expect(document.body.style.overflow).toBe('hidden')
+  })
+
+  it('라이트박스가 닫히면 배경 스크롤이 복원된다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+    expect(document.body.style.overflow).toBe('hidden')
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(document.body.style.overflow).toBe('')
+  })
+})
+
 describe('GalleryPage 피드 영상 재생', () => {
   const mockFeedPostWithVideo: FeedPost = {
     id: 12,
