@@ -52,10 +52,11 @@ export const useGallery = () => {
       setSelectedSubCategory(null)
       loadPhotos(true)
     } else if (selectedCategory === 'RETREAT') {
-      setIsLoadingSubCategories(true)
-      setIsLoading(true)
-      fetchSubCategories('RETREAT')
-        .then((subs) => {
+      ;(async () => {
+        setIsLoadingSubCategories(true)
+        setIsLoading(true)
+        try {
+          const subs = await fetchSubCategories('RETREAT')
           setSubCategories(subs)
           if (subs.length > 0) {
             const first = subs[0].name
@@ -65,14 +66,13 @@ export const useGallery = () => {
             setPhotos([])
             setIsLoading(false)
           }
-        })
-        .catch(() => {
+        } catch {
           setError('카테고리를 불러오는데 실패했습니다.')
           setIsLoading(false)
-        })
-        .finally(() => {
+        } finally {
           setIsLoadingSubCategories(false)
-        })
+        }
+      })()
     }
   }, [selectedCategory, loadPhotos])
 

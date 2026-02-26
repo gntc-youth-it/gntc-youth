@@ -337,17 +337,9 @@ describe('GalleryPage 수련회 행사 선택 모달', () => {
     await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
     expect(screen.getByText('수련회 행사 목록')).toBeInTheDocument()
 
-    // X 버튼은 모달 헤더의 마지막 버튼
-    const closeButtons = screen.getAllByRole('button')
-    const xButton = closeButtons.find((btn) => {
-      const svg = btn.querySelector('svg')
-      return svg && btn.closest('.border-b') !== null
-    })
-    if (xButton) {
-      await userEvent.click(xButton)
-    }
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }))
 
-    // 모달 헤더 영역의 닫기 버튼을 직접 찾기 어려우므로 배경 클릭으로 대체 테스트
+    expect(screen.queryByText('수련회 행사 목록')).not.toBeInTheDocument()
   })
 })
 
