@@ -71,7 +71,7 @@ describe('compressVideo module', () => {
         '-vf', "scale='min(1280,iw)':-2",
         '-c:v', 'libx264',
         '-crf', '28',
-        '-preset', 'fast',
+        '-preset', 'ultrafast',
         '-c:a', 'aac',
         '-b:a', '128k',
         '-movflags', '+faststart',
@@ -134,6 +134,43 @@ describe('compressVideo module', () => {
 
       expect(mockInstance.deleteFile).toHaveBeenCalledWith('input.mp4')
       expect(mockInstance.deleteFile).toHaveBeenCalledWith('output.mp4')
+    })
+
+    it('skipBelowSize 이하 MP4 파일은 압축을 스킵한다', async () => {
+      const file = createMockVideoFile(1000)
+
+      const result = await compressVideo(file, { skipBelowSize: 2000 })
+
+      expect(result.blob).toBe(file)
+      expect(result.originalSize).toBe(1000)
+      expect(result.compressedSize).toBe(1000)
+      expect(mockInstance.load).not.toHaveBeenCalled()
+      expect(mockInstance.exec).not.toHaveBeenCalled()
+    })
+
+    it('skipBelowSize 이하여도 MP4가 아니면 압축한다', async () => {
+      const file = new File([new ArrayBuffer(1000)], 'test.mov', { type: 'video/quicktime' })
+
+      await compressVideo(file, { skipBelowSize: 2000 })
+
+      expect(mockInstance.exec).toHaveBeenCalled()
+    })
+
+    it('skipBelowSize 초과 MP4 파일은 압축한다', async () => {
+      const file = createMockVideoFile(3000)
+
+      await compressVideo(file, { skipBelowSize: 2000 })
+
+      expect(mockInstance.exec).toHaveBeenCalled()
+    })
+
+    it('스킵 시 onProgress를 100으로 호출한다', async () => {
+      const onProgress = jest.fn()
+      const file = createMockVideoFile(1000)
+
+      await compressVideo(file, { skipBelowSize: 2000, onProgress })
+
+      expect(onProgress).toHaveBeenCalledWith(100)
     })
 
     it('exec 실패 시에도 가상 파일을 정리한다', async () => {
