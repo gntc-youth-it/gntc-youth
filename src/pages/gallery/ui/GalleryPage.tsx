@@ -376,7 +376,7 @@ const UnmutedIcon = () => (
   </svg>
 )
 
-const FeedVideoPlayer = ({ src }: { src: string }) => {
+const FeedVideoPlayer = ({ src, onVideoClick }: { src: string; onVideoClick: (url: string) => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isMuted, setIsMuted] = useState(true)
 
@@ -409,7 +409,7 @@ const FeedVideoPlayer = ({ src }: { src: string }) => {
   }, [])
 
   return (
-    <div className="relative w-full h-[360px] sm:h-[400px]" onClick={toggleMute}>
+    <div className="relative w-full h-[360px] sm:h-[400px] cursor-pointer" onClick={() => onVideoClick(src)}>
       <video
         ref={videoRef}
         src={src}
@@ -476,13 +476,14 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
               <div key={image.fileId} className="w-full flex-shrink-0">
                 {isVideo ? (
                   idx === currentIndex ? (
-                    <FeedVideoPlayer src={url} />
+                    <FeedVideoPlayer src={url} onVideoClick={onImageClick} />
                   ) : (
                     <video
                       src={url}
-                      className="w-full h-[360px] sm:h-[400px] object-cover"
+                      className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
                       muted
                       preload="metadata"
+                      onClick={() => onImageClick(url)}
                     />
                   )
                 ) : (
@@ -656,7 +657,7 @@ const FeedContent = ({
   )
 }
 
-// ─── Image Lightbox ─────────────────────────────────────
+// ─── Media Lightbox ─────────────────────────────────────
 
 const ImageLightbox = ({
   imageUrl,
@@ -666,6 +667,7 @@ const ImageLightbox = ({
   onClose: () => void
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const isVideo = isVideoUrl(imageUrl)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -691,7 +693,7 @@ const ImageLightbox = ({
       data-testid="lightbox-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label="이미지 확대 보기"
+      aria-label={isVideo ? '동영상 확대 보기' : '이미지 확대 보기'}
     >
       <button
         ref={closeButtonRef}
@@ -704,15 +706,26 @@ const ImageLightbox = ({
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-      <img
-        src={imageUrl}
-        alt="확대 사진"
-        className="max-w-[95vw] max-h-[95vh] object-contain"
-        onClick={(e) => e.stopPropagation()}
-        onError={(e) => {
-          ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-        }}
-      />
+      {isVideo ? (
+        <video
+          src={imageUrl}
+          className="max-w-[95vw] max-h-[95vh] object-contain"
+          controls
+          autoPlay
+          playsInline
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <img
+          src={imageUrl}
+          alt="확대 사진"
+          className="max-w-[95vw] max-h-[95vh] object-contain"
+          onClick={(e) => e.stopPropagation()}
+          onError={(e) => {
+            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+          }}
+        />
+      )}
     </div>
   )
 }
