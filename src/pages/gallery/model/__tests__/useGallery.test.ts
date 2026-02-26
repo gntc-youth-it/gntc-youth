@@ -1,11 +1,12 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useGallery } from '../useGallery'
-import { fetchGalleryPhotos } from '../../api/galleryApi'
-import type { GalleryPhotosResponse } from '../types'
+import { fetchGalleryPhotos, fetchSubCategories } from '../../api/galleryApi'
+import type { GalleryPhotosResponse, SubCategory } from '../types'
 
 jest.mock('../../api/galleryApi')
 
 const mockFetchGalleryPhotos = fetchGalleryPhotos as jest.MockedFunction<typeof fetchGalleryPhotos>
+const mockFetchSubCategories = fetchSubCategories as jest.MockedFunction<typeof fetchSubCategories>
 
 const mockResponse: GalleryPhotosResponse = {
   images: [
@@ -16,9 +17,27 @@ const mockResponse: GalleryPhotosResponse = {
   hasNext: true,
 }
 
+const mockSubCategories: SubCategory[] = [
+  {
+    name: 'RETREAT_2026_WINTER',
+    displayName: '2026 겨울 수련회',
+    imageUrl: 'assets/2026-winter-poster.webp',
+    startDate: '2026-01-29',
+    endDate: '2026-01-31',
+  },
+  {
+    name: 'RETREAT_2025_SUMMER',
+    displayName: '2025 여름 수련회',
+    imageUrl: 'assets/2025-summer-poster.webp',
+    startDate: '2025-07-10',
+    endDate: '2025-07-12',
+  },
+]
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockFetchGalleryPhotos.mockResolvedValue(mockResponse)
+  mockFetchSubCategories.mockResolvedValue(mockSubCategories)
 })
 
 describe('useGallery', () => {
@@ -175,5 +194,205 @@ describe('useGallery', () => {
   it('초기 카테고리는 ALL이다', () => {
     const { result } = renderHook(() => useGallery())
     expect(result.current.selectedCategory).toBe('ALL')
+  })
+})
+
+describe('useGallery 수련회 서브카테고리', () => {
+  it('RETREAT 카테고리 선택 시 서브카테고리를 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchSubCategories).toHaveBeenCalledWith('RETREAT')
+    expect(result.current.subCategories).toHaveLength(2)
+    expect(result.current.subCategories[0].name).toBe('RETREAT_2026_WINTER')
+  })
+
+  it('RETREAT 선택 시 첫 번째 서브카테고리가 자동 선택된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.selectedSubCategory).toBe('RETREAT_2026_WINTER')
+    })
+  })
+
+  it('RETREAT 선택 시 첫 번째 서브카테고리로 사진을 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      subCategory: 'RETREAT_2026_WINTER',
+    })
+  })
+
+  it('selectSubCategory로 다른 서브카테고리를 선택하면 사진을 다시 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.selectSubCategory('RETREAT_2025_SUMMER')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedSubCategory).toBe('RETREAT_2025_SUMMER')
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      subCategory: 'RETREAT_2025_SUMMER',
+    })
+  })
+
+  it('RETREAT에서 loadMore 호출 시 선택된 서브카테고리가 전달된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+    mockFetchGalleryPhotos.mockResolvedValueOnce({
+      images: [{ id: 39, url: 'uploads/more.jpg' }],
+      nextCursor: null,
+      hasNext: false,
+    })
+
+    act(() => {
+      result.current.loadMore()
+    })
+
+    await waitFor(() => {
+      expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+        size: 20,
+        cursor: 41,
+        subCategory: 'RETREAT_2026_WINTER',
+      })
+    })
+  })
+
+  it('ALL로 돌아가면 서브카테고리가 초기화된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toHaveLength(2)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('ALL')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.subCategories).toHaveLength(0)
+    expect(result.current.selectedSubCategory).toBeNull()
+  })
+
+  it('서브카테고리 조회 실패 시 에러 메시지가 설정된다', async () => {
+    mockFetchSubCategories.mockRejectedValueOnce(new Error('Network error'))
+
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.error).toBe('카테고리를 불러오는데 실패했습니다.')
+  })
+
+  it('서브카테고리가 빈 배열이면 사진 조회를 하지 않는다', async () => {
+    mockFetchSubCategories.mockResolvedValueOnce([])
+
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchGalleryPhotos).not.toHaveBeenCalled()
+    expect(result.current.photos).toHaveLength(0)
   })
 })

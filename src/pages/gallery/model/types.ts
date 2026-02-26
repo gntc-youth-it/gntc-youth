@@ -47,6 +47,9 @@ export interface Category {
 export interface SubCategory {
   name: string
   displayName: string
+  imageUrl: string
+  startDate: string
+  endDate: string
 }
 
 export interface CreatePostRequest {

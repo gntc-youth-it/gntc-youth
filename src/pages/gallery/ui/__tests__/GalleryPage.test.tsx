@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
-import type { GalleryPhotoItem } from '../../model/types'
+import type { GalleryPhotoItem, SubCategory } from '../../model/types'
 
 const mockNavigate = jest.fn()
 
@@ -30,6 +30,23 @@ const mockPhotos: GalleryPhotoItem[] = [
   { id: 40, url: 'uploads/photo3.jpg' },
 ]
 
+const mockSubCategories: SubCategory[] = [
+  {
+    name: 'RETREAT_2026_WINTER',
+    displayName: '2026 겨울 수련회 (새 힘을 바라보라)',
+    imageUrl: 'assets/2026-winter-poster.webp',
+    startDate: '2026-01-29',
+    endDate: '2026-01-31',
+  },
+  {
+    name: 'RETREAT_2025_SUMMER',
+    displayName: '2025 여름 수련회',
+    imageUrl: 'assets/2025-summer-poster.webp',
+    startDate: '2025-07-10',
+    endDate: '2025-07-12',
+  },
+]
+
 const defaultGallery = {
   photos: mockPhotos,
   isLoading: false,
@@ -39,6 +56,10 @@ const defaultGallery = {
   loadMore: jest.fn(),
   selectedCategory: 'ALL' as const,
   setSelectedCategory: jest.fn(),
+  subCategories: [] as SubCategory[],
+  selectedSubCategory: null as string | null,
+  selectSubCategory: jest.fn(),
+  isLoadingSubCategories: false,
 }
 
 beforeEach(() => {
@@ -190,6 +211,135 @@ describe('GalleryPage 무한 스크롤', () => {
     expect(screen.getByAltText('갤러리 사진 1')).toBeInTheDocument()
     expect(screen.getByAltText('갤러리 사진 2')).toBeInTheDocument()
     expect(screen.getByAltText('갤러리 사진 3')).toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 수련회 히어로 배너', () => {
+  const retreatGallery = {
+    ...defaultGallery,
+    selectedCategory: 'RETREAT' as const,
+    subCategories: mockSubCategories,
+    selectedSubCategory: 'RETREAT_2026_WINTER',
+  }
+
+  it('수련회 탭에서 선택된 서브카테고리의 행사명이 표시된다', () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('2026 겨울 수련회 (새 힘을 바라보라)')).toBeInTheDocument()
+  })
+
+  it('수련회 탭에서 선택된 서브카테고리의 기간이 표시된다', () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('2026.01.29 - 2026.01.31')).toBeInTheDocument()
+  })
+
+  it('수련회 탭에서 RETREAT 라벨이 표시된다', () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('RETREAT')).toBeInTheDocument()
+  })
+
+  it('서브카테고리가 2개 이상이면 "다른 행사 보기" 버튼이 표시된다', () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByRole('button', { name: /다른 행사 보기/ })).toBeInTheDocument()
+  })
+
+  it('서브카테고리가 1개면 "다른 행사 보기" 버튼이 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue({
+      ...retreatGallery,
+      subCategories: [mockSubCategories[0]],
+    })
+
+    render(<GalleryPage />)
+
+    expect(screen.queryByRole('button', { name: /다른 행사 보기/ })).not.toBeInTheDocument()
+  })
+
+  it('ALL 탭에서는 히어로 배너가 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue(defaultGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.queryByText('RETREAT')).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 수련회 행사 선택 모달', () => {
+  const retreatGallery = {
+    ...defaultGallery,
+    selectedCategory: 'RETREAT' as const,
+    subCategories: mockSubCategories,
+    selectedSubCategory: 'RETREAT_2026_WINTER',
+  }
+
+  it('"다른 행사 보기" 클릭 시 모달이 열린다', async () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+
+    expect(screen.getByText('수련회 행사 목록')).toBeInTheDocument()
+  })
+
+  it('모달에 모든 서브카테고리가 표시된다', async () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+
+    expect(screen.getByText('2025 여름 수련회')).toBeInTheDocument()
+    expect(screen.getByText('2025.07.10 - 2025.07.12')).toBeInTheDocument()
+  })
+
+  it('현재 선택된 행사에 "현재 보고 있는 행사" 라벨이 표시된다', async () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+
+    expect(screen.getByText('현재 보고 있는 행사')).toBeInTheDocument()
+  })
+
+  it('다른 행사를 클릭하면 selectSubCategory가 호출되고 모달이 닫힌다', async () => {
+    const mockSelectSubCategory = jest.fn()
+    mockUseGallery.mockReturnValue({
+      ...retreatGallery,
+      selectSubCategory: mockSelectSubCategory,
+    })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+    await userEvent.click(screen.getByText('2025 여름 수련회'))
+
+    expect(mockSelectSubCategory).toHaveBeenCalledWith('RETREAT_2025_SUMMER')
+    expect(screen.queryByText('수련회 행사 목록')).not.toBeInTheDocument()
+  })
+
+  it('X 버튼 클릭 시 모달이 닫힌다', async () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+    expect(screen.getByText('수련회 행사 목록')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }))
+
+    expect(screen.queryByText('수련회 행사 목록')).not.toBeInTheDocument()
   })
 })
 
