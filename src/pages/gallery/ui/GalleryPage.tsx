@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
+import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { buildCdnUrl } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
@@ -290,6 +292,8 @@ const FeedContent = ({ albums }: { albums: GalleryAlbum[] }) => (
 export const GalleryPage = () => {
   const { albums, isLoading, error, selectedCategory, setSelectedCategory } = useGallery()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const navigate = useNavigate()
+  const { isLoggedIn } = useAuth()
 
   return (
     <>
@@ -304,9 +308,16 @@ export const GalleryPage = () => {
                   GALLERY
                 </h1>
                 <p className="text-sm text-[#666666]">
-                  은혜와진리교회 청년봉사선교회 · 사진 갤러리
-                </p>
+                  은혜와진리교회 청년봉사선교회 · 사진 갤러리</p>
               </div>
+              {isLoggedIn && (
+                <button
+                  onClick={() => navigate('/gallery/write')}
+                  className="px-5 py-2.5 bg-[#3B5BDB] text-white text-sm font-semibold rounded-lg hover:bg-[#364FC7] transition-colors shrink-0"
+                >
+                  글쓰기
+                </button>
+              )}
             </div>
 
             {/* Nav bar: categories + view toggle */}
