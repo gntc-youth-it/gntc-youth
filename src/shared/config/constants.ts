@@ -27,5 +27,4 @@ export const IMAGE_COMPRESSION_OPTIONS = {
 export const VIDEO_COMPRESSION_OPTIONS = {
   crf: 28,
   maxWidth: 1280,
-  skipBelowSize: 20 * 1024 * 1024, // 20MB 이하 MP4는 압축 스킵
 }

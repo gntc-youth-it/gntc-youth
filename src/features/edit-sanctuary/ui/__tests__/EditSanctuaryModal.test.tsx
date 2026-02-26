@@ -312,7 +312,6 @@ describe('EditSanctuaryModal', () => {
         expect(mockCompressVideo).toHaveBeenCalledWith(file, {
           crf: 28,
           maxWidth: 1280,
-          skipBelowSize: 20 * 1024 * 1024,
           onProgress: expect.any(Function),
         })
       })

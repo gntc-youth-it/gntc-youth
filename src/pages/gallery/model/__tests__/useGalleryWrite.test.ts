@@ -37,7 +37,7 @@ jest.mock('../../../../shared/config/constants', () => ({
   ACCEPTED_VIDEO_TYPES: ['video/mp4', 'video/quicktime', 'video/webm'],
   MAX_IMAGE_SIZE: 20 * 1024 * 1024,
   MAX_VIDEO_SIZE: 500 * 1024 * 1024,
-  VIDEO_COMPRESSION_OPTIONS: { crf: 28, maxWidth: 1280, skipBelowSize: 20 * 1024 * 1024 },
+  VIDEO_COMPRESSION_OPTIONS: { crf: 28, maxWidth: 1280 },
 }))
 
 // Mock crypto.randomUUID
