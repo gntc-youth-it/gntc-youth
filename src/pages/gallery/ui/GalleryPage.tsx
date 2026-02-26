@@ -446,16 +446,28 @@ const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
   )
 }
 
-const FeedCard = ({ post }: { post: FeedPost }) => (
+const GNTC_LOGO_URL = 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp'
+const GNTC_AUTHOR_NAME = 'GNTC YOUTH'
+
+const FeedCard = ({ post }: { post: FeedPost }) => {
+  const displayName = post.isAuthorPublic ? post.authorName : GNTC_AUTHOR_NAME
+
+  return (
   <article className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
     {/* Post header */}
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#3B5BDB] flex items-center justify-center">
-          <span className="text-white text-xs font-bold">{post.authorName.charAt(0)}</span>
-        </div>
+        {post.isAuthorPublic ? (
+          <div className="w-10 h-10 rounded-full bg-[#3B5BDB] flex items-center justify-center">
+            <span className="text-white text-xs font-bold">{post.authorName.charAt(0)}</span>
+          </div>
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden p-1">
+            <img src={GNTC_LOGO_URL} alt="GNTC Youth" className="w-full h-full object-contain" />
+          </div>
+        )}
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold text-[#1A1A1A]">{post.authorName}</span>
+          <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>
           <span className="text-xs text-[#999999]">{formatFeedDate(post.createdAt)}</span>
         </div>
       </div>
@@ -498,7 +510,8 @@ const FeedCard = ({ post }: { post: FeedPost }) => (
       )}
     </div>
   </article>
-)
+  )
+}
 
 const FeedContent = ({
   posts,

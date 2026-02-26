@@ -79,6 +79,7 @@ describe('useGalleryWrite 초기 상태', () => {
     expect(result.current.content).toBe('')
     expect(result.current.hashtags).toEqual([])
     expect(result.current.selectedChurches).toEqual([])
+    expect(result.current.isAuthorPublic).toBe(false)
     expect(result.current.images).toEqual([])
     expect(result.current.isSubmitting).toBe(false)
     expect(result.current.submitError).toBeNull()
@@ -379,9 +380,40 @@ describe('useGalleryWrite 게시글 등록', () => {
       hashtags: ['수련회'],
       churches: ['ANYANG'],
       imageIds: undefined,
+      isAuthorPublic: undefined,
     })
     expect(mockNavigate).toHaveBeenCalledWith('/gallery')
     expect(result.current.isSubmitting).toBe(false)
+  })
+
+  it('isAuthorPublic: true로 게시글을 등록한다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toEqual(mockSubCategories)
+    })
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
+      result.current.setIsAuthorPublic(true)
+    })
+
+    expect(result.current.isAuthorPublic).toBe(true)
+
+    await act(async () => {
+      await result.current.handleSubmit()
+    })
+
+    expect(mockCreatePost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subCategory: 'RETREAT_2026_WINTER',
+        isAuthorPublic: true,
+      })
+    )
   })
 
   it('게시글 등록 실패 시 에러 메시지를 표시한다', async () => {

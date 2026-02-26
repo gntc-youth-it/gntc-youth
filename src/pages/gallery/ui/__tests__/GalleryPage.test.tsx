@@ -58,6 +58,7 @@ const mockFeedPosts: FeedPost[] = [
     id: 10,
     authorId: 1,
     authorName: '홍길동',
+    isAuthorPublic: true,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
     status: 'APPROVED',
@@ -75,6 +76,7 @@ const mockFeedPosts: FeedPost[] = [
     id: 8,
     authorId: 2,
     authorName: '김영희',
+    isAuthorPublic: false,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
     status: 'APPROVED',
@@ -406,7 +408,9 @@ describe('GalleryPage 피드 뷰', () => {
 
     expect(screen.getByText('홍길동')).toBeInTheDocument()
     expect(screen.getByText('수련회 후기입니다')).toBeInTheDocument()
-    expect(screen.getByText('김영희')).toBeInTheDocument()
+    // 김영희는 isAuthorPublic: false이므로 GNTC YOUTH로 표시
+    expect(screen.queryByText('김영희')).not.toBeInTheDocument()
+    expect(screen.getByText('GNTC YOUTH')).toBeInTheDocument()
     expect(screen.getByText('은혜로운 시간이었습니다')).toBeInTheDocument()
   })
 
@@ -506,6 +510,62 @@ describe('GalleryPage 피드 뷰', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /갤러리/ }))
     expect(screen.queryByText('홍길동')).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 작성자 공개 여부', () => {
+  it('isAuthorPublic: true인 게시글은 실제 작성자 이름을 표시한다', async () => {
+    const publicPost: FeedPost = {
+      ...mockFeedPosts[0],
+      isAuthorPublic: true,
+      authorName: '홍길동',
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [publicPost] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('홍길동')).toBeInTheDocument()
+    expect(screen.getByText('홍')).toBeInTheDocument() // 이니셜 아바타
+    expect(screen.queryByText('GNTC YOUTH')).not.toBeInTheDocument()
+  })
+
+  it('isAuthorPublic: false인 게시글은 GNTC YOUTH로 표시한다', async () => {
+    const privatePost: FeedPost = {
+      ...mockFeedPosts[0],
+      isAuthorPublic: false,
+      authorName: '홍길동',
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [privatePost] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('GNTC YOUTH')).toBeInTheDocument()
+    expect(screen.queryByText('홍길동')).not.toBeInTheDocument()
+    // GNTC YOUTH 로고 이미지가 있는지 확인
+    expect(screen.getByAltText('GNTC Youth')).toBeInTheDocument()
+  })
+
+  it('isAuthorPublic: false인 게시글에 이니셜 아바타 대신 로고가 표시된다', async () => {
+    const privatePost: FeedPost = {
+      ...mockFeedPosts[0],
+      isAuthorPublic: false,
+      authorName: '홍길동',
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [privatePost] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    // 이니셜 아바타('홍')가 표시되지 않아야 함
+    expect(screen.queryByText('홍')).not.toBeInTheDocument()
+    // 로고 이미지가 표시되어야 함
+    const logo = screen.getByAltText('GNTC Youth')
+    expect(logo).toHaveAttribute('src', 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp')
   })
 })
 

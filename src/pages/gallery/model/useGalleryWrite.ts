@@ -23,6 +23,7 @@ export const useGalleryWrite = () => {
   const [content, setContent] = useState('')
   const [hashtags, setHashtags] = useState<string[]>([])
   const [selectedChurches, setSelectedChurches] = useState<string[]>([])
+  const [isAuthorPublic, setIsAuthorPublic] = useState(false)
 
   // Image state
   const [images, setImages] = useState<UploadingImage[]>([])
@@ -223,6 +224,7 @@ export const useGalleryWrite = () => {
         hashtags: hashtags.length > 0 ? hashtags : undefined,
         churches: selectedChurches.length > 0 ? selectedChurches : undefined,
         imageIds: imageIds.length > 0 ? imageIds : undefined,
+        isAuthorPublic: isAuthorPublic || undefined,
       })
 
       navigate('/gallery')
@@ -231,7 +233,7 @@ export const useGalleryWrite = () => {
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedSubCategory, images, content, hashtags, selectedChurches, navigate])
+  }, [selectedSubCategory, images, content, hashtags, selectedChurches, isAuthorPublic, navigate])
 
   return {
     // Categories
@@ -250,6 +252,8 @@ export const useGalleryWrite = () => {
     removeHashtag,
     selectedChurches,
     toggleChurch,
+    isAuthorPublic,
+    setIsAuthorPublic,
 
     // Images
     images,
