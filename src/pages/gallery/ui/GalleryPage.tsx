@@ -664,12 +664,19 @@ const ImageLightbox = ({
   imageUrl: string
   onClose: () => void
 }) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        closeButtonRef.current?.focus()
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     document.body.style.overflow = 'hidden'
+    closeButtonRef.current?.focus()
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
@@ -680,8 +687,13 @@ const ImageLightbox = ({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
       onClick={onClose}
+      data-testid="lightbox-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="이미지 확대 보기"
     >
       <button
+        ref={closeButtonRef}
         onClick={onClose}
         className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
         aria-label="닫기"
@@ -724,6 +736,7 @@ export const GalleryPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const handleCloseLightbox = useCallback(() => setLightboxUrl(null), [])
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
@@ -884,7 +897,7 @@ export const GalleryPage = () => {
 
       {/* Image Lightbox */}
       {lightboxUrl && (
-        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+        <ImageLightbox imageUrl={lightboxUrl} onClose={handleCloseLightbox} />
       )}
     </>
   )

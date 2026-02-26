@@ -636,6 +636,17 @@ describe('GalleryPage 이미지 라이트박스', () => {
     expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
   })
 
+  it('배경 클릭 시 라이트박스가 닫힌다', async () => {
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByAltText('갤러리 사진 1'))
+    expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByTestId('lightbox-overlay'))
+
+    expect(screen.queryByAltText('확대 사진')).not.toBeInTheDocument()
+  })
+
   it('라이트박스가 열리면 배경 스크롤이 비활성화된다', async () => {
     render(<GalleryPage />)
 
