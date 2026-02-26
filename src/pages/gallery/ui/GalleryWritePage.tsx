@@ -31,6 +31,8 @@ const CloseIcon = () => (
 
 // ─── Sub-components ──────────────────────────────────────
 
+const COMPRESSION_UI_PROGRESS = 50
+
 const ImagePreviewCard = ({
   image,
   onRemove,
@@ -48,7 +50,7 @@ const ImagePreviewCard = ({
 
   return (
     <div className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
-      <img src={image.preview} alt="" className="w-full h-full object-cover" />
+      <img src={image.preview} alt={`업로드된 이미지: ${image.file.name}`} className="w-full h-full object-cover" />
 
       {/* Progress overlay */}
       {(image.status === 'compressing' || image.status === 'uploading') && (
@@ -57,7 +59,7 @@ const ImagePreviewCard = ({
           <div className="w-3/4 h-1.5 bg-white/30 rounded-full overflow-hidden">
             <div
               className="h-full bg-white rounded-full transition-all duration-200"
-              style={{ width: `${image.status === 'compressing' ? 50 : image.progress}%` }}
+              style={{ width: `${image.status === 'compressing' ? COMPRESSION_UI_PROGRESS : image.progress}%` }}
             />
           </div>
         </div>

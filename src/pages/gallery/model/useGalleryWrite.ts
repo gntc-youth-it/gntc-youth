@@ -26,6 +26,8 @@ export const useGalleryWrite = () => {
 
   // Image state
   const [images, setImages] = useState<UploadingImage[]>([])
+  const imagesRef = useRef(images)
+  imagesRef.current = images
 
   // Churches
   const [churches, setChurches] = useState<Church[]>([])
@@ -97,7 +99,7 @@ export const useGalleryWrite = () => {
   // Cleanup image preview URLs on unmount
   useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.preview))
+      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
