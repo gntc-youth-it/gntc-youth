@@ -436,7 +436,8 @@ const FeedVideoPlayer = ({ src }: { src: string }) => {
 // ─── Feed View Components ────────────────────────────────
 
 const formatFeedDate = (dateStr: string) => {
-  const date = new Date(dateStr)
+  const utcStr = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z'
+  const date = new Date(utcStr)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMin = Math.floor(diffMs / 60000)
