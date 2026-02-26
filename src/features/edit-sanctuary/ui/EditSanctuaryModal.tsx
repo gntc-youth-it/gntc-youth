@@ -8,7 +8,7 @@ import {
 import { useChurchInfo, clearChurchInfoCache } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
 import { getMediaType, buildCdnUrl, compressImage, compressVideo, isVideoCompressionSupported, uploadToS3 } from '../../../shared/lib'
-import { IMAGE_COMPRESSION_OPTIONS, VIDEO_COMPRESSION_OPTIONS } from '../../media-upload/model/constants'
+import { IMAGE_COMPRESSION_OPTIONS, VIDEO_COMPRESSION_OPTIONS } from '../../../shared/config'
 import { getFilePresignedUrl, updateChurchInfo } from '../api'
 import type { SanctuaryFormData } from '../model/types'
 
