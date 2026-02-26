@@ -134,34 +134,23 @@ const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
 )
 
 const AllPhotosGrid = ({ albums }: { albums: GalleryAlbum[] }) => {
-  const allPhotos = albums.flatMap((album) => album.photos)
-  const columnCount = 4
-  const columns: string[][] = Array.from({ length: columnCount }, () => [])
-  const heights = new Array(columnCount).fill(0)
-
-  allPhotos.forEach((photo) => {
-    const shortest = heights.indexOf(Math.min(...heights))
-    columns[shortest].push(buildCdnUrl(photo.url))
-    heights[shortest] += 1
-  })
+  const allPhotos = albums.flatMap((album) =>
+    album.photos.map((photo) => ({ ...photo, albumTitle: album.title }))
+  )
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {columns.map((col, colIdx) => (
-        <div key={colIdx} className="flex flex-col gap-3">
-          {col.map((url, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl">
-              <img
-                src={url}
-                alt={`갤러리 사진 ${colIdx * col.length + imgIdx + 1}`}
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
-              />
-            </div>
-          ))}
+    <div className="columns-2 md:columns-4 gap-3">
+      {allPhotos.map((photo) => (
+        <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
+          <img
+            src={buildCdnUrl(photo.url)}
+            alt={`${photo.albumTitle} 앨범 사진`}
+            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            onError={(e) => {
+              ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+            }}
+          />
         </div>
       ))}
     </div>
