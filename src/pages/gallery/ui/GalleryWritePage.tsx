@@ -130,6 +130,7 @@ export const GalleryWritePage = () => {
   const canUploadImages = user?.role === 'LEADER' || user?.role === 'MASTER'
 
   const handleHashtagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       const value = hashtagInput.replace(/,/g, '').trim()
