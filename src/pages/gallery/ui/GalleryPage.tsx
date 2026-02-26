@@ -87,7 +87,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
 
 // ─── Grid View Components ────────────────────────────────
 
-const GalleryGrid = ({ album }: { album: GalleryAlbum }) => {
+const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => {
   const columnCount = 4
   const columns: string[][] = Array.from({ length: columnCount }, () => [])
   const heights = new Array(columnCount).fill(0)
@@ -103,7 +103,7 @@ const GalleryGrid = ({ album }: { album: GalleryAlbum }) => {
       {columns.map((col, colIdx) => (
         <div key={colIdx} className="flex flex-col gap-3">
           {col.map((url, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl">
+            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(url)}>
               <img
                 src={url}
                 alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
@@ -121,7 +121,7 @@ const GalleryGrid = ({ album }: { album: GalleryAlbum }) => {
   )
 }
 
-const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
+const AlbumSection = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => (
   <section className="flex flex-col gap-5">
     <div className="flex items-end justify-between">
       <div className="flex flex-col gap-1">
@@ -130,7 +130,7 @@ const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
       </div>
       <span className="text-sm text-[#999999]">{album.photoCount}장의 사진</span>
     </div>
-    <GalleryGrid album={album} />
+    <GalleryGrid album={album} onImageClick={onImageClick} />
   </section>
 )
 
@@ -139,11 +139,13 @@ const AllPhotosGrid = ({
   hasNext,
   isFetchingMore,
   loadMore,
+  onImageClick,
 }: {
   photos: GalleryPhotoItem[]
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
+  onImageClick: (url: string) => void
 }) => {
   const sentinelRef = useInfiniteScroll(loadMore, {
     enabled: hasNext && !isFetchingMore,
@@ -156,7 +158,11 @@ const AllPhotosGrid = ({
       </p>
       <div className="columns-2 md:columns-4 gap-3">
         {photos.map((photo, idx) => (
-          <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
+          <div
+            key={photo.id}
+            className="mb-3 break-inside-avoid overflow-hidden rounded-xl cursor-pointer"
+            onClick={() => onImageClick(buildCdnUrl(photo.url))}
+          >
             <img
               src={buildCdnUrl(photo.url)}
               alt={`갤러리 사진 ${idx + 1}`}
@@ -191,6 +197,7 @@ const GridContent = ({
   hasNext,
   isFetchingMore,
   loadMore,
+  onImageClick,
 }: {
   albums: GalleryAlbum[]
   showAllPhotos: boolean
@@ -198,6 +205,7 @@ const GridContent = ({
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
+  onImageClick: (url: string) => void
 }) => (
   <div className="px-4 sm:px-8 lg:px-[60px] py-10">
     <div className="max-w-7xl mx-auto flex flex-col gap-10">
@@ -207,11 +215,12 @@ const GridContent = ({
           hasNext={hasNext}
           isFetchingMore={isFetchingMore}
           loadMore={loadMore}
+          onImageClick={onImageClick}
         />
       ) : (
         albums.map((album, idx) => (
           <div key={album.id}>
-            <AlbumSection album={album} />
+            <AlbumSection album={album} onImageClick={onImageClick} />
             {idx < albums.length - 1 && <div className="h-px bg-[#E0E0E0] mt-10" />}
           </div>
         ))
@@ -442,7 +451,7 @@ const formatFeedDate = (dateStr: string) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
-const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
+const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; onImageClick: (url: string) => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const goTo = (idx: number) => {
@@ -479,8 +488,9 @@ const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
                   <img
                     src={url}
                     alt={`사진 ${image.sortOrder}`}
-                    className="w-full h-[360px] sm:h-[400px] object-cover"
+                    className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
                     loading="lazy"
+                    onClick={() => onImageClick(url)}
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
                     }}
@@ -542,7 +552,7 @@ const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
 const GNTC_LOGO_URL = 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp'
 const GNTC_AUTHOR_NAME = 'GNTC YOUTH'
 
-const FeedCard = ({ post }: { post: FeedPost }) => {
+const FeedCard = ({ post, onImageClick }: { post: FeedPost; onImageClick: (url: string) => void }) => {
   const displayName = post.isAuthorPublic ? post.authorName : GNTC_AUTHOR_NAME
 
   return (
@@ -574,7 +584,7 @@ const FeedCard = ({ post }: { post: FeedPost }) => {
     </div>
 
     {/* Image carousel */}
-    <FeedImageCarousel images={post.images} />
+    <FeedImageCarousel images={post.images} onImageClick={onImageClick} />
 
     {/* Action bar */}
     <div className="flex items-center justify-between px-4 py-3">
@@ -611,11 +621,13 @@ const FeedContent = ({
   hasNext,
   isFetchingMore,
   loadMore,
+  onImageClick,
 }: {
   posts: FeedPost[]
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
+  onImageClick: (url: string) => void
 }) => {
   const sentinelRef = useInfiniteScroll(loadMore, {
     enabled: hasNext && !isFetchingMore,
@@ -625,7 +637,7 @@ const FeedContent = ({
     <div className="flex justify-center px-4 py-10">
       <div className="w-full max-w-[600px] flex flex-col gap-6">
         {posts.map((post) => (
-          <FeedCard key={post.id} post={post} />
+          <FeedCard key={post.id} post={post} onImageClick={onImageClick} />
         ))}
         {isFetchingMore && (
           <div className="flex justify-center py-8">
@@ -639,6 +651,55 @@ const FeedContent = ({
         )}
         <div ref={sentinelRef} className="h-1" />
       </div>
+    </div>
+  )
+}
+
+// ─── Image Lightbox ─────────────────────────────────────
+
+const ImageLightbox = ({
+  imageUrl,
+  onClose,
+}: {
+  imageUrl: string
+  onClose: () => void
+}) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+        aria-label="닫기"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <img
+        src={imageUrl}
+        alt="확대 사진"
+        className="max-w-[95vw] max-h-[95vh] object-contain"
+        onClick={(e) => e.stopPropagation()}
+        onError={(e) => {
+          ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+        }}
+      />
     </div>
   )
 }
@@ -662,6 +723,7 @@ export const GalleryPage = () => {
   const feed = useFeed()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
@@ -787,6 +849,7 @@ export const GalleryPage = () => {
                 hasNext={hasNext}
                 isFetchingMore={isFetchingMore}
                 loadMore={loadMore}
+                onImageClick={setLightboxUrl}
               />
             ) : (
               <FeedContent
@@ -794,6 +857,7 @@ export const GalleryPage = () => {
                 hasNext={feed.hasNext}
                 isFetchingMore={feed.isFetchingMore}
                 loadMore={feedLoadMore}
+                onImageClick={setLightboxUrl}
               />
             )}
           </div>
@@ -817,6 +881,11 @@ export const GalleryPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Image Lightbox */}
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </>
   )
 }
