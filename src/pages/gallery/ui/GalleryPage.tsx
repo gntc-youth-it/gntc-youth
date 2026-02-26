@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { useFeed } from '../model/useFeed'
-import { buildCdnUrl, useInfiniteScroll } from '../../../shared/lib'
+import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage } from '../model/types'
 
@@ -350,6 +350,80 @@ const RetreatSelectorModal = ({
   </div>
 )
 
+// ─── Feed Video Player ──────────────────────────────────
+
+const MutedIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </svg>
+)
+
+const UnmutedIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  </svg>
+)
+
+const FeedVideoPlayer = ({ src }: { src: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isMuted, setIsMuted] = useState(true)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {/* autoplay blocked */})
+          } else {
+            video.pause()
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.muted = !video.muted
+    setIsMuted(video.muted)
+  }, [])
+
+  return (
+    <div className="relative w-full h-[360px] sm:h-[400px]" onClick={toggleMute}>
+      <video
+        ref={videoRef}
+        src={src}
+        className="w-full h-full object-cover"
+        loop
+        muted
+        playsInline
+        preload="metadata"
+      />
+      <button
+        className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white"
+        onClick={(e) => {
+          e.stopPropagation()
+          toggleMute()
+        }}
+        aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
+      >
+        {isMuted ? <MutedIcon /> : <UnmutedIcon />}
+      </button>
+    </div>
+  )
+}
+
 // ─── Feed View Components ────────────────────────────────
 
 const formatFeedDate = (dateStr: string) => {
@@ -384,18 +458,37 @@ const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
           className="flex transition-transform duration-300 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {images.map((image) => (
-            <img
-              key={image.fileId}
-              src={buildCdnUrl(image.filePath)}
-              alt={`사진 ${image.sortOrder}`}
-              className="w-full h-[360px] sm:h-[400px] object-cover flex-shrink-0"
-              loading="lazy"
-              onError={(e) => {
-                ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-              }}
-            />
-          ))}
+          {images.map((image, idx) => {
+            const url = buildCdnUrl(image.filePath)
+            const isVideo = isVideoUrl(url)
+
+            return (
+              <div key={image.fileId} className="w-full flex-shrink-0">
+                {isVideo ? (
+                  idx === currentIndex ? (
+                    <FeedVideoPlayer src={url} />
+                  ) : (
+                    <video
+                      src={url}
+                      className="w-full h-[360px] sm:h-[400px] object-cover"
+                      muted
+                      preload="metadata"
+                    />
+                  )
+                ) : (
+                  <img
+                    src={url}
+                    alt={`사진 ${image.sortOrder}`}
+                    className="w-full h-[360px] sm:h-[400px] object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 

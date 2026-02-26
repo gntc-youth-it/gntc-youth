@@ -138,4 +138,5 @@ export interface UploadingImage {
   status: UploadStatus
   fileId?: number
   error?: string
+  mediaType: 'image' | 'video'
 }

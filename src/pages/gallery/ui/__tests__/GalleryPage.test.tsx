@@ -583,3 +583,90 @@ describe('GalleryPage 푸터', () => {
     expect(screen.getByText('은혜와진리교회 · 청년봉사선교회')).toBeInTheDocument()
   })
 })
+
+describe('GalleryPage 피드 영상 재생', () => {
+  const mockFeedPostWithVideo: FeedPost = {
+    id: 12,
+    authorId: 1,
+    authorName: '홍길동',
+    isAuthorPublic: true,
+    subCategory: 'RETREAT_2026_WINTER',
+    category: 'RETREAT',
+    status: 'APPROVED',
+    content: '수련회 영상입니다',
+    hashtags: ['#수련회'],
+    churches: ['ANYANG'],
+    images: [
+      { fileId: 10, filePath: 'uploads/video1.mp4', sortOrder: 1 },
+      { fileId: 11, filePath: 'uploads/photo1.jpg', sortOrder: 2 },
+    ],
+    commentCount: 1,
+    createdAt: '2026-02-26T12:00:00',
+  }
+
+  it('영상 URL이 포함된 피드에서 video 태그가 렌더링된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPostWithVideo] })
+
+    const { container } = render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(container.querySelector('video')).toBeInTheDocument()
+  })
+
+  it('이미지 URL은 img 태그로 렌더링된다', async () => {
+    const imageOnlyPost: FeedPost = {
+      ...mockFeedPostWithVideo,
+      images: [{ fileId: 11, filePath: 'uploads/photo1.jpg', sortOrder: 1 }],
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [imageOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(container.querySelector('video')).not.toBeInTheDocument()
+    expect(screen.getByAltText('사진 1')).toBeInTheDocument()
+  })
+
+  it('영상에 음소거 토글 버튼이 표시된다', async () => {
+    const videoOnlyPost: FeedPost = {
+      ...mockFeedPostWithVideo,
+      images: [{ fileId: 10, filePath: 'uploads/video1.mp4', sortOrder: 1 }],
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByLabelText('소리 켜기')).toBeInTheDocument()
+  })
+
+  it('영상이 loop과 muted 속성을 가진다', async () => {
+    const videoOnlyPost: FeedPost = {
+      ...mockFeedPostWithVideo,
+      images: [{ fileId: 10, filePath: 'uploads/video1.mp4', sortOrder: 1 }],
+    }
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    const video = container.querySelector('video')
+    expect(video).toHaveAttribute('loop')
+  })
+
+  it('이미지와 영상이 혼합된 캐러셀에서 dot indicator가 정상 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPostWithVideo] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    // 2개 미디어 아이템 → dot 2개
+    const dots = screen.getAllByLabelText(/사진 \d/)
+    expect(dots).toHaveLength(2)
+  })
+})
