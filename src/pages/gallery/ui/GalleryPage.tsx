@@ -151,11 +151,11 @@ const AllPhotosGrid = ({
   return (
     <>
       <div className="columns-2 md:columns-4 gap-3">
-        {photos.map((photo) => (
+        {photos.map((photo, idx) => (
           <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
             <img
               src={buildCdnUrl(photo.url)}
-              alt="갤러리 사진"
+              alt={`갤러리 사진 ${idx + 1}`}
               className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
               loading="lazy"
               onError={(e) => {
