@@ -631,7 +631,7 @@ describe('GalleryPage 이미지 라이트박스', () => {
     render(<GalleryPage />)
 
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
-    await userEvent.click(screen.getByAltText('사진 1'))
+    await userEvent.click(screen.getAllByAltText('사진 1')[0])
 
     expect(screen.getByAltText('확대 사진')).toBeInTheDocument()
   })
