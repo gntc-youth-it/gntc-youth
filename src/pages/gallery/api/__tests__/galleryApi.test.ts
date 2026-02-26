@@ -4,6 +4,7 @@ jest.mock('../../../../shared/api', () => ({
 
 import {
   fetchGalleryAlbums,
+  fetchGalleryPhotos,
   fetchCategories,
   fetchSubCategories,
   getPresignedUrl,
@@ -48,6 +49,41 @@ describe('fetchGalleryAlbums', () => {
     mockApiRequest.mockRejectedValue(new Error('Network error'))
 
     await expect(fetchGalleryAlbums()).rejects.toThrow('Network error')
+  })
+})
+
+describe('fetchGalleryPhotos', () => {
+  it('파라미터 없이 호출하면 /posts/gallery로 요청한다', async () => {
+    const mockResponse = { images: [], nextCursor: null, hasNext: false }
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    const result = await fetchGalleryPhotos({})
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/gallery')
+    expect(result).toEqual(mockResponse)
+  })
+
+  it('cursor와 size를 쿼리 파라미터로 전달한다', async () => {
+    const mockResponse = {
+      images: [{ id: 42, url: 'uploads/abc123.jpg' }],
+      nextCursor: 42,
+      hasNext: true,
+    }
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    await fetchGalleryPhotos({ cursor: 50, size: 10 })
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/gallery?size=10&cursor=50')
+  })
+
+  it('subCategory를 쿼리 파라미터로 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ images: [], nextCursor: null, hasNext: false })
+
+    await fetchGalleryPhotos({ subCategory: 'RETREAT_2026_WINTER' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/gallery?subCategory=RETREAT_2026_WINTER'
+    )
   })
 })
 

@@ -24,6 +24,19 @@ export interface GalleryResponse {
   albums: GalleryAlbum[]
 }
 
+// --- Gallery Photo Pagination Types ---
+
+export interface GalleryPhotoItem {
+  id: number
+  url: string
+}
+
+export interface GalleryPhotosResponse {
+  images: GalleryPhotoItem[]
+  nextCursor: number | null
+  hasNext: boolean
+}
+
 // --- Post Creation Types ---
 
 export interface Category {

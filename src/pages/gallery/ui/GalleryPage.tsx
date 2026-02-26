@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
-import { buildCdnUrl } from '../../../shared/lib'
+import { buildCdnUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import type { GalleryCategory, GalleryAlbum, ViewMode } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
@@ -133,35 +133,77 @@ const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
   </section>
 )
 
-const AllPhotosGrid = ({ albums }: { albums: GalleryAlbum[] }) => {
-  const allPhotos = albums.flatMap((album) =>
-    album.photos.map((photo) => ({ ...photo, albumTitle: album.title }))
-  )
+const AllPhotosGrid = ({
+  photos,
+  hasNext,
+  isFetchingMore,
+  loadMore,
+}: {
+  photos: GalleryPhotoItem[]
+  hasNext: boolean
+  isFetchingMore: boolean
+  loadMore: () => void
+}) => {
+  const sentinelRef = useInfiniteScroll(loadMore, {
+    enabled: hasNext && !isFetchingMore,
+  })
 
   return (
-    <div className="columns-2 md:columns-4 gap-3">
-      {allPhotos.map((photo) => (
-        <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
-          <img
-            src={buildCdnUrl(photo.url)}
-            alt={`${photo.albumTitle} 앨범 사진`}
-            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-            onError={(e) => {
-              ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-            }}
-          />
+    <>
+      <div className="columns-2 md:columns-4 gap-3">
+        {photos.map((photo) => (
+          <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
+            <img
+              src={buildCdnUrl(photo.url)}
+              alt="갤러리 사진"
+              className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+              onError={(e) => {
+                ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      {isFetchingMore && (
+        <div className="flex justify-center py-8">
+          <div className="w-6 h-6 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
         </div>
-      ))}
-    </div>
+      )}
+      {!hasNext && photos.length > 0 && (
+        <p className="text-center text-sm text-[#999999] py-8">
+          모든 사진을 불러왔습니다.
+        </p>
+      )}
+      <div ref={sentinelRef} className="h-1" />
+    </>
   )
 }
 
-const GridContent = ({ albums, showAllPhotos }: { albums: GalleryAlbum[]; showAllPhotos: boolean }) => (
+const GridContent = ({
+  albums,
+  showAllPhotos,
+  photos,
+  hasNext,
+  isFetchingMore,
+  loadMore,
+}: {
+  albums: GalleryAlbum[]
+  showAllPhotos: boolean
+  photos: GalleryPhotoItem[]
+  hasNext: boolean
+  isFetchingMore: boolean
+  loadMore: () => void
+}) => (
   <div className="px-4 sm:px-8 lg:px-[60px] py-10">
     <div className="max-w-7xl mx-auto flex flex-col gap-10">
       {showAllPhotos ? (
-        <AllPhotosGrid albums={albums} />
+        <AllPhotosGrid
+          photos={photos}
+          hasNext={hasNext}
+          isFetchingMore={isFetchingMore}
+          loadMore={loadMore}
+        />
       ) : (
         albums.map((album, idx) => (
           <div key={album.id}>
@@ -318,10 +360,21 @@ const FeedContent = ({ albums }: { albums: GalleryAlbum[] }) => (
 // ─── Main Page ───────────────────────────────────────────
 
 export const GalleryPage = () => {
-  const { albums, isLoading, error, selectedCategory, setSelectedCategory } = useGallery()
+  const {
+    photos,
+    isLoading,
+    isFetchingMore,
+    error,
+    hasNext,
+    loadMore,
+    selectedCategory,
+    setSelectedCategory,
+  } = useGallery()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
+  // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
+  const albums: GalleryAlbum[] = []
 
   return (
     <>
@@ -383,16 +436,23 @@ export const GalleryPage = () => {
           </div>
         )}
 
-        {!isLoading && !error && albums.length === 0 && (
+        {!isLoading && !error && photos.length === 0 && albums.length === 0 && (
           <div className="text-center py-20">
             <p className="text-[#999999] text-sm">아직 등록된 갤러리가 없습니다.</p>
           </div>
         )}
 
-        {!isLoading && !error && albums.length > 0 && (
+        {!isLoading && !error && (photos.length > 0 || albums.length > 0) && (
           <div className="transition-opacity duration-300">
             {viewMode === 'grid' ? (
-              <GridContent albums={albums} showAllPhotos={selectedCategory === 'ALL'} />
+              <GridContent
+                albums={albums}
+                showAllPhotos={selectedCategory === 'ALL'}
+                photos={photos}
+                hasNext={hasNext}
+                isFetchingMore={isFetchingMore}
+                loadMore={loadMore}
+              />
             ) : (
               <FeedContent albums={albums} />
             )}
