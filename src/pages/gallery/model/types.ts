@@ -96,6 +96,35 @@ export interface Church {
   name: string
 }
 
+// --- Feed Types ---
+
+export interface FeedPostImage {
+  fileId: number
+  filePath: string
+  sortOrder: number
+}
+
+export interface FeedPost {
+  id: number
+  authorId: number
+  authorName: string
+  subCategory: string
+  category: string
+  status: string
+  content: string
+  hashtags: string[]
+  churches: string[]
+  images: FeedPostImage[]
+  commentCount: number
+  createdAt: string
+}
+
+export interface FeedPostsResponse {
+  posts: FeedPost[]
+  nextCursor: number | null
+  hasNext: boolean
+}
+
 export type UploadStatus = 'pending' | 'compressing' | 'uploading' | 'done' | 'error'
 
 export interface UploadingImage {

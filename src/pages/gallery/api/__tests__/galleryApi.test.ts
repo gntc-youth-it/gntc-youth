@@ -5,6 +5,7 @@ jest.mock('../../../../shared/api', () => ({
 import {
   fetchGalleryAlbums,
   fetchGalleryPhotos,
+  fetchFeedPosts,
   fetchCategories,
   fetchSubCategories,
   getPresignedUrl,
@@ -206,6 +207,57 @@ describe('createPost', () => {
     mockApiRequest.mockRejectedValue(new Error('카테고리는 필수입니다'))
 
     await expect(createPost({ subCategory: '' })).rejects.toThrow('카테고리는 필수입니다')
+  })
+})
+
+describe('fetchFeedPosts', () => {
+  it('파라미터 없이 호출하면 /posts/feed로 요청한다', async () => {
+    const mockResponse = { posts: [], nextCursor: null, hasNext: false }
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    const result = await fetchFeedPosts({})
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/feed')
+    expect(result).toEqual(mockResponse)
+  })
+
+  it('cursor와 size를 쿼리 파라미터로 전달한다', async () => {
+    const mockResponse = {
+      posts: [{ id: 10, authorName: '홍길동', content: '테스트' }],
+      nextCursor: 7,
+      hasNext: true,
+    }
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    await fetchFeedPosts({ cursor: 10, size: 4 })
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/feed?size=4&cursor=10')
+  })
+
+  it('subCategory를 쿼리 파라미터로 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ posts: [], nextCursor: null, hasNext: false })
+
+    await fetchFeedPosts({ subCategory: 'RETREAT_2026_WINTER' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/feed?subCategory=RETREAT_2026_WINTER'
+    )
+  })
+
+  it('모든 파라미터를 동시에 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ posts: [], nextCursor: null, hasNext: false })
+
+    await fetchFeedPosts({ cursor: 7, size: 4, subCategory: 'RETREAT_2026_WINTER' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/feed?size=4&cursor=7&subCategory=RETREAT_2026_WINTER'
+    )
+  })
+
+  it('API 에러 시 에러를 전파한다', async () => {
+    mockApiRequest.mockRejectedValue(new Error('Network error'))
+
+    await expect(fetchFeedPosts({})).rejects.toThrow('Network error')
   })
 })
 
