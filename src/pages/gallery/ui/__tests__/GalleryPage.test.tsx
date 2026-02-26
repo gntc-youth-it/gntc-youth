@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
-import type { GalleryAlbum } from '../../model/types'
+import type { GalleryPhotoItem } from '../../model/types'
 
 const mockNavigate = jest.fn()
 
@@ -24,40 +24,19 @@ jest.mock('../../model/useGallery', () => ({
 
 const mockUseGallery = useGallery as jest.MockedFunction<typeof useGallery>
 
-const mockAlbums: GalleryAlbum[] = [
-  {
-    id: '1',
-    title: '겨울수련회 · 새 힘을 얻으라',
-    date: '2026.01.29 - 01.31',
-    dateFormatted: '2026년 1월 31일',
-    category: 'RETREAT',
-    photoCount: 48,
-    photos: [
-      { id: 'p1', url: '/gallery/photo1.jpg' },
-      { id: 'p2', url: '/gallery/photo2.jpg' },
-    ],
-    caption: '겨울수련회 둘째 날 함께한 예배의 순간들',
-    tags: ['겨울수련회', 'GNTC청년'],
-    likeCount: 24,
-  },
-  {
-    id: '2',
-    title: '성탄축하 예배',
-    date: '2025.12.25',
-    dateFormatted: '2025년 12월 25일',
-    category: 'ALL',
-    photoCount: 32,
-    photos: [{ id: 'p3', url: '/gallery/photo3.jpg' }],
-    caption: '성탄절 예배의 은혜',
-    tags: ['성탄절'],
-    likeCount: 18,
-  },
+const mockPhotos: GalleryPhotoItem[] = [
+  { id: 42, url: 'uploads/photo1.jpg' },
+  { id: 41, url: 'uploads/photo2.jpg' },
+  { id: 40, url: 'uploads/photo3.jpg' },
 ]
 
 const defaultGallery = {
-  albums: mockAlbums,
+  photos: mockPhotos,
   isLoading: false,
+  isFetchingMore: false,
   error: null,
+  hasNext: true,
+  loadMore: jest.fn(),
   selectedCategory: 'ALL' as const,
   setSelectedCategory: jest.fn(),
 }
@@ -65,6 +44,15 @@ const defaultGallery = {
 beforeEach(() => {
   jest.clearAllMocks()
   mockUseGallery.mockReturnValue(defaultGallery)
+
+  // IntersectionObserver mock
+  const mockIntersectionObserver = jest.fn()
+  mockIntersectionObserver.mockReturnValue({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+  })
+  window.IntersectionObserver = mockIntersectionObserver
 })
 
 describe('GalleryPage 헤더', () => {
@@ -105,65 +93,33 @@ describe('GalleryPage 뷰 토글', () => {
   it('기본 뷰는 그리드(갤러리) 뷰이다', () => {
     render(<GalleryPage />)
 
-    // 전체 탭에서는 앨범 구분 없이 모든 사진이 표시된다
-    expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
-    expect(screen.queryByText('48장의 사진')).not.toBeInTheDocument()
-  })
-
-  it('특정 카테고리에서는 앨범별 섹션이 표시된다', () => {
-    mockUseGallery.mockReturnValue({ ...defaultGallery, selectedCategory: 'RETREAT' })
-
-    render(<GalleryPage />)
-
-    expect(screen.getByText('48장의 사진')).toBeInTheDocument()
-    expect(screen.getByText('겨울수련회 · 새 힘을 얻으라')).toBeInTheDocument()
-  })
-
-  it('피드 뷰로 전환하면 피드 카드가 표시된다', async () => {
-    render(<GalleryPage />)
-
-    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
-
-    // 피드 뷰에서는 GNTC-YOUTH 아바타와 캡션이 표시된다
-    expect(screen.getAllByText('GNTC-YOUTH')).toHaveLength(2)
-    expect(screen.getByText('겨울수련회 둘째 날 함께한 예배의 순간들')).toBeInTheDocument()
-    expect(screen.getByText('#겨울수련회 #GNTC청년')).toBeInTheDocument()
-  })
-
-  it('피드 뷰에서 다시 갤러리 뷰로 전환된다', async () => {
-    render(<GalleryPage />)
-
-    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
-    await userEvent.click(screen.getByRole('button', { name: /갤러리/ }))
-
-    // 전체 탭이므로 앨범 구분 없이 사진이 표시된다
     expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
   })
 })
 
 describe('GalleryPage 로딩/에러 상태', () => {
   it('로딩 중에는 스피너가 표시된다', () => {
-    mockUseGallery.mockReturnValue({ ...defaultGallery, albums: [], isLoading: true })
+    mockUseGallery.mockReturnValue({ ...defaultGallery, photos: [], isLoading: true })
 
     render(<GalleryPage />)
 
-    expect(screen.queryByText('48장의 사진')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   it('에러 시 에러 메시지가 표시된다', () => {
     mockUseGallery.mockReturnValue({
       ...defaultGallery,
-      albums: [],
-      error: '갤러리를 불러오는데 실패했습니다.',
+      photos: [],
+      error: '사진을 불러오는데 실패했습니다.',
     })
 
     render(<GalleryPage />)
 
-    expect(screen.getByText('갤러리를 불러오는데 실패했습니다.')).toBeInTheDocument()
+    expect(screen.getByText('사진을 불러오는데 실패했습니다.')).toBeInTheDocument()
   })
 
-  it('앨범이 없으면 빈 상태 메시지가 표시된다', () => {
-    mockUseGallery.mockReturnValue({ ...defaultGallery, albums: [] })
+  it('사진이 없으면 빈 상태 메시지가 표시된다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, photos: [] })
 
     render(<GalleryPage />)
 
@@ -171,25 +127,38 @@ describe('GalleryPage 로딩/에러 상태', () => {
   })
 })
 
-describe('GalleryPage 피드 뷰 상세', () => {
-  it('좋아요 수가 표시된다', async () => {
+describe('GalleryPage 무한 스크롤', () => {
+  it('모든 사진을 불러왔으면 완료 메시지가 표시된다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: false })
+
     render(<GalleryPage />)
 
-    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
-
-    expect(screen.getByText(/24명이 좋아합니다/)).toBeInTheDocument()
-    expect(screen.getByText(/18명이 좋아합니다/)).toBeInTheDocument()
+    expect(screen.getByText('모든 사진을 불러왔습니다.')).toBeInTheDocument()
   })
 
-  it('액션 버튼들이 표시된다', async () => {
+  it('아직 다음 페이지가 있으면 완료 메시지가 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: true })
+
     render(<GalleryPage />)
 
-    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    expect(screen.queryByText('모든 사진을 불러왔습니다.')).not.toBeInTheDocument()
+  })
 
-    expect(screen.getAllByLabelText('좋아요')).toHaveLength(2)
-    expect(screen.getAllByLabelText('댓글')).toHaveLength(2)
-    expect(screen.getAllByLabelText('공유')).toHaveLength(2)
-    expect(screen.getAllByLabelText('저장')).toHaveLength(2)
+  it('추가 로딩 중에는 스피너가 표시된다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, isFetchingMore: true })
+
+    render(<GalleryPage />)
+
+    // photos + loading spinner should both be visible
+    expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
+  })
+
+  it('사진 alt 텍스트에 순번이 포함된다', () => {
+    render(<GalleryPage />)
+
+    expect(screen.getByAltText('갤러리 사진 1')).toBeInTheDocument()
+    expect(screen.getByAltText('갤러리 사진 2')).toBeInTheDocument()
+    expect(screen.getByAltText('갤러리 사진 3')).toBeInTheDocument()
   })
 })
 

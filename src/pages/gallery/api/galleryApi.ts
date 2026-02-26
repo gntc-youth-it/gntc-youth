@@ -1,6 +1,7 @@
 import { apiRequest } from '../../../shared/api'
 import type {
   GalleryResponse,
+  GalleryPhotosResponse,
   Category,
   SubCategory,
   PresignedUrlRequest,
@@ -12,6 +13,25 @@ import type {
 
 export const fetchGalleryAlbums = async (): Promise<GalleryResponse> => {
   return apiRequest<GalleryResponse>('/gallery/albums')
+}
+
+export const fetchGalleryPhotos = async (params: {
+  subCategory?: string
+  cursor?: number | null
+  size?: number
+}): Promise<GalleryPhotosResponse> => {
+  const searchParams = new URLSearchParams()
+  if (params.size != null) {
+    searchParams.set('size', String(params.size))
+  }
+  if (params.cursor != null) {
+    searchParams.set('cursor', String(params.cursor))
+  }
+  if (params.subCategory) {
+    searchParams.set('subCategory', params.subCategory)
+  }
+  const query = searchParams.toString()
+  return apiRequest<GalleryPhotosResponse>(`/posts/gallery${query ? `?${query}` : ''}`)
 }
 
 export const fetchCategories = async (): Promise<Category[]> => {
