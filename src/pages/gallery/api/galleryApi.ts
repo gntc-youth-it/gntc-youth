@@ -37,5 +37,6 @@ export const createPost = async (data: CreatePostRequest): Promise<CreatePostRes
 }
 
 export const fetchChurches = async (): Promise<Church[]> => {
-  return apiRequest<Church[]>('/churches')
+  const response = await apiRequest<{ churches: Church[] }>('/churches')
+  return response.churches
 }
