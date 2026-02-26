@@ -105,7 +105,16 @@ describe('GalleryPage 뷰 토글', () => {
   it('기본 뷰는 그리드(갤러리) 뷰이다', () => {
     render(<GalleryPage />)
 
-    // 그리드 뷰에서는 앨범 제목과 사진 수가 표시된다
+    // 전체 탭에서는 앨범 구분 없이 모든 사진이 표시된다
+    expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
+    expect(screen.queryByText('48장의 사진')).not.toBeInTheDocument()
+  })
+
+  it('특정 카테고리에서는 앨범별 섹션이 표시된다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, selectedCategory: 'RETREAT' })
+
+    render(<GalleryPage />)
+
     expect(screen.getByText('48장의 사진')).toBeInTheDocument()
     expect(screen.getByText('겨울수련회 · 새 힘을 얻으라')).toBeInTheDocument()
   })
@@ -127,7 +136,8 @@ describe('GalleryPage 뷰 토글', () => {
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
     await userEvent.click(screen.getByRole('button', { name: /갤러리/ }))
 
-    expect(screen.getByText('48장의 사진')).toBeInTheDocument()
+    // 전체 탭이므로 앨범 구분 없이 사진이 표시된다
+    expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
   })
 })
 
