@@ -85,6 +85,22 @@ describe('fetchGalleryPhotos', () => {
       '/posts/gallery?subCategory=RETREAT_2026_WINTER'
     )
   })
+
+  it('모든 파라미터를 동시에 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ images: [], nextCursor: null, hasNext: false })
+
+    await fetchGalleryPhotos({ cursor: 100, size: 15, subCategory: 'RETREAT_2026_WINTER' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/gallery?size=15&cursor=100&subCategory=RETREAT_2026_WINTER'
+    )
+  })
+
+  it('API 에러 시 에러를 전파한다', async () => {
+    mockApiRequest.mockRejectedValue(new Error('Network error'))
+
+    await expect(fetchGalleryPhotos({})).rejects.toThrow('Network error')
+  })
 })
 
 describe('fetchCategories', () => {

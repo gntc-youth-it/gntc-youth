@@ -136,6 +136,14 @@ describe('GalleryPage 무한 스크롤', () => {
     expect(screen.getByText('모든 사진을 불러왔습니다.')).toBeInTheDocument()
   })
 
+  it('아직 다음 페이지가 있으면 완료 메시지가 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: true })
+
+    render(<GalleryPage />)
+
+    expect(screen.queryByText('모든 사진을 불러왔습니다.')).not.toBeInTheDocument()
+  })
+
   it('추가 로딩 중에는 스피너가 표시된다', () => {
     mockUseGallery.mockReturnValue({ ...defaultGallery, isFetchingMore: true })
 
@@ -143,6 +151,14 @@ describe('GalleryPage 무한 스크롤', () => {
 
     // photos + loading spinner should both be visible
     expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
+  })
+
+  it('사진 alt 텍스트에 순번이 포함된다', () => {
+    render(<GalleryPage />)
+
+    expect(screen.getByAltText('갤러리 사진 1')).toBeInTheDocument()
+    expect(screen.getByAltText('갤러리 사진 2')).toBeInTheDocument()
+    expect(screen.getByAltText('갤러리 사진 3')).toBeInTheDocument()
   })
 })
 
