@@ -3,7 +3,7 @@
   "name": "GNTC Youth - 청년부 웹사이트",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "https://cdn.gntc-youth.com/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     }

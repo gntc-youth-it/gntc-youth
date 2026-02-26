@@ -148,6 +148,37 @@ describe('GalleryPage 로딩/에러 상태', () => {
   })
 })
 
+describe('GalleryPage 사진 수 표시', () => {
+  it('사진 목록 상단에 총 사진 수가 표시된다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: false })
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('총 3장의 사진')).toBeInTheDocument()
+  })
+
+  it('더 불러올 사진이 있으면 +가 붙는다', () => {
+    mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: true })
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('총 3장+의 사진')).toBeInTheDocument()
+  })
+
+  it('사진이 추가 로드되면 수가 업데이트된다', () => {
+    const morePhotos: GalleryPhotoItem[] = [
+      ...mockPhotos,
+      { id: 39, url: 'uploads/photo4.jpg' },
+      { id: 38, url: 'uploads/photo5.jpg' },
+    ]
+    mockUseGallery.mockReturnValue({ ...defaultGallery, photos: morePhotos, hasNext: false })
+
+    render(<GalleryPage />)
+
+    expect(screen.getByText('총 5장의 사진')).toBeInTheDocument()
+  })
+})
+
 describe('GalleryPage 무한 스크롤', () => {
   it('모든 사진을 불러왔으면 완료 메시지가 표시된다', () => {
     mockUseGallery.mockReturnValue({ ...defaultGallery, hasNext: false })
