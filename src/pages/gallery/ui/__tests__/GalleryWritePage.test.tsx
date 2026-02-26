@@ -154,29 +154,29 @@ describe('GalleryWritePage 카테고리 선택', () => {
   })
 })
 
-describe('GalleryWritePage 이미지 업로드 영역', () => {
-  it('USER 역할일 때 이미지 업로드 권한 안내를 표시한다', () => {
+describe('GalleryWritePage 미디어 업로드 영역', () => {
+  it('USER 역할일 때 미디어 업로드 권한 안내를 표시한다', () => {
     mockAuthValue = { user: { id: 1, name: '홍길동', role: 'USER' }, isLoggedIn: true }
 
     render(<GalleryWritePage />)
 
-    expect(screen.getByText('이미지 업로드는 리더 이상 권한이 필요합니다.')).toBeInTheDocument()
+    expect(screen.getByText('미디어 업로드는 리더 이상 권한이 필요합니다.')).toBeInTheDocument()
   })
 
-  it('LEADER 역할일 때 이미지 업로드 영역을 표시한다', () => {
+  it('LEADER 역할일 때 미디어 업로드 영역을 표시한다', () => {
     mockAuthValue = { user: { id: 1, name: '홍길동', role: 'LEADER' }, isLoggedIn: true }
 
     render(<GalleryWritePage />)
 
-    expect(screen.getByText('클릭하거나 이미지를 드래그하여 업로드')).toBeInTheDocument()
+    expect(screen.getByText('클릭하거나 파일을 드래그하여 업로드')).toBeInTheDocument()
   })
 
-  it('MASTER 역할일 때 이미지 업로드 영역을 표시한다', () => {
+  it('MASTER 역할일 때 미디어 업로드 영역을 표시한다', () => {
     mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
 
     render(<GalleryWritePage />)
 
-    expect(screen.getByText('클릭하거나 이미지를 드래그하여 업로드')).toBeInTheDocument()
+    expect(screen.getByText('클릭하거나 파일을 드래그하여 업로드')).toBeInTheDocument()
   })
 })
 
@@ -334,5 +334,88 @@ describe('GalleryWritePage 작성자 공개 여부', () => {
 
     const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
     expect(checkbox).toBeChecked()
+  })
+})
+
+describe('GalleryWritePage 미디어 프리뷰', () => {
+  beforeEach(() => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'LEADER' }, isLoggedIn: true }
+  })
+
+  it('사진/동영상 섹션 제목이 표시된다', () => {
+    render(<GalleryWritePage />)
+
+    expect(screen.getByText('사진/동영상')).toBeInTheDocument()
+  })
+
+  it('지원 포맷 안내에 이미지와 동영상이 모두 포함된다', () => {
+    render(<GalleryWritePage />)
+
+    expect(screen.getByText('이미지(JPG, PNG, GIF, WebP, HEIC) · 동영상(MP4, MOV, WebM)')).toBeInTheDocument()
+  })
+
+  it('영상 프리뷰가 video 태그로 렌더링된다', () => {
+    mockWriteHookValue = {
+      ...defaultWriteHook,
+      images: [
+        {
+          id: 'v1',
+          file: new File(['vid'], 'test.mp4', { type: 'video/mp4' }),
+          preview: 'blob:video-url',
+          progress: 100,
+          status: 'done' as const,
+          fileId: 1,
+          mediaType: 'video' as const,
+        },
+      ] as never[],
+    }
+
+    const { container } = render(<GalleryWritePage />)
+
+    expect(container.querySelector('video')).toBeInTheDocument()
+  })
+
+  it('영상 프리뷰에 동영상 뱃지가 표시된다', () => {
+    mockWriteHookValue = {
+      ...defaultWriteHook,
+      images: [
+        {
+          id: 'v1',
+          file: new File(['vid'], 'test.mp4', { type: 'video/mp4' }),
+          preview: 'blob:video-url',
+          progress: 100,
+          status: 'done' as const,
+          fileId: 1,
+          mediaType: 'video' as const,
+        },
+      ] as never[],
+    }
+
+    render(<GalleryWritePage />)
+
+    expect(screen.getByText('동영상')).toBeInTheDocument()
+  })
+
+  it('이미지 프리뷰가 img 태그로 렌더링된다', () => {
+    mockWriteHookValue = {
+      ...defaultWriteHook,
+      images: [
+        {
+          id: 'i1',
+          file: new File(['img'], 'photo.jpg', { type: 'image/jpeg' }),
+          preview: 'blob:image-url',
+          progress: 100,
+          status: 'done' as const,
+          fileId: 2,
+          mediaType: 'image' as const,
+        },
+      ] as never[],
+    }
+
+    const { container } = render(<GalleryWritePage />)
+
+    const img = container.querySelector('img[src="blob:image-url"]')
+    expect(img).toBeInTheDocument()
+    expect(container.querySelector('video')).not.toBeInTheDocument()
   })
 })

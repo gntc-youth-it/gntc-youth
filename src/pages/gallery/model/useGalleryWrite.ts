@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { compressImage, uploadToS3 } from '../../../shared/lib'
+import { compressImage, compressVideo, isVideoCompressionSupported, uploadToS3 } from '../../../shared/lib'
+import {
+  ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_VIDEO_TYPES,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  VIDEO_COMPRESSION_OPTIONS,
+} from '../../../shared/config/constants'
 import {
   fetchCategories,
   fetchSubCategories,
@@ -9,6 +16,35 @@ import {
   fetchChurches,
 } from '../api/galleryApi'
 import type { Category, SubCategory, Church, UploadingImage } from './types'
+
+const ACCEPTED_IMAGE_HEIC = 'image/heic'
+
+function validateFile(file: File): string | null {
+  const isImage = file.type.startsWith('image/')
+  const isVideo = file.type.startsWith('video/')
+
+  if (!isImage && !isVideo) {
+    return '지원하지 않는 파일 형식입니다.'
+  }
+
+  if (isImage && !ACCEPTED_IMAGE_TYPES.includes(file.type) && file.type !== ACCEPTED_IMAGE_HEIC) {
+    return '지원하지 않는 이미지 형식입니다.'
+  }
+
+  if (isVideo && !ACCEPTED_VIDEO_TYPES.includes(file.type)) {
+    return '지원하지 않는 동영상 형식입니다.'
+  }
+
+  if (isImage && file.size > MAX_IMAGE_SIZE) {
+    return `이미지 파일 크기는 ${MAX_IMAGE_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
+  }
+
+  if (isVideo && file.size > MAX_VIDEO_SIZE) {
+    return `동영상 파일 크기는 ${MAX_VIDEO_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
+  }
+
+  return null
+}
 
 export const useGalleryWrite = () => {
   const navigate = useNavigate()
@@ -109,29 +145,57 @@ export const useGalleryWrite = () => {
     setImages((prev) => prev.map((img) => (img.id === id ? { ...img, ...updates } : img)))
   }, [])
 
-  const processImage = useCallback(
-    async (uploadImage: UploadingImage) => {
-      const { id, file } = uploadImage
+  const processFile = useCallback(
+    async (uploadItem: UploadingImage) => {
+      const { id, file, mediaType } = uploadItem
 
       try {
         // Compress
         updateImage(id, { status: 'compressing', progress: 0 })
-        const { blob } = await compressImage(file)
+
+        let uploadBlob: Blob
+        let uploadContentType: string
+
+        if (mediaType === 'video') {
+          if (isVideoCompressionSupported()) {
+            const result = await compressVideo(file, {
+              ...VIDEO_COMPRESSION_OPTIONS,
+              onProgress: (progress) => {
+                if (mountedRef.current) {
+                  updateImage(id, { progress })
+                }
+              },
+            })
+            uploadBlob = result.blob
+            uploadContentType = 'video/mp4'
+          } else {
+            // WASM 미지원 시 원본 그대로 업로드
+            uploadBlob = file
+            uploadContentType = file.type
+          }
+        } else {
+          const { blob } = await compressImage(file)
+          uploadBlob = blob
+          uploadContentType = blob.type
+        }
 
         if (!mountedRef.current) return
 
         // Get presigned URL
         updateImage(id, { status: 'uploading', progress: 0 })
+        const ext = mediaType === 'video' ? 'mp4' : (uploadContentType.split('/')[1] || 'webp')
+        const filename = file.name.replace(/\.[^/.]+$/, '') + `.${ext}`
+
         const { fileId, presignedUrl } = await getPresignedUrl({
-          filename: file.name,
-          contentType: blob.type,
-          fileSize: blob.size,
+          filename,
+          contentType: uploadContentType,
+          fileSize: uploadBlob.size,
         })
 
         if (!mountedRef.current) return
 
         // Upload to S3
-        await uploadToS3(presignedUrl, blob, blob.type, {
+        await uploadToS3(presignedUrl, uploadBlob, uploadContentType, {
           onProgress: (progress) => {
             if (mountedRef.current) {
               updateImage(id, { progress })
@@ -157,20 +221,29 @@ export const useGalleryWrite = () => {
   const addImages = useCallback(
     (files: FileList | File[]) => {
       const fileArray = Array.from(files)
-      const newImages: UploadingImage[] = fileArray.map((file) => ({
-        id: crypto.randomUUID(),
-        file,
-        preview: URL.createObjectURL(file),
-        progress: 0,
-        status: 'pending' as const,
-      }))
+      const newItems: UploadingImage[] = fileArray.map((file) => {
+        const validationError = validateFile(file)
+        const isVideo = file.type.startsWith('video/')
 
-      setImages((prev) => [...prev, ...newImages])
+        return {
+          id: crypto.randomUUID(),
+          file,
+          preview: URL.createObjectURL(file),
+          progress: 0,
+          status: validationError ? ('error' as const) : ('pending' as const),
+          error: validationError ?? undefined,
+          mediaType: isVideo ? ('video' as const) : ('image' as const),
+        }
+      })
 
-      // Start upload pipeline for each new image
-      newImages.forEach((img) => processImage(img))
+      setImages((prev) => [...prev, ...newItems])
+
+      // Start upload pipeline only for valid files
+      newItems
+        .filter((item) => item.status !== 'error')
+        .forEach((item) => processFile(item))
     },
-    [processImage]
+    [processFile]
   )
 
   const removeImage = useCallback((id: string) => {
@@ -207,7 +280,7 @@ export const useGalleryWrite = () => {
 
     const hasUploading = images.some((img) => img.status === 'compressing' || img.status === 'uploading')
     if (hasUploading) {
-      setSubmitError('이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
+      setSubmitError('미디어 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
       return
     }
 

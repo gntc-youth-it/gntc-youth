@@ -33,13 +33,15 @@ const CloseIcon = () => (
 
 const COMPRESSION_UI_PROGRESS = 50
 
-const ImagePreviewCard = ({
+const MediaPreviewCard = ({
   image,
   onRemove,
 }: {
   image: UploadingImage
   onRemove: (id: string) => void
 }) => {
+  const isVideo = image.mediaType === 'video'
+
   const statusLabel = {
     pending: '대기 중...',
     compressing: '압축 중...',
@@ -50,7 +52,25 @@ const ImagePreviewCard = ({
 
   return (
     <div className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
-      <img src={image.preview} alt={`업로드된 이미지: ${image.file.name}`} className="w-full h-full object-cover" />
+      {isVideo ? (
+        <>
+          <video
+            src={image.preview}
+            className="w-full h-full object-cover"
+            muted
+            preload="metadata"
+          />
+          {/* Video indicator badge */}
+          <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/60 rounded text-white text-[10px] font-medium flex items-center gap-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            동영상
+          </div>
+        </>
+      ) : (
+        <img src={image.preview} alt={`업로드된 미디어: ${image.file.name}`} className="w-full h-full object-cover" />
+      )}
 
       {/* Progress overlay */}
       {(image.status === 'compressing' || image.status === 'uploading') && (
@@ -59,7 +79,13 @@ const ImagePreviewCard = ({
           <div className="w-3/4 h-1.5 bg-white/30 rounded-full overflow-hidden">
             <div
               className="h-full bg-white rounded-full transition-all duration-200"
-              style={{ width: `${image.status === 'compressing' ? COMPRESSION_UI_PROGRESS : image.progress}%` }}
+              style={{
+                width: `${
+                  image.status === 'compressing'
+                    ? (isVideo ? image.progress : COMPRESSION_UI_PROGRESS)
+                    : image.progress
+                }%`,
+              }}
             />
           </div>
         </div>
@@ -257,7 +283,7 @@ export const GalleryWritePage = () => {
 
             {/* Image Upload */}
             <div className="bg-white rounded-2xl p-6 space-y-4">
-              <h2 className="text-base font-semibold text-[#1A1A1A]">사진</h2>
+              <h2 className="text-base font-semibold text-[#1A1A1A]">사진/동영상</h2>
               {canUploadImages ? (
                 <>
                   <div
@@ -273,13 +299,13 @@ export const GalleryWritePage = () => {
                   >
                     <ImageIcon />
                     <p className="mt-3 text-sm text-[#666666]">
-                      클릭하거나 이미지를 드래그하여 업로드
+                      클릭하거나 파일을 드래그하여 업로드
                     </p>
-                    <p className="mt-1 text-xs text-[#999999]">JPG, PNG, WebP, HEIC 지원</p>
+                    <p className="mt-1 text-xs text-[#999999]">이미지(JPG, PNG, GIF, WebP, HEIC) · 동영상(MP4, MOV, WebM)</p>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/jpeg,image/png,image/webp,image/heic"
+                      accept="image/jpeg,image/png,image/gif,image/webp,image/heic,video/mp4,video/quicktime,video/webm"
                       multiple
                       onChange={handleFileChange}
                       className="hidden"
@@ -289,7 +315,7 @@ export const GalleryWritePage = () => {
                   {images.length > 0 && (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                       {images.map((image) => (
-                        <ImagePreviewCard key={image.id} image={image} onRemove={removeImage} />
+                        <MediaPreviewCard key={image.id} image={image} onRemove={removeImage} />
                       ))}
                     </div>
                   )}
@@ -297,7 +323,7 @@ export const GalleryWritePage = () => {
               ) : (
                 <div className="border border-gray-200 rounded-xl p-6 text-center bg-gray-50">
                   <p className="text-sm text-[#666666]">
-                    이미지 업로드는 리더 이상 권한이 필요합니다.
+                    미디어 업로드는 리더 이상 권한이 필요합니다.
                   </p>
                 </div>
               )}
