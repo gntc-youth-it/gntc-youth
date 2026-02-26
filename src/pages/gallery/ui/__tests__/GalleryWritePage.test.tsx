@@ -26,8 +26,8 @@ const mockAddHashtag = jest.fn()
 const mockRemoveHashtag = jest.fn()
 const mockToggleChurch = jest.fn()
 const mockSetIsAuthorPublic = jest.fn()
-const mockAddImages = jest.fn()
-const mockRemoveImage = jest.fn()
+const mockAddMedia = jest.fn()
+const mockRemoveMedia = jest.fn()
 
 const defaultWriteHook = {
   categories: [{ name: 'RETREAT', displayName: '수련회' }],
@@ -45,9 +45,9 @@ const defaultWriteHook = {
   toggleChurch: mockToggleChurch,
   isAuthorPublic: false,
   setIsAuthorPublic: mockSetIsAuthorPublic,
-  images: [] as never[],
-  addImages: mockAddImages,
-  removeImage: mockRemoveImage,
+  mediaItems: [] as never[],
+  addMedia: mockAddMedia,
+  removeMedia: mockRemoveMedia,
   churches: [
     { code: 'ANYANG', name: '안양' },
     { code: 'SUWON', name: '수원' },
@@ -357,7 +357,7 @@ describe('GalleryWritePage 미디어 프리뷰', () => {
   it('영상 프리뷰가 video 태그로 렌더링된다', () => {
     mockWriteHookValue = {
       ...defaultWriteHook,
-      images: [
+      mediaItems: [
         {
           id: 'v1',
           file: new File(['vid'], 'test.mp4', { type: 'video/mp4' }),
@@ -378,7 +378,7 @@ describe('GalleryWritePage 미디어 프리뷰', () => {
   it('영상 프리뷰에 동영상 뱃지가 표시된다', () => {
     mockWriteHookValue = {
       ...defaultWriteHook,
-      images: [
+      mediaItems: [
         {
           id: 'v1',
           file: new File(['vid'], 'test.mp4', { type: 'video/mp4' }),
@@ -399,7 +399,7 @@ describe('GalleryWritePage 미디어 프리뷰', () => {
   it('이미지 프리뷰가 img 태그로 렌더링된다', () => {
     mockWriteHookValue = {
       ...defaultWriteHook,
-      images: [
+      mediaItems: [
         {
           id: 'i1',
           file: new File(['img'], 'photo.jpg', { type: 'image/jpeg' }),

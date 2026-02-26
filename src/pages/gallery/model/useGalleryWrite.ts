@@ -20,27 +20,26 @@ import type { Category, SubCategory, Church, UploadingImage } from './types'
 const ACCEPTED_IMAGE_HEIC = 'image/heic'
 
 function validateFile(file: File): string | null {
-  const isImage = file.type.startsWith('image/')
-  const isVideo = file.type.startsWith('video/')
+  const { type, size } = file
+  const isImage = type.startsWith('image/')
+  const isVideo = type.startsWith('video/')
 
-  if (!isImage && !isVideo) {
+  if (isImage) {
+    if (![...ACCEPTED_IMAGE_TYPES, ACCEPTED_IMAGE_HEIC].includes(type)) {
+      return '지원하지 않는 이미지 형식입니다.'
+    }
+    if (size > MAX_IMAGE_SIZE) {
+      return `이미지 파일 크기는 ${MAX_IMAGE_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
+    }
+  } else if (isVideo) {
+    if (!ACCEPTED_VIDEO_TYPES.includes(type)) {
+      return '지원하지 않는 동영상 형식입니다.'
+    }
+    if (size > MAX_VIDEO_SIZE) {
+      return `동영상 파일 크기는 ${MAX_VIDEO_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
+    }
+  } else {
     return '지원하지 않는 파일 형식입니다.'
-  }
-
-  if (isImage && !ACCEPTED_IMAGE_TYPES.includes(file.type) && file.type !== ACCEPTED_IMAGE_HEIC) {
-    return '지원하지 않는 이미지 형식입니다.'
-  }
-
-  if (isVideo && !ACCEPTED_VIDEO_TYPES.includes(file.type)) {
-    return '지원하지 않는 동영상 형식입니다.'
-  }
-
-  if (isImage && file.size > MAX_IMAGE_SIZE) {
-    return `이미지 파일 크기는 ${MAX_IMAGE_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
-  }
-
-  if (isVideo && file.size > MAX_VIDEO_SIZE) {
-    return `동영상 파일 크기는 ${MAX_VIDEO_SIZE / 1024 / 1024}MB를 초과할 수 없습니다.`
   }
 
   return null
@@ -61,10 +60,10 @@ export const useGalleryWrite = () => {
   const [selectedChurches, setSelectedChurches] = useState<string[]>([])
   const [isAuthorPublic, setIsAuthorPublic] = useState(false)
 
-  // Image state
-  const [images, setImages] = useState<UploadingImage[]>([])
-  const imagesRef = useRef(images)
-  imagesRef.current = images
+  // Media state
+  const [mediaItems, setMediaItems] = useState<UploadingImage[]>([])
+  const mediaItemsRef = useRef(mediaItems)
+  mediaItemsRef.current = mediaItems
 
   // Churches
   const [churches, setChurches] = useState<Church[]>([])
@@ -136,13 +135,13 @@ export const useGalleryWrite = () => {
   // Cleanup image preview URLs on unmount
   useEffect(() => {
     return () => {
-      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview))
+      mediaItemsRef.current.forEach((img) => URL.revokeObjectURL(img.preview))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const updateImage = useCallback((id: string, updates: Partial<UploadingImage>) => {
-    setImages((prev) => prev.map((img) => (img.id === id ? { ...img, ...updates } : img)))
+  const updateMediaItem = useCallback((id: string, updates: Partial<UploadingImage>) => {
+    setMediaItems((prev) => prev.map((img) => (img.id === id ? { ...img, ...updates } : img)))
   }, [])
 
   const processFile = useCallback(
@@ -151,7 +150,7 @@ export const useGalleryWrite = () => {
 
       try {
         // Compress
-        updateImage(id, { status: 'compressing', progress: 0 })
+        updateMediaItem(id, { status: 'compressing', progress: 0 })
 
         let uploadBlob: Blob
         let uploadContentType: string
@@ -162,7 +161,7 @@ export const useGalleryWrite = () => {
               ...VIDEO_COMPRESSION_OPTIONS,
               onProgress: (progress) => {
                 if (mountedRef.current) {
-                  updateImage(id, { progress })
+                  updateMediaItem(id, { progress })
                 }
               },
             })
@@ -182,7 +181,7 @@ export const useGalleryWrite = () => {
         if (!mountedRef.current) return
 
         // Get presigned URL
-        updateImage(id, { status: 'uploading', progress: 0 })
+        updateMediaItem(id, { status: 'uploading', progress: 0 })
         const ext = mediaType === 'video' ? 'mp4' : (uploadContentType.split('/')[1] || 'webp')
         const filename = file.name.replace(/\.[^/.]+$/, '') + `.${ext}`
 
@@ -198,27 +197,27 @@ export const useGalleryWrite = () => {
         await uploadToS3(presignedUrl, uploadBlob, uploadContentType, {
           onProgress: (progress) => {
             if (mountedRef.current) {
-              updateImage(id, { progress })
+              updateMediaItem(id, { progress })
             }
           },
         })
 
         if (!mountedRef.current) return
 
-        updateImage(id, { status: 'done', progress: 100, fileId })
+        updateMediaItem(id, { status: 'done', progress: 100, fileId })
       } catch (err) {
         if (mountedRef.current) {
-          updateImage(id, {
+          updateMediaItem(id, {
             status: 'error',
             error: err instanceof Error ? err.message : '업로드에 실패했습니다.',
           })
         }
       }
     },
-    [updateImage]
+    [updateMediaItem]
   )
 
-  const addImages = useCallback(
+  const addMedia = useCallback(
     (files: FileList | File[]) => {
       const fileArray = Array.from(files)
       const newItems: UploadingImage[] = fileArray.map((file) => {
@@ -236,7 +235,7 @@ export const useGalleryWrite = () => {
         }
       })
 
-      setImages((prev) => [...prev, ...newItems])
+      setMediaItems((prev) => [...prev, ...newItems])
 
       // Start upload pipeline only for valid files
       newItems
@@ -246,8 +245,8 @@ export const useGalleryWrite = () => {
     [processFile]
   )
 
-  const removeImage = useCallback((id: string) => {
-    setImages((prev) => {
+  const removeMedia = useCallback((id: string) => {
+    setMediaItems((prev) => {
       const target = prev.find((img) => img.id === id)
       if (target) URL.revokeObjectURL(target.preview)
       return prev.filter((img) => img.id !== id)
@@ -278,7 +277,7 @@ export const useGalleryWrite = () => {
       return
     }
 
-    const hasUploading = images.some((img) => img.status === 'compressing' || img.status === 'uploading')
+    const hasUploading = mediaItems.some((img) => img.status === 'compressing' || img.status === 'uploading')
     if (hasUploading) {
       setSubmitError('미디어 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
       return
@@ -287,7 +286,7 @@ export const useGalleryWrite = () => {
     setIsSubmitting(true)
 
     try {
-      const imageIds = images
+      const imageIds = mediaItems
         .filter((img) => img.status === 'done' && img.fileId != null)
         .map((img) => img.fileId!)
 
@@ -306,7 +305,7 @@ export const useGalleryWrite = () => {
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedSubCategory, images, content, hashtags, selectedChurches, isAuthorPublic, navigate])
+  }, [selectedSubCategory, mediaItems, content, hashtags, selectedChurches, isAuthorPublic, navigate])
 
   return {
     // Categories
@@ -328,10 +327,10 @@ export const useGalleryWrite = () => {
     isAuthorPublic,
     setIsAuthorPublic,
 
-    // Images
-    images,
-    addImages,
-    removeImage,
+    // Media
+    mediaItems,
+    addMedia,
+    removeMedia,
 
     // Churches
     churches,

@@ -392,12 +392,12 @@ const FeedVideoPlayer = ({ src }: { src: string }) => {
     return () => observer.disconnect()
   }, [])
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     const video = videoRef.current
     if (!video) return
     video.muted = !video.muted
     setIsMuted(video.muted)
-  }
+  }, [])
 
   return (
     <div className="relative w-full h-[360px] sm:h-[400px]" onClick={toggleMute}>

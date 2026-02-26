@@ -56,6 +56,7 @@ const MediaPreviewCard = ({
         <>
           <video
             src={image.preview}
+            title={`업로드된 미디어: ${image.file.name}`}
             className="w-full h-full object-cover"
             muted
             preload="metadata"
@@ -145,9 +146,9 @@ export const GalleryWritePage = () => {
     toggleChurch,
     isAuthorPublic,
     setIsAuthorPublic,
-    images,
-    addImages,
-    removeImage,
+    mediaItems,
+    addMedia,
+    removeMedia,
     churches,
     churchesLoading,
     handleSubmit,
@@ -184,15 +185,15 @@ export const GalleryWritePage = () => {
       e.preventDefault()
       setIsDragging(false)
       const files = e.dataTransfer.files
-      if (files.length > 0) addImages(files)
+      if (files.length > 0) addMedia(files)
     },
-    [addImages]
+    [addMedia]
   )
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      addImages(files)
+      addMedia(files)
       e.target.value = ''
     }
   }
@@ -312,10 +313,10 @@ export const GalleryWritePage = () => {
                     />
                   </div>
 
-                  {images.length > 0 && (
+                  {mediaItems.length > 0 && (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                      {images.map((image) => (
-                        <MediaPreviewCard key={image.id} image={image} onRemove={removeImage} />
+                      {mediaItems.map((image) => (
+                        <MediaPreviewCard key={image.id} image={image} onRemove={removeMedia} />
                       ))}
                     </div>
                   )}

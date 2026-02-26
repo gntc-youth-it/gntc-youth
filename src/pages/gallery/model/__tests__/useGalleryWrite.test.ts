@@ -98,7 +98,7 @@ describe('useGalleryWrite 초기 상태', () => {
     expect(result.current.hashtags).toEqual([])
     expect(result.current.selectedChurches).toEqual([])
     expect(result.current.isAuthorPublic).toBe(false)
-    expect(result.current.images).toEqual([])
+    expect(result.current.mediaItems).toEqual([])
     expect(result.current.isSubmitting).toBe(false)
     expect(result.current.submitError).toBeNull()
   })
@@ -256,21 +256,21 @@ describe('useGalleryWrite 이미지 업로드', () => {
     const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images).toHaveLength(1)
-    expect(result.current.images[0].file).toBe(file)
+    expect(result.current.mediaItems).toHaveLength(1)
+    expect(result.current.mediaItems[0].file).toBe(file)
     expect(mockCreateObjectURL).toHaveBeenCalledWith(file)
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('done')
+      expect(result.current.mediaItems[0].status).toBe('done')
     })
 
     expect(mockCompressImage).toHaveBeenCalledWith(file)
     expect(mockGetPresignedUrl).toHaveBeenCalled()
     expect(mockUploadToS3).toHaveBeenCalled()
-    expect(result.current.images[0].fileId).toBe(1)
+    expect(result.current.mediaItems[0].fileId).toBe(1)
   })
 
   it('이미지를 삭제하면 object URL이 해제된다', async () => {
@@ -279,16 +279,16 @@ describe('useGalleryWrite 이미지 업로드', () => {
     const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    const imageId = result.current.images[0].id
+    const imageId = result.current.mediaItems[0].id
 
     act(() => {
-      result.current.removeImage(imageId)
+      result.current.removeMedia(imageId)
     })
 
-    expect(result.current.images).toHaveLength(0)
+    expect(result.current.mediaItems).toHaveLength(0)
     expect(mockRevokeObjectURL).toHaveBeenCalled()
   })
 
@@ -300,14 +300,14 @@ describe('useGalleryWrite 이미지 업로드', () => {
     const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('error')
+      expect(result.current.mediaItems[0].status).toBe('error')
     })
 
-    expect(result.current.images[0].error).toBe('압축 실패')
+    expect(result.current.mediaItems[0].error).toBe('압축 실패')
   })
 
   it('S3 업로드 실패 시 이미지 상태가 error가 된다', async () => {
@@ -318,14 +318,14 @@ describe('useGalleryWrite 이미지 업로드', () => {
     const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('error')
+      expect(result.current.mediaItems[0].status).toBe('error')
     })
 
-    expect(result.current.images[0].error).toBe('업로드에 실패했습니다. (500)')
+    expect(result.current.mediaItems[0].error).toBe('업로드에 실패했습니다. (500)')
   })
 })
 
@@ -359,7 +359,7 @@ describe('useGalleryWrite 게시글 등록', () => {
 
     act(() => {
       result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await act(async () => {
@@ -475,11 +475,11 @@ describe('useGalleryWrite 게시글 등록', () => {
 
     act(() => {
       result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await waitFor(() => {
-      expect(result.current.images[0]?.status).toBe('done')
+      expect(result.current.mediaItems[0]?.status).toBe('done')
     })
 
     await act(async () => {
@@ -503,20 +503,20 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['video-data'], 'test.mp4', { type: 'video/mp4' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images).toHaveLength(1)
+    expect(result.current.mediaItems).toHaveLength(1)
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('done')
+      expect(result.current.mediaItems[0].status).toBe('done')
     })
 
     expect(mockCompressVideo).toHaveBeenCalled()
     expect(mockCompressImage).not.toHaveBeenCalled()
     expect(mockGetPresignedUrl).toHaveBeenCalled()
     expect(mockUploadToS3).toHaveBeenCalled()
-    expect(result.current.images[0].fileId).toBe(1)
+    expect(result.current.mediaItems[0].fileId).toBe(1)
   })
 
   it('영상 파일의 mediaType이 video로 설정된다', () => {
@@ -525,10 +525,10 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images[0].mediaType).toBe('video')
+    expect(result.current.mediaItems[0].mediaType).toBe('video')
   })
 
   it('이미지 파일의 mediaType이 image로 설정된다', () => {
@@ -537,10 +537,10 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['img'], 'photo.jpg', { type: 'image/jpeg' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images[0].mediaType).toBe('image')
+    expect(result.current.mediaItems[0].mediaType).toBe('image')
   })
 
   it('WASM 미지원 시 영상을 원본 그대로 업로드한다', async () => {
@@ -551,11 +551,11 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['video-data'], 'test.mp4', { type: 'video/mp4' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('done')
+      expect(result.current.mediaItems[0].status).toBe('done')
     })
 
     expect(mockCompressVideo).not.toHaveBeenCalled()
@@ -574,14 +574,14 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('error')
+      expect(result.current.mediaItems[0].status).toBe('error')
     })
 
-    expect(result.current.images[0].error).toBe('압축 실패')
+    expect(result.current.mediaItems[0].error).toBe('압축 실패')
   })
 
   it('지원하지 않는 파일 형식은 error 상태로 추가된다', () => {
@@ -590,11 +590,11 @@ describe('useGalleryWrite 영상 업로드', () => {
     const file = new File(['data'], 'file.exe', { type: 'application/octet-stream' })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images[0].status).toBe('error')
-    expect(result.current.images[0].error).toBe('지원하지 않는 파일 형식입니다.')
+    expect(result.current.mediaItems[0].status).toBe('error')
+    expect(result.current.mediaItems[0].error).toBe('지원하지 않는 파일 형식입니다.')
     expect(mockCompressImage).not.toHaveBeenCalled()
     expect(mockCompressVideo).not.toHaveBeenCalled()
   })
@@ -606,11 +606,11 @@ describe('useGalleryWrite 영상 업로드', () => {
     Object.defineProperty(file, 'size', { value: 600 * 1024 * 1024 })
 
     act(() => {
-      result.current.addImages([file])
+      result.current.addMedia([file])
     })
 
-    expect(result.current.images[0].status).toBe('error')
-    expect(result.current.images[0].error).toContain('500MB')
+    expect(result.current.mediaItems[0].status).toBe('error')
+    expect(result.current.mediaItems[0].error).toContain('500MB')
   })
 
   it('이미지와 영상을 함께 업로드할 수 있다', async () => {
@@ -633,16 +633,16 @@ describe('useGalleryWrite 영상 업로드', () => {
 
     act(() => {
       result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
-      result.current.addImages([imageFile, videoFile])
+      result.current.addMedia([imageFile, videoFile])
     })
 
-    expect(result.current.images).toHaveLength(2)
-    expect(result.current.images[0].mediaType).toBe('image')
-    expect(result.current.images[1].mediaType).toBe('video')
+    expect(result.current.mediaItems).toHaveLength(2)
+    expect(result.current.mediaItems[0].mediaType).toBe('image')
+    expect(result.current.mediaItems[1].mediaType).toBe('video')
 
     await waitFor(() => {
-      expect(result.current.images[0].status).toBe('done')
-      expect(result.current.images[1].status).toBe('done')
+      expect(result.current.mediaItems[0].status).toBe('done')
+      expect(result.current.mediaItems[1].status).toBe('done')
     })
 
     expect(mockCompressImage).toHaveBeenCalledTimes(1)
