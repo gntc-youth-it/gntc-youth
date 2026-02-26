@@ -1,2 +1,11 @@
 export { isLocalDevelopment } from './environment'
-export { CDN_BASE_URL, FALLBACK_IMAGE_URL } from './constants'
+export {
+  CDN_BASE_URL,
+  FALLBACK_IMAGE_URL,
+  ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_VIDEO_TYPES,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  IMAGE_COMPRESSION_OPTIONS,
+  VIDEO_COMPRESSION_OPTIONS,
+} from './constants'

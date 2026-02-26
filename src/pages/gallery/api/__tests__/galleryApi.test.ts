@@ -40,7 +40,7 @@ describe('fetchGalleryAlbums', () => {
 
     const result = await fetchGalleryAlbums()
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/gallery/albums')
+    expect(mockApiRequest).toHaveBeenCalledWith('/gallery/albums')
     expect(result).toEqual(mockResponse)
   })
 
@@ -58,7 +58,7 @@ describe('fetchCategories', () => {
 
     const result = await fetchCategories()
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/posts/categories')
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/categories')
     expect(result).toEqual(mockResponse)
   })
 
@@ -76,7 +76,7 @@ describe('fetchSubCategories', () => {
 
     const result = await fetchSubCategories('RETREAT')
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/posts/categories/RETREAT/sub-categories')
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/categories/RETREAT/sub-categories')
     expect(result).toEqual(mockResponse)
   })
 
@@ -98,7 +98,7 @@ describe('getPresignedUrl', () => {
       fileSize: 102400,
     })
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/files/presigned-url', {
+    expect(mockApiRequest).toHaveBeenCalledWith('/files/presigned-url', {
       method: 'POST',
       body: JSON.stringify({ filename: 'photo.jpg', contentType: 'image/jpeg', fileSize: 102400 }),
     })
@@ -138,7 +138,7 @@ describe('createPost', () => {
       churches: ['ANYANG'],
     })
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/posts', {
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts', {
       method: 'POST',
       body: JSON.stringify({
         subCategory: 'RETREAT_2026_WINTER',
@@ -167,7 +167,7 @@ describe('fetchChurches', () => {
 
     const result = await fetchChurches()
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/api/churches')
+    expect(mockApiRequest).toHaveBeenCalledWith('/churches')
     expect(result).toEqual(mockResponse)
   })
 
