@@ -5,7 +5,7 @@ import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { buildCdnUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
@@ -216,6 +216,135 @@ const GridContent = ({
   </div>
 )
 
+// ─── Retreat Sub-Category Section ────────────────────────
+
+const formatRetreatDate = (start: string, end: string) => {
+  const s = new Date(start)
+  const e = new Date(end)
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  return `${fmt(s)} - ${fmt(e)}`
+}
+
+const RetreatHeroBanner = ({
+  sub,
+  showBrowse,
+  onBrowse,
+}: {
+  sub: SubCategory
+  showBrowse: boolean
+  onBrowse: () => void
+}) => (
+  <div className="relative h-[320px] sm:h-[400px] overflow-hidden">
+    <img
+      src={buildCdnUrl(sub.imageUrl)}
+      alt={sub.displayName}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+      }}
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+    <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 lg:px-[60px] pb-8">
+      <div className="max-w-7xl mx-auto flex items-end justify-between">
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold text-white/70 tracking-[2px] uppercase">RETREAT</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+            {sub.displayName}
+          </h2>
+          <p className="text-sm text-white/80">{formatRetreatDate(sub.startDate, sub.endDate)}</p>
+        </div>
+        {showBrowse && (
+          <button
+            onClick={onBrowse}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-medium hover:bg-white/30 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            다른 행사 보기
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)
+
+const RetreatSelectorModal = ({
+  subCategories,
+  selectedSubCategory,
+  onSelect,
+  onClose,
+}: {
+  subCategories: SubCategory[]
+  selectedSubCategory: string | null
+  onSelect: (name: string) => void
+  onClose: () => void
+}) => (
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative w-full max-w-lg mx-4 mb-0 sm:mb-0 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] flex flex-col animate-in">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F0F0]">
+        <h3 className="text-lg font-bold text-[#1A1A1A]">수련회 행사 목록</h3>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F0F0F0] transition-colors"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* List */}
+      <div className="overflow-y-auto p-4 flex flex-col gap-3">
+        {subCategories.map((sub) => {
+          const isSelected = selectedSubCategory === sub.name
+          return (
+            <button
+              key={sub.name}
+              onClick={() => {
+                onSelect(sub.name)
+                onClose()
+              }}
+              className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 text-left ${
+                isSelected
+                  ? 'bg-[#EDF2FF] ring-1 ring-[#3B5BDB]'
+                  : 'bg-[#FAFAFA] hover:bg-[#F0F0F0]'
+              }`}
+            >
+              <img
+                src={buildCdnUrl(sub.imageUrl)}
+                alt={sub.displayName}
+                className="w-16 h-20 rounded-lg object-cover flex-shrink-0"
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                }}
+              />
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className={`text-[15px] font-bold leading-tight ${isSelected ? 'text-[#3B5BDB]' : 'text-[#1A1A1A]'}`}>
+                  {sub.displayName}
+                </span>
+                <span className="text-[12px] text-[#999999]">
+                  {formatRetreatDate(sub.startDate, sub.endDate)}
+                </span>
+                {isSelected && (
+                  <span className="text-[11px] font-semibold text-[#3B5BDB]">현재 보고 있는 행사</span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  </div>
+)
+
 // ─── Feed View Components ────────────────────────────────
 
 const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
@@ -369,8 +498,12 @@ export const GalleryPage = () => {
     loadMore,
     selectedCategory,
     setSelectedCategory,
+    subCategories,
+    selectedSubCategory,
+    selectSubCategory,
   } = useGallery()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [showRetreatModal, setShowRetreatModal] = useState(false)
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
@@ -423,6 +556,28 @@ export const GalleryPage = () => {
           </div>
         </div>
 
+        {/* Retreat Hero Banner */}
+        {selectedCategory === 'RETREAT' && subCategories.length > 0 && (() => {
+          const selected = subCategories.find((s) => s.name === selectedSubCategory)
+          return selected ? (
+            <RetreatHeroBanner
+              sub={selected}
+              showBrowse={subCategories.length > 1}
+              onBrowse={() => setShowRetreatModal(true)}
+            />
+          ) : null
+        })()}
+
+        {/* Retreat Selector Modal */}
+        {showRetreatModal && (
+          <RetreatSelectorModal
+            subCategories={subCategories}
+            selectedSubCategory={selectedSubCategory}
+            onSelect={selectSubCategory}
+            onClose={() => setShowRetreatModal(false)}
+          />
+        )}
+
         {/* Content */}
         {isLoading && (
           <div className="flex justify-center items-center py-20">
@@ -447,7 +602,7 @@ export const GalleryPage = () => {
             {viewMode === 'grid' ? (
               <GridContent
                 albums={albums}
-                showAllPhotos={selectedCategory === 'ALL'}
+                showAllPhotos={selectedCategory === 'ALL' || selectedSubCategory !== null}
                 photos={photos}
                 hasNext={hasNext}
                 isFetchingMore={isFetchingMore}
