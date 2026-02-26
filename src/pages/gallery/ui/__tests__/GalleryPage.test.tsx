@@ -4,6 +4,16 @@ import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
 import type { GalleryAlbum } from '../../model/types'
 
+const mockNavigate = jest.fn()
+
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}))
+
+jest.mock('../../../../features/auth', () => ({
+  useAuth: () => ({ user: null, isLoggedIn: false }),
+}))
+
 jest.mock('../../../../widgets/header', () => ({
   Header: () => <div data-testid="header">Header</div>,
 }))

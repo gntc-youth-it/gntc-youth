@@ -4,7 +4,7 @@ import { HomePage } from '../pages/home'
 import { LoginPage } from '../pages/login'
 import { AuthCallbackPage } from '../pages/auth-callback'
 import { AdminUsersPage } from '../pages/admin/users'
-import { GalleryPage } from '../pages/gallery'
+import { GalleryPage, GalleryWritePage } from '../pages/gallery'
 import './styles/index.css'
 
 export const App = () => {
@@ -13,6 +13,7 @@ export const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/gallery/write" element={<GalleryWritePage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />

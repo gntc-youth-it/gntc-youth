@@ -23,3 +23,71 @@ export interface GalleryAlbum {
 export interface GalleryResponse {
   albums: GalleryAlbum[]
 }
+
+// --- Post Creation Types ---
+
+export interface Category {
+  name: string
+  displayName: string
+}
+
+export interface SubCategory {
+  name: string
+  displayName: string
+}
+
+export interface CreatePostRequest {
+  subCategory: string
+  content?: string
+  hashtags?: string[]
+  churches?: string[]
+  imageIds?: number[]
+}
+
+export interface PostImage {
+  fileId: number
+  filePath: string
+  sortOrder: number
+}
+
+export interface CreatePostResponse {
+  id: number
+  authorId: number
+  authorName: string
+  subCategory: string
+  category: string
+  status: string
+  content: string
+  hashtags: string[]
+  churches: string[]
+  images: PostImage[]
+  createdAt: string
+}
+
+export interface PresignedUrlRequest {
+  filename: string
+  contentType: string
+  fileSize: number
+}
+
+export interface PresignedUrlResponse {
+  fileId: number
+  presignedUrl: string
+}
+
+export interface Church {
+  code: string
+  name: string
+}
+
+export type UploadStatus = 'pending' | 'compressing' | 'uploading' | 'done' | 'error'
+
+export interface UploadingImage {
+  id: string
+  file: File
+  preview: string
+  progress: number
+  status: UploadStatus
+  fileId?: number
+  error?: string
+}
