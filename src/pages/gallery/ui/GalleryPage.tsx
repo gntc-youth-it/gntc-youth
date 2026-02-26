@@ -659,7 +659,7 @@ const FeedContent = ({
 
 // ─── Media Lightbox ─────────────────────────────────────
 
-const ImageLightbox = ({
+const MediaLightbox = ({
   imageUrl,
   onClose,
 }: {
@@ -911,7 +911,7 @@ export const GalleryPage = () => {
 
       {/* Image Lightbox */}
       {lightboxUrl && (
-        <ImageLightbox imageUrl={lightboxUrl} onClose={handleCloseLightbox} />
+        <MediaLightbox imageUrl={lightboxUrl} onClose={handleCloseLightbox} />
       )}
     </>
   )
