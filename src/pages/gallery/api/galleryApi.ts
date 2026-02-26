@@ -2,6 +2,7 @@ import { apiRequest } from '../../../shared/api'
 import type {
   GalleryResponse,
   GalleryPhotosResponse,
+  FeedPostsResponse,
   Category,
   SubCategory,
   PresignedUrlRequest,
@@ -54,6 +55,25 @@ export const createPost = async (data: CreatePostRequest): Promise<CreatePostRes
     method: 'POST',
     body: JSON.stringify(data),
   })
+}
+
+export const fetchFeedPosts = async (params: {
+  subCategory?: string
+  cursor?: number | null
+  size?: number
+}): Promise<FeedPostsResponse> => {
+  const searchParams = new URLSearchParams()
+  if (params.size != null) {
+    searchParams.set('size', String(params.size))
+  }
+  if (params.cursor != null) {
+    searchParams.set('cursor', String(params.cursor))
+  }
+  if (params.subCategory) {
+    searchParams.set('subCategory', params.subCategory)
+  }
+  const query = searchParams.toString()
+  return apiRequest<FeedPostsResponse>(`/posts/feed${query ? `?${query}` : ''}`)
 }
 
 export const fetchChurches = async (): Promise<Church[]> => {

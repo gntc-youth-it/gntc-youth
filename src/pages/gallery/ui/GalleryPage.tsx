@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
+import { useFeed } from '../model/useFeed'
 import { buildCdnUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
@@ -351,15 +352,30 @@ const RetreatSelectorModal = ({
 
 // ─── Feed View Components ────────────────────────────────
 
-const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
+const formatFeedDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHour = Math.floor(diffMs / 3600000)
+  const diffDay = Math.floor(diffMs / 86400000)
+
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+  if (diffHour < 24) return `${diffHour}시간 전`
+  if (diffDay < 7) return `${diffDay}일 전`
+
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+}
+
+const FeedImageCarousel = ({ images }: { images: FeedPostImage[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const photos = album.photos
 
   const goTo = (idx: number) => {
-    if (idx >= 0 && idx < photos.length) setCurrentIndex(idx)
+    if (idx >= 0 && idx < images.length) setCurrentIndex(idx)
   }
 
-  if (photos.length === 0) return null
+  if (images.length === 0) return null
 
   return (
     <div className="relative">
@@ -368,11 +384,11 @@ const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
           className="flex transition-transform duration-300 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {photos.map((photo) => (
+          {images.map((image) => (
             <img
-              key={photo.id}
-              src={buildCdnUrl(photo.url)}
-              alt={album.title}
+              key={image.fileId}
+              src={buildCdnUrl(image.filePath)}
+              alt={`사진 ${image.sortOrder}`}
               className="w-full h-[360px] sm:h-[400px] object-cover flex-shrink-0"
               loading="lazy"
               onError={(e) => {
@@ -384,7 +400,7 @@ const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
       </div>
 
       {/* Navigation arrows */}
-      {photos.length > 1 && (
+      {images.length > 1 && (
         <>
           {currentIndex > 0 && (
             <button
@@ -397,7 +413,7 @@ const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
               </svg>
             </button>
           )}
-          {currentIndex < photos.length - 1 && (
+          {currentIndex < images.length - 1 && (
             <button
               onClick={() => goTo(currentIndex + 1)}
               className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center shadow-sm hover:bg-white transition-colors"
@@ -412,9 +428,9 @@ const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
       )}
 
       {/* Dots indicator */}
-      {photos.length > 1 && (
+      {images.length > 1 && (
         <div className="flex justify-center gap-1.5 py-3">
-          {photos.map((_, idx) => (
+          {images.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goTo(idx)}
@@ -430,17 +446,17 @@ const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
   )
 }
 
-const FeedCard = ({ album }: { album: GalleryAlbum }) => (
+const FeedCard = ({ post }: { post: FeedPost }) => (
   <article className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
     {/* Post header */}
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-[#3B5BDB] flex items-center justify-center">
-          <span className="text-white text-xs font-bold">G</span>
+          <span className="text-white text-xs font-bold">{post.authorName.charAt(0)}</span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold text-[#1A1A1A]">GNTC-YOUTH</span>
-          <span className="text-xs text-[#999999]">{album.dateFormatted}</span>
+          <span className="text-sm font-bold text-[#1A1A1A]">{post.authorName}</span>
+          <span className="text-xs text-[#999999]">{formatFeedDate(post.createdAt)}</span>
         </div>
       </div>
       <button className="p-1 text-[#CCCCCC] hover:text-[#999999] transition-colors" aria-label="더보기">
@@ -453,7 +469,7 @@ const FeedCard = ({ album }: { album: GalleryAlbum }) => (
     </div>
 
     {/* Image carousel */}
-    <FeedImageCarousel album={album} />
+    <FeedImageCarousel images={post.images} />
 
     {/* Action bar */}
     <div className="flex items-center justify-between px-4 py-3">
@@ -467,28 +483,59 @@ const FeedCard = ({ album }: { album: GalleryAlbum }) => (
 
     {/* Post footer */}
     <div className="flex flex-col gap-2 px-4 pb-4">
-      <span className="text-[13px] font-semibold text-[#1A1A1A]">
-        ❤️ {album.likeCount}명이 좋아합니다
-      </span>
-      <p className="text-[13px] text-[#333333] leading-relaxed">{album.caption}</p>
-      {album.tags.length > 0 && (
+      {post.content && (
+        <p className="text-[13px] text-[#333333] leading-relaxed">{post.content}</p>
+      )}
+      {post.hashtags.length > 0 && (
         <span className="text-xs font-medium text-[#3B5BDB]">
-          {album.tags.map((t) => `#${t}`).join(' ')}
+          {post.hashtags.map((t) => t.startsWith('#') ? t : `#${t}`).join(' ')}
+        </span>
+      )}
+      {post.commentCount > 0 && (
+        <span className="text-xs text-[#999999]">
+          댓글 {post.commentCount}개
         </span>
       )}
     </div>
   </article>
 )
 
-const FeedContent = ({ albums }: { albums: GalleryAlbum[] }) => (
-  <div className="flex justify-center px-4 py-10">
-    <div className="w-full max-w-[600px] flex flex-col gap-6">
-      {albums.map((album) => (
-        <FeedCard key={album.id} album={album} />
-      ))}
+const FeedContent = ({
+  posts,
+  hasNext,
+  isFetchingMore,
+  loadMore,
+}: {
+  posts: FeedPost[]
+  hasNext: boolean
+  isFetchingMore: boolean
+  loadMore: () => void
+}) => {
+  const sentinelRef = useInfiniteScroll(loadMore, {
+    enabled: hasNext && !isFetchingMore,
+  })
+
+  return (
+    <div className="flex justify-center px-4 py-10">
+      <div className="w-full max-w-[600px] flex flex-col gap-6">
+        {posts.map((post) => (
+          <FeedCard key={post.id} post={post} />
+        ))}
+        {isFetchingMore && (
+          <div className="flex justify-center py-8">
+            <div className="w-6 h-6 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        {!hasNext && posts.length > 0 && (
+          <p className="text-center text-sm text-[#999999] py-8">
+            모든 피드를 불러왔습니다.
+          </p>
+        )}
+        <div ref={sentinelRef} className="h-1" />
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 // ─── Main Page ───────────────────────────────────────────
 
@@ -506,12 +553,33 @@ export const GalleryPage = () => {
     selectedSubCategory,
     selectSubCategory,
   } = useGallery()
+  const feed = useFeed()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
   const albums: GalleryAlbum[] = []
+
+  // 피드 뷰로 전환 시 피드 데이터 로드
+  useEffect(() => {
+    if (viewMode === 'feed') {
+      const subCat = selectedSubCategory ?? undefined
+      feed.loadFeed(subCat)
+    } else {
+      feed.reset()
+    }
+  }, [viewMode, selectedSubCategory]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const feedLoadMore = useCallback(() => {
+    feed.loadMore(selectedSubCategory ?? undefined)
+  }, [feed, selectedSubCategory])
+
+  const currentIsLoading = viewMode === 'feed' ? feed.isLoading : isLoading
+  const currentError = viewMode === 'feed' ? feed.error : error
+  const hasContent = viewMode === 'feed'
+    ? feed.posts.length > 0
+    : photos.length > 0 || albums.length > 0
 
   return (
     <>
@@ -583,25 +651,27 @@ export const GalleryPage = () => {
         )}
 
         {/* Content */}
-        {isLoading && (
+        {currentIsLoading && (
           <div className="flex justify-center items-center py-20">
             <div className="w-8 h-8 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
-        {error && (
+        {currentError && (
           <div className="text-center py-20">
-            <p className="text-[#999999] text-sm">{error}</p>
+            <p className="text-[#999999] text-sm">{currentError}</p>
           </div>
         )}
 
-        {!isLoading && !error && photos.length === 0 && albums.length === 0 && (
+        {!currentIsLoading && !currentError && !hasContent && (
           <div className="text-center py-20">
-            <p className="text-[#999999] text-sm">아직 등록된 갤러리가 없습니다.</p>
+            <p className="text-[#999999] text-sm">
+              {viewMode === 'feed' ? '아직 등록된 피드가 없습니다.' : '아직 등록된 갤러리가 없습니다.'}
+            </p>
           </div>
         )}
 
-        {!isLoading && !error && (photos.length > 0 || albums.length > 0) && (
+        {!currentIsLoading && !currentError && hasContent && (
           <div className="transition-opacity duration-300">
             {viewMode === 'grid' ? (
               <GridContent
@@ -613,7 +683,12 @@ export const GalleryPage = () => {
                 loadMore={loadMore}
               />
             ) : (
-              <FeedContent albums={albums} />
+              <FeedContent
+                posts={feed.posts}
+                hasNext={feed.hasNext}
+                isFetchingMore={feed.isFetchingMore}
+                loadMore={feedLoadMore}
+              />
             )}
           </div>
         )}
