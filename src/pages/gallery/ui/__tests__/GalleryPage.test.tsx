@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
-import type { GalleryPhotoItem, SubCategory } from '../../model/types'
+import { useFeed } from '../../model/useFeed'
+import type { GalleryPhotoItem, SubCategory, FeedPost } from '../../model/types'
 
 const mockNavigate = jest.fn()
 
@@ -22,7 +23,12 @@ jest.mock('../../model/useGallery', () => ({
   useGallery: jest.fn(),
 }))
 
+jest.mock('../../model/useFeed', () => ({
+  useFeed: jest.fn(),
+}))
+
 const mockUseGallery = useGallery as jest.MockedFunction<typeof useGallery>
+const mockUseFeed = useFeed as jest.MockedFunction<typeof useFeed>
 
 const mockPhotos: GalleryPhotoItem[] = [
   { id: 42, url: 'uploads/photo1.jpg' },
@@ -47,6 +53,40 @@ const mockSubCategories: SubCategory[] = [
   },
 ]
 
+const mockFeedPosts: FeedPost[] = [
+  {
+    id: 10,
+    authorId: 1,
+    authorName: '홍길동',
+    subCategory: 'RETREAT_2026_WINTER',
+    category: 'RETREAT',
+    status: 'APPROVED',
+    content: '수련회 후기입니다',
+    hashtags: ['#수련회', '#부흥'],
+    churches: ['ANYANG'],
+    images: [
+      { fileId: 5, filePath: 'uploads/abc.jpg', sortOrder: 1 },
+      { fileId: 6, filePath: 'uploads/def.jpg', sortOrder: 2 },
+    ],
+    commentCount: 3,
+    createdAt: '2026-02-26T10:30:00',
+  },
+  {
+    id: 8,
+    authorId: 2,
+    authorName: '김영희',
+    subCategory: 'RETREAT_2026_WINTER',
+    category: 'RETREAT',
+    status: 'APPROVED',
+    content: '은혜로운 시간이었습니다',
+    hashtags: ['#감사'],
+    churches: ['SUWON'],
+    images: [{ fileId: 7, filePath: 'uploads/ghi.jpg', sortOrder: 1 }],
+    commentCount: 0,
+    createdAt: '2026-02-25T14:00:00',
+  },
+]
+
 const defaultGallery = {
   photos: mockPhotos,
   isLoading: false,
@@ -62,9 +102,22 @@ const defaultGallery = {
   isLoadingSubCategories: false,
 }
 
+const defaultFeed = {
+  posts: [] as FeedPost[],
+  isLoading: false,
+  isFetchingMore: false,
+  error: null,
+  hasNext: true,
+  loadFeed: jest.fn(),
+  loadMore: jest.fn(),
+  reset: jest.fn(),
+  loaded: false,
+}
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockUseGallery.mockReturnValue(defaultGallery)
+  mockUseFeed.mockReturnValue(defaultFeed)
 
   // IntersectionObserver mock
   const mockIntersectionObserver = jest.fn()
@@ -340,6 +393,119 @@ describe('GalleryPage 수련회 행사 선택 모달', () => {
     await userEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     expect(screen.queryByText('수련회 행사 목록')).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 피드 뷰', () => {
+  it('피드 뷰 전환 시 피드 카드가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('홍길동')).toBeInTheDocument()
+    expect(screen.getByText('수련회 후기입니다')).toBeInTheDocument()
+    expect(screen.getByText('김영희')).toBeInTheDocument()
+    expect(screen.getByText('은혜로운 시간이었습니다')).toBeInTheDocument()
+  })
+
+  it('피드 카드에 해시태그가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('#수련회 #부흥')).toBeInTheDocument()
+    expect(screen.getByText('#감사')).toBeInTheDocument()
+  })
+
+  it('댓글이 있는 피드 카드에 댓글 수가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('댓글 3개')).toBeInTheDocument()
+  })
+
+  it('댓글이 없는 피드 카드에는 댓글 수가 표시되지 않는다', async () => {
+    const postWithoutComments = [{ ...mockFeedPosts[1] }] // commentCount: 0
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: postWithoutComments })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.queryByText(/댓글 0개/)).not.toBeInTheDocument()
+  })
+
+  it('피드 뷰에서 피드가 없으면 빈 상태 메시지가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('아직 등록된 피드가 없습니다.')).toBeInTheDocument()
+  })
+
+  it('피드 뷰에서 에러 시 에러 메시지가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({
+      ...defaultFeed,
+      posts: [],
+      error: '피드를 불러오는데 실패했습니다.',
+    })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('피드를 불러오는데 실패했습니다.')).toBeInTheDocument()
+  })
+
+  it('피드 뷰에서 모든 피드를 불러왔으면 완료 메시지가 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts, hasNext: false })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('모든 피드를 불러왔습니다.')).toBeInTheDocument()
+  })
+
+  it('피드 뷰에서 다음 페이지가 있으면 완료 메시지가 표시되지 않는다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts, hasNext: true })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.queryByText('모든 피드를 불러왔습니다.')).not.toBeInTheDocument()
+  })
+
+  it('피드 카드에 작성자 이름 첫 글자가 아바타에 표시된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getByText('홍')).toBeInTheDocument()
+  })
+
+  it('그리드 뷰로 전환하면 피드 카드가 사라진다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    expect(screen.getByText('홍길동')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /갤러리/ }))
+    expect(screen.queryByText('홍길동')).not.toBeInTheDocument()
   })
 })
 
