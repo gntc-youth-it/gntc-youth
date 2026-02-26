@@ -6,7 +6,7 @@ export async function getPresignedUrl(
   contentType: string,
   fileSize: number
 ): Promise<PresignedUrlResponse> {
-  return apiRequest<PresignedUrlResponse>('/media/presigned-url', {
+  return apiRequest<PresignedUrlResponse>('/files/presigned-url', {
     method: 'POST',
     body: JSON.stringify({ fileName, contentType, fileSize }),
   })
