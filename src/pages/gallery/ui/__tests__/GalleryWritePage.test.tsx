@@ -25,6 +25,7 @@ const mockSetContent = jest.fn()
 const mockAddHashtag = jest.fn()
 const mockRemoveHashtag = jest.fn()
 const mockToggleChurch = jest.fn()
+const mockSetIsAuthorPublic = jest.fn()
 const mockAddImages = jest.fn()
 const mockRemoveImage = jest.fn()
 
@@ -42,6 +43,8 @@ const defaultWriteHook = {
   removeHashtag: mockRemoveHashtag,
   selectedChurches: [] as string[],
   toggleChurch: mockToggleChurch,
+  isAuthorPublic: false,
+  setIsAuthorPublic: mockSetIsAuthorPublic,
   images: [] as never[],
   addImages: mockAddImages,
   removeImage: mockRemoveImage,
@@ -297,5 +300,39 @@ describe('GalleryWritePage 제출', () => {
     await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
 
     expect(mockHandleSubmit).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('GalleryWritePage 작성자 공개 여부', () => {
+  it('작성자 정보 공개 체크박스가 표시된다', () => {
+    render(<GalleryWritePage />)
+
+    expect(screen.getByText('작성자 정보 공개')).toBeInTheDocument()
+    expect(screen.getByText("체크하지 않으면 작성자가 'GNTC YOUTH'로 표시됩니다.")).toBeInTheDocument()
+  })
+
+  it('기본값은 체크 해제 상태이다', () => {
+    render(<GalleryWritePage />)
+
+    const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it('체크박스 클릭 시 setIsAuthorPublic이 호출된다', async () => {
+    render(<GalleryWritePage />)
+
+    const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
+    await userEvent.click(checkbox)
+
+    expect(mockSetIsAuthorPublic).toHaveBeenCalledWith(true)
+  })
+
+  it('isAuthorPublic이 true이면 체크 상태로 표시된다', () => {
+    mockWriteHookValue = { ...defaultWriteHook, isAuthorPublic: true }
+
+    render(<GalleryWritePage />)
+
+    const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
+    expect(checkbox).toBeChecked()
   })
 })

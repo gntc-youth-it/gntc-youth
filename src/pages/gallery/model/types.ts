@@ -58,6 +58,7 @@ export interface CreatePostRequest {
   hashtags?: string[]
   churches?: string[]
   imageIds?: number[]
+  isAuthorPublic?: boolean
 }
 
 export interface PostImage {
@@ -70,6 +71,7 @@ export interface CreatePostResponse {
   id: number
   authorId: number
   authorName: string
+  isAuthorPublic: boolean
   subCategory: string
   category: string
   status: string
@@ -108,6 +110,7 @@ export interface FeedPost {
   id: number
   authorId: number
   authorName: string
+  isAuthorPublic: boolean
   subCategory: string
   category: string
   status: string

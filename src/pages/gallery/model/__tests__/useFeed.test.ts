@@ -11,6 +11,7 @@ const mockPost = {
   id: 10,
   authorId: 1,
   authorName: '홍길동',
+  isAuthorPublic: false,
   subCategory: 'RETREAT_2026_WINTER',
   category: 'RETREAT',
   status: 'APPROVED',

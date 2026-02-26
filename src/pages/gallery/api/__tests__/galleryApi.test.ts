@@ -173,6 +173,7 @@ describe('createPost', () => {
       id: 1,
       authorId: 10,
       authorName: '홍길동',
+      isAuthorPublic: false,
       subCategory: 'RETREAT_2026_WINTER',
       category: 'RETREAT',
       status: 'PENDING_REVIEW',
@@ -201,6 +202,40 @@ describe('createPost', () => {
       }),
     })
     expect(result).toEqual(mockResponse)
+  })
+
+  it('isAuthorPublic: true로 게시글을 생성한다', async () => {
+    const mockResponse = {
+      id: 2,
+      authorId: 10,
+      authorName: '홍길동',
+      isAuthorPublic: true,
+      subCategory: 'RETREAT_2026_WINTER',
+      category: 'RETREAT',
+      status: 'PENDING_REVIEW',
+      content: '공개 게시글',
+      hashtags: [],
+      churches: [],
+      images: [],
+      createdAt: '2026-02-26T10:00:00',
+    }
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    const result = await createPost({
+      subCategory: 'RETREAT_2026_WINTER',
+      content: '공개 게시글',
+      isAuthorPublic: true,
+    })
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts', {
+      method: 'POST',
+      body: JSON.stringify({
+        subCategory: 'RETREAT_2026_WINTER',
+        content: '공개 게시글',
+        isAuthorPublic: true,
+      }),
+    })
+    expect(result.isAuthorPublic).toBe(true)
   })
 
   it('API 에러 시 에러를 전파한다', async () => {
