@@ -159,16 +159,16 @@ describe('createPost', () => {
 
 describe('fetchChurches', () => {
   it('성전 목록을 반환한다', async () => {
-    const mockResponse = [
+    const mockChurches = [
       { code: 'ANYANG', name: '안양' },
       { code: 'SUWON', name: '수원' },
     ]
-    mockApiRequest.mockResolvedValue(mockResponse)
+    mockApiRequest.mockResolvedValue({ churches: mockChurches })
 
     const result = await fetchChurches()
 
     expect(mockApiRequest).toHaveBeenCalledWith('/churches')
-    expect(result).toEqual(mockResponse)
+    expect(result).toEqual(mockChurches)
   })
 
   it('API 에러 시 에러를 전파한다', async () => {
