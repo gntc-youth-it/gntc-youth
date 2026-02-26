@@ -25,12 +25,14 @@ function TestComponent({
   onLoadMore,
   enabled,
   rootMargin,
+  reobserveDelay,
 }: {
   onLoadMore: () => void
   enabled: boolean
   rootMargin?: string
+  reobserveDelay?: number
 }) {
-  const ref = useInfiniteScroll(onLoadMore, { enabled, rootMargin })
+  const ref = useInfiniteScroll(onLoadMore, { enabled, rootMargin, reobserveDelay })
   return createElement('div', { ref, 'data-testid': 'sentinel' })
 }
 
@@ -290,6 +292,49 @@ describe('useInfiniteScroll', () => {
         intersectionCallback([{ isIntersecting: true } as IntersectionObserverEntry])
       })
       expect(onLoadMore).toHaveBeenCalledTimes(2)
+
+      unmountComponentAtNode(container)
+      document.body.removeChild(container)
+    })
+
+    it('reobserveDelay 옵션으로 재관찰 딜레이를 커스텀할 수 있다', () => {
+      const onLoadMore = jest.fn()
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+
+      act(() => {
+        render(
+          createElement(TestComponent, { onLoadMore, enabled: true, reobserveDelay: 300 }),
+          container
+        )
+      })
+
+      // fetch 사이클 시뮬레이션
+      act(() => {
+        render(
+          createElement(TestComponent, { onLoadMore, enabled: false, reobserveDelay: 300 }),
+          container
+        )
+      })
+      act(() => {
+        render(
+          createElement(TestComponent, { onLoadMore, enabled: true, reobserveDelay: 300 }),
+          container
+        )
+      })
+
+      // 150ms 후: 기본값이었으면 재관찰되지만, 300ms로 설정했으므로 아직 안 됨
+      act(() => {
+        jest.advanceTimersByTime(150)
+      })
+      expect(unobserveMock).not.toHaveBeenCalled()
+
+      // 300ms 후: 재관찰 발생
+      act(() => {
+        jest.advanceTimersByTime(150)
+      })
+      expect(unobserveMock).toHaveBeenCalledTimes(1)
+      expect(observeMock).toHaveBeenCalledTimes(2)
 
       unmountComponentAtNode(container)
       document.body.removeChild(container)

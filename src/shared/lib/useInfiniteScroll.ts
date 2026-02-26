@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 
 export const useInfiniteScroll = (
   onLoadMore: () => void,
-  options: { enabled: boolean; rootMargin?: string }
+  options: { enabled: boolean; rootMargin?: string; reobserveDelay?: number }
 ) => {
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const onLoadMoreRef = useRef(onLoadMore)
@@ -50,10 +50,10 @@ export const useInfiniteScroll = (
         observer.unobserve(sentinel)
         observer.observe(sentinel)
       }
-    }, 150)
+    }, options.reobserveDelay ?? 150)
 
     return () => clearTimeout(timerId)
-  }, [options.enabled])
+  }, [options.enabled, options.reobserveDelay])
 
   return setSentinelRef
 }
