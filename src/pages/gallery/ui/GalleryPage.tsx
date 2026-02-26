@@ -133,15 +133,54 @@ const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
   </section>
 )
 
-const GridContent = ({ albums }: { albums: GalleryAlbum[] }) => (
-  <div className="px-4 sm:px-8 lg:px-[60px] py-10">
-    <div className="max-w-7xl mx-auto flex flex-col gap-10">
-      {albums.map((album, idx) => (
-        <div key={album.id}>
-          <AlbumSection album={album} />
-          {idx < albums.length - 1 && <div className="h-px bg-[#E0E0E0] mt-10" />}
+const AllPhotosGrid = ({ albums }: { albums: GalleryAlbum[] }) => {
+  const allPhotos = albums.flatMap((album) => album.photos)
+  const columnCount = 4
+  const columns: string[][] = Array.from({ length: columnCount }, () => [])
+  const heights = new Array(columnCount).fill(0)
+
+  allPhotos.forEach((photo) => {
+    const shortest = heights.indexOf(Math.min(...heights))
+    columns[shortest].push(buildCdnUrl(photo.url))
+    heights[shortest] += 1
+  })
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {columns.map((col, colIdx) => (
+        <div key={colIdx} className="flex flex-col gap-3">
+          {col.map((url, imgIdx) => (
+            <div key={imgIdx} className="overflow-hidden rounded-xl">
+              <img
+                src={url}
+                alt={`갤러리 사진 ${colIdx * col.length + imgIdx + 1}`}
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                }}
+              />
+            </div>
+          ))}
         </div>
       ))}
+    </div>
+  )
+}
+
+const GridContent = ({ albums, showAllPhotos }: { albums: GalleryAlbum[]; showAllPhotos: boolean }) => (
+  <div className="px-4 sm:px-8 lg:px-[60px] py-10">
+    <div className="max-w-7xl mx-auto flex flex-col gap-10">
+      {showAllPhotos ? (
+        <AllPhotosGrid albums={albums} />
+      ) : (
+        albums.map((album, idx) => (
+          <div key={album.id}>
+            <AlbumSection album={album} />
+            {idx < albums.length - 1 && <div className="h-px bg-[#E0E0E0] mt-10" />}
+          </div>
+        ))
+      )}
     </div>
   </div>
 )
@@ -364,7 +403,7 @@ export const GalleryPage = () => {
         {!isLoading && !error && albums.length > 0 && (
           <div className="transition-opacity duration-300">
             {viewMode === 'grid' ? (
-              <GridContent albums={albums} />
+              <GridContent albums={albums} showAllPhotos={selectedCategory === 'ALL'} />
             ) : (
               <FeedContent albums={albums} />
             )}
