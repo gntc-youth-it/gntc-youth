@@ -1,7 +1,6 @@
 export interface VideoCompressionOptions {
   crf?: number
   maxWidth?: number
-  skipBelowSize?: number
   onProgress?: (progress: number) => void
 }
 
@@ -50,18 +49,7 @@ export async function compressVideo(
 
   const crf = options?.crf ?? DEFAULT_CRF
   const maxWidth = options?.maxWidth ?? DEFAULT_MAX_WIDTH
-  const skipBelowSize = options?.skipBelowSize ?? 0
   const onProgress = options?.onProgress
-
-  // 이미 MP4이고 기준 크기 이하인 파일은 압축 스킵
-  if (skipBelowSize > 0 && file.size <= skipBelowSize && file.type === 'video/mp4') {
-    onProgress?.(100)
-    return {
-      blob: file,
-      originalSize: file.size,
-      compressedSize: file.size,
-    }
-  }
 
   const ffmpeg = await getFFmpeg()
   const { fetchFile } = await import('@ffmpeg/util')
@@ -82,7 +70,7 @@ export async function compressVideo(
       '-vf', `scale='min(${maxWidth},iw)':-2`,
       '-c:v', 'libx264',
       '-crf', String(crf),
-      '-preset', 'ultrafast',
+      '-preset', 'fast',
       '-c:a', 'aac',
       '-b:a', '128k',
       '-movflags', '+faststart',
