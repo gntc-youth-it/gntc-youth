@@ -150,6 +150,9 @@ const AllPhotosGrid = ({
 
   return (
     <>
+      <p className="text-sm text-[#999999] mb-4">
+        총 {photos.length}장{hasNext ? '+' : ''}의 사진
+      </p>
       <div className="columns-2 md:columns-4 gap-3">
         {photos.map((photo, idx) => (
           <div key={photo.id} className="mb-3 break-inside-avoid overflow-hidden rounded-xl">
