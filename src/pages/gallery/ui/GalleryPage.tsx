@@ -569,7 +569,7 @@ export const GalleryPage = () => {
     } else {
       feed.reset()
     }
-  }, [viewMode, selectedSubCategory]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [viewMode, selectedSubCategory, feed.loadFeed, feed.reset])
 
   const feedLoadMore = useCallback(() => {
     feed.loadMore(selectedSubCategory ?? undefined)

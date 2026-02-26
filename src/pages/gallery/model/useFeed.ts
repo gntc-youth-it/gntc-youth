@@ -12,6 +12,10 @@ export const useFeed = () => {
   const [hasNext, setHasNext] = useState(true)
   const cursorRef = useRef<number | null>(null)
   const loadedRef = useRef(false)
+  const isFetchingMoreRef = useRef(isFetchingMore)
+  isFetchingMoreRef.current = isFetchingMore
+  const hasNextRef = useRef(hasNext)
+  hasNextRef.current = hasNext
 
   const loadPosts = useCallback(async (reset: boolean, subCategory?: string) => {
     if (reset) {
@@ -50,11 +54,11 @@ export const useFeed = () => {
 
   const loadMore = useCallback(
     (subCategory?: string) => {
-      if (!isFetchingMore && hasNext) {
+      if (!isFetchingMoreRef.current && hasNextRef.current) {
         loadPosts(false, subCategory)
       }
     },
-    [isFetchingMore, hasNext, loadPosts],
+    [loadPosts],
   )
 
   const reset = useCallback(() => {
