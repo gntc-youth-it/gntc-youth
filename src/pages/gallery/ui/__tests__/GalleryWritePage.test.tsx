@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryWritePage } from '../GalleryWritePage'
 
@@ -199,6 +199,17 @@ describe('GalleryWritePage 해시태그', () => {
     await userEvent.type(input, '수련회{Enter}')
 
     expect(mockAddHashtag).toHaveBeenCalledWith('수련회')
+    expect(mockAddHashtag).toHaveBeenCalledTimes(1)
+  })
+
+  it('IME 조합 중 Enter 키 입력 시 해시태그가 추가되지 않는다', () => {
+    render(<GalleryWritePage />)
+
+    const input = screen.getByPlaceholderText('태그 입력 후 Enter')
+    fireEvent.change(input, { target: { value: '수련회' } })
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
+
+    expect(mockAddHashtag).not.toHaveBeenCalled()
   })
 
   it('해시태그 칩이 표시된다', () => {
