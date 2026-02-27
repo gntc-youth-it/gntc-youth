@@ -57,7 +57,7 @@ export const Footer = () => {
             <div className="space-y-2 text-gray-400 text-sm">
               <p>📍 경기도 안양시 만안구 안양로 193</p>
               <p>📞 031-443-3731~2</p>
-              <p>✉️ truth@gntc.net</p>
+              <p>✉️ gntceum@gmail.com</p>
             </div>
           </div>
 
