@@ -49,12 +49,21 @@ export interface Category {
   displayName: string
 }
 
+export interface SubCategoryVerse {
+  bookName: string
+  bookDisplayName: string
+  chapter: number
+  verse: number
+  content: string
+}
+
 export interface SubCategory {
   name: string
   displayName: string
   imageUrl: string
   startDate: string
   endDate: string
+  verse?: SubCategoryVerse
 }
 
 export interface CreatePostRequest {

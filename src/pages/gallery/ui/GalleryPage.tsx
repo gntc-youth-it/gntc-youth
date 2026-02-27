@@ -268,6 +268,11 @@ const RetreatHeroBanner = ({
             {sub.displayName}
           </h2>
           <p className="text-sm text-white/80">{formatRetreatDate(sub.startDate, sub.endDate)}</p>
+          {sub.verse && (
+            <p className="text-sm text-white/70 mt-1">
+              {sub.verse.content} ({sub.verse.bookDisplayName} {sub.verse.chapter}장 {sub.verse.verse}절)
+            </p>
+          )}
         </div>
         {showBrowse && (
           <button
@@ -349,6 +354,11 @@ const RetreatSelectorModal = ({
                 <span className="text-[12px] text-[#999999]">
                   {formatRetreatDate(sub.startDate, sub.endDate)}
                 </span>
+                {sub.verse && (
+                  <span className="text-[11px] text-[#777777] leading-snug">
+                    {sub.verse.content} ({sub.verse.bookDisplayName} {sub.verse.chapter}장 {sub.verse.verse}절)
+                  </span>
+                )}
                 {isSelected && (
                   <span className="text-[11px] font-semibold text-[#3B5BDB]">현재 보고 있는 행사</span>
                 )}

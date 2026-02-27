@@ -25,6 +25,13 @@ const mockSubCategories: SubCategory[] = [
     imageUrl: 'assets/2026-winter-poster.webp',
     startDate: '2026-01-29',
     endDate: '2026-01-31',
+    verse: {
+      bookName: 'ISAIAH',
+      bookDisplayName: '이사야',
+      chapter: 40,
+      verse: 31,
+      content: '오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달려도 곤비하지 아니하겠고 걸어도 피곤하지 아니하리로다',
+    },
   },
   {
     name: 'RETREAT_2025_SUMMER',
