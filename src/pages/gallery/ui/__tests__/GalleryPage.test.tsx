@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
 import { useFeed } from '../../model/useFeed'
+import { deletePost } from '../../api/galleryApi'
 import type { GalleryPhotoItem, SubCategory, FeedPost } from '../../model/types'
 
 const mockNavigate = jest.fn()
@@ -11,9 +12,17 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
 
+const mockUseAuth = jest.fn()
 jest.mock('../../../../features/auth', () => ({
-  useAuth: () => ({ user: null, isLoggedIn: false }),
+  useAuth: () => mockUseAuth(),
 }))
+
+jest.mock('../../api/galleryApi', () => ({
+  ...jest.requireActual('../../api/galleryApi'),
+  deletePost: jest.fn(),
+}))
+
+const mockDeletePost = deletePost as jest.MockedFunction<typeof deletePost>
 
 jest.mock('../../../../widgets/header', () => ({
   Header: () => <div data-testid="header">Header</div>,
@@ -113,13 +122,16 @@ const defaultFeed = {
   loadFeed: jest.fn(),
   loadMore: jest.fn(),
   reset: jest.fn(),
+  removePost: jest.fn(),
   loaded: false,
 }
 
 beforeEach(() => {
   jest.clearAllMocks()
+  mockUseAuth.mockReturnValue({ user: null, isLoggedIn: false })
   mockUseGallery.mockReturnValue(defaultGallery)
   mockUseFeed.mockReturnValue(defaultFeed)
+  mockDeletePost.mockResolvedValue(undefined)
 
   // IntersectionObserver mock
   const mockIntersectionObserver = jest.fn()
@@ -852,5 +864,204 @@ describe('GalleryPage 라이트박스 영상 소리 겹침 방지', () => {
     await userEvent.keyboard('{Escape}')
 
     expect(playSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('GalleryPage 게시글 삭제', () => {
+  const masterAuth = { user: { id: 1, name: '관리자', role: 'MASTER' }, isLoggedIn: true }
+  const userAuth = { user: { id: 2, name: '일반유저', role: 'USER' }, isLoggedIn: true }
+  const leaderAuth = { user: { id: 3, name: '리더', role: 'LEADER' }, isLoggedIn: true }
+
+  it('MASTER 권한이면 피드 카드에 더보기 버튼이 표시된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.getAllByLabelText('더보기').length).toBeGreaterThan(0)
+  })
+
+  it('USER 권한이면 더보기 버튼이 표시되지 않는다', async () => {
+    mockUseAuth.mockReturnValue(userAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.queryByLabelText('더보기')).not.toBeInTheDocument()
+  })
+
+  it('LEADER 권한이면 더보기 버튼이 표시되지 않는다', async () => {
+    mockUseAuth.mockReturnValue(leaderAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.queryByLabelText('더보기')).not.toBeInTheDocument()
+  })
+
+  it('비로그인 상태에서는 더보기 버튼이 표시되지 않는다', async () => {
+    mockUseAuth.mockReturnValue({ user: null, isLoggedIn: false })
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: mockFeedPosts })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(screen.queryByLabelText('더보기')).not.toBeInTheDocument()
+  })
+
+  it('더보기 버튼 클릭 시 삭제 메뉴가 표시된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+  })
+
+  it('삭제 버튼 클릭 시 확인 모달이 표시된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(screen.getByText('게시글 삭제')).toBeInTheDocument()
+    expect(screen.getByText(/삭제하면 되돌릴 수 없습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '취소' })).toBeInTheDocument()
+  })
+
+  it('확인 모달에서 취소 클릭 시 모달이 닫힌다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(screen.getByText('게시글 삭제')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '취소' }))
+
+    expect(screen.queryByText('게시글 삭제')).not.toBeInTheDocument()
+  })
+
+  it('확인 모달에서 삭제 확인 시 deletePost API가 호출된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    const mockRemovePost = jest.fn()
+    mockUseFeed.mockReturnValue({
+      ...defaultFeed,
+      posts: [mockFeedPosts[0]],
+      removePost: mockRemovePost,
+    })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+
+    // 모달의 삭제 버튼 (두 번째 '삭제' 텍스트가 있는 버튼)
+    const confirmButtons = screen.getAllByRole('button')
+    const confirmDeleteBtn = confirmButtons.find(
+      (btn) => btn.textContent === '삭제' && btn.closest('.fixed')
+    )!
+
+    await userEvent.click(confirmDeleteBtn)
+
+    await waitFor(() => {
+      expect(mockDeletePost).toHaveBeenCalledWith(10)
+    })
+  })
+
+  it('삭제 성공 시 피드에서 게시글이 제거된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    const mockRemovePost = jest.fn()
+    mockUseFeed.mockReturnValue({
+      ...defaultFeed,
+      posts: [mockFeedPosts[0]],
+      removePost: mockRemovePost,
+    })
+    mockDeletePost.mockResolvedValue(undefined)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+
+    const confirmButtons = screen.getAllByRole('button')
+    const confirmDeleteBtn = confirmButtons.find(
+      (btn) => btn.textContent === '삭제' && btn.closest('.fixed')
+    )!
+
+    await userEvent.click(confirmDeleteBtn)
+
+    await waitFor(() => {
+      expect(mockRemovePost).toHaveBeenCalledWith(10)
+    })
+
+    // 모달이 닫힌다
+    await waitFor(() => {
+      expect(screen.queryByText('게시글 삭제')).not.toBeInTheDocument()
+    })
+  })
+
+  it('삭제 실패 시 alert이 표시된다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+    mockDeletePost.mockRejectedValue(new Error('Unauthorized'))
+
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {})
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+
+    const confirmButtons = screen.getAllByRole('button')
+    const confirmDeleteBtn = confirmButtons.find(
+      (btn) => btn.textContent === '삭제' && btn.closest('.fixed')
+    )!
+
+    await userEvent.click(confirmDeleteBtn)
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith('게시글 삭제에 실패했습니다.')
+    })
+
+    alertSpy.mockRestore()
+  })
+
+  it('메뉴 외부 클릭 시 메뉴가 닫힌다', async () => {
+    mockUseAuth.mockReturnValue(masterAuth)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+    await userEvent.click(screen.getByLabelText('더보기'))
+
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+
+    // 외부 클릭
+    await userEvent.click(screen.getByText('수련회 후기입니다'))
+
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
   })
 })

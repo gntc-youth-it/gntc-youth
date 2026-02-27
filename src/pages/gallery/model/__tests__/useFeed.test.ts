@@ -217,6 +217,51 @@ describe('useFeed', () => {
     expect(result.current.error).toBeNull()
   })
 
+  it('removePost 호출 시 해당 게시글이 목록에서 제거된다', async () => {
+    const secondPost = { ...mockPost, id: 7, content: '두 번째 게시글' }
+    const multiResponse: FeedPostsResponse = {
+      posts: [mockPost, secondPost],
+      nextCursor: null,
+      hasNext: false,
+    }
+    mockFetchFeedPosts.mockResolvedValue(multiResponse)
+
+    const { result } = renderHook(() => useFeed())
+
+    act(() => {
+      result.current.loadFeed()
+    })
+
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(2)
+    })
+
+    act(() => {
+      result.current.removePost(10)
+    })
+
+    expect(result.current.posts).toHaveLength(1)
+    expect(result.current.posts[0].id).toBe(7)
+  })
+
+  it('removePost로 존재하지 않는 ID를 전달하면 목록이 변경되지 않는다', async () => {
+    const { result } = renderHook(() => useFeed())
+
+    act(() => {
+      result.current.loadFeed()
+    })
+
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(1)
+    })
+
+    act(() => {
+      result.current.removePost(999)
+    })
+
+    expect(result.current.posts).toHaveLength(1)
+  })
+
   it('loadMore 중복 호출 시 한 번만 API를 호출한다', async () => {
     let resolveSecond: (value: FeedPostsResponse) => void
     const secondPromise = new Promise<FeedPostsResponse>((resolve) => {

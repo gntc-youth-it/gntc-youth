@@ -113,5 +113,9 @@ export const apiRequest = async <T>(
     throw new HttpError(response.status, message, errorData.code)
   }
 
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return response.json()
 }

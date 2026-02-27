@@ -102,6 +102,17 @@ describe('apiRequest', () => {
     expect(result).toEqual({ message: 'success' })
   })
 
+  it('204 No Content 응답 시 undefined를 반환한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+    })
+
+    const result = await apiRequest('/api/test')
+
+    expect(result).toBeUndefined()
+  })
+
   it('커스텀 옵션을 전달할 수 있다', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
