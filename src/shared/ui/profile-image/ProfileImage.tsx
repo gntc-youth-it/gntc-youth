@@ -41,8 +41,7 @@ export const ProfileImage = ({
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <line x1="12" y1="2" x2="12" y2="22" />
-          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 1V23M5 8H19" />
         </svg>
       </div>
     )
