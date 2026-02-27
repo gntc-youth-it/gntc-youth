@@ -1,12 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useGallery } from '../useGallery'
-import { fetchGalleryPhotos, fetchSubCategories } from '../../api/galleryApi'
+import { fetchChurches, fetchGalleryPhotos, fetchSubCategories } from '../../api/galleryApi'
 import type { GalleryPhotosResponse, SubCategory } from '../types'
 
 jest.mock('../../api/galleryApi')
 
 const mockFetchGalleryPhotos = fetchGalleryPhotos as jest.MockedFunction<typeof fetchGalleryPhotos>
 const mockFetchSubCategories = fetchSubCategories as jest.MockedFunction<typeof fetchSubCategories>
+const mockFetchChurches = fetchChurches as jest.MockedFunction<typeof fetchChurches>
 
 const mockResponse: GalleryPhotosResponse = {
   images: [
@@ -34,10 +35,17 @@ const mockSubCategories: SubCategory[] = [
   },
 ]
 
+const mockChurches = [
+  { code: 'ANYANG', name: '안양' },
+  { code: 'SUWON', name: '수원' },
+  { code: 'INCHEON', name: '인천' },
+]
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockFetchGalleryPhotos.mockResolvedValue(mockResponse)
   mockFetchSubCategories.mockResolvedValue(mockSubCategories)
+  mockFetchChurches.mockResolvedValue(mockChurches)
 })
 
 describe('useGallery', () => {
@@ -394,5 +402,233 @@ describe('useGallery 수련회 서브카테고리', () => {
 
     expect(mockFetchGalleryPhotos).not.toHaveBeenCalled()
     expect(result.current.photos).toHaveLength(0)
+  })
+})
+
+describe('useGallery 성전별', () => {
+  it('userChurchId가 없으면 기본값 ANYANG이 선택된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedChurchId).toBe('ANYANG')
+  })
+
+  it('userChurchId가 전달되면 해당 성전이 기본 선택된다', async () => {
+    const { result } = renderHook(() => useGallery('SUWON'))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedChurchId).toBe('SUWON')
+  })
+
+  it('CHURCH 카테고리 선택 시 churchId로 사진을 조회한다', async () => {
+    const { result } = renderHook(() => useGallery('BUCHEON'))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      churchId: 'BUCHEON',
+    })
+  })
+
+  it('CHURCH 카테고리에서 서브카테고리는 초기화된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // 먼저 RETREAT 선택
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toHaveLength(2)
+    })
+
+    // CHURCH로 전환
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.subCategories).toHaveLength(0)
+    expect(result.current.selectedSubCategory).toBeNull()
+  })
+
+  it('selectChurch로 다른 성전을 선택하면 사진을 다시 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.selectChurch('INCHEON')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedChurchId).toBe('INCHEON')
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      churchId: 'INCHEON',
+    })
+  })
+
+  it('CHURCH에서 loadMore 호출 시 선택된 churchId가 전달된다', async () => {
+    const { result } = renderHook(() => useGallery('DAEJEON'))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+    mockFetchGalleryPhotos.mockResolvedValueOnce({
+      images: [{ id: 39, url: 'uploads/more.jpg' }],
+      nextCursor: null,
+      hasNext: false,
+    })
+
+    act(() => {
+      result.current.loadMore()
+    })
+
+    await waitFor(() => {
+      expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+        size: 20,
+        cursor: 41,
+        churchId: 'DAEJEON',
+      })
+    })
+  })
+
+  it('CHURCH에서 ALL로 돌아가면 churchId 없이 전체 사진을 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.setSelectedCategory('ALL')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+    })
+  })
+
+  it('CHURCH 카테고리 선택 시 fetchChurches API로 성전 목록을 가져온다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.churchOptions).toHaveLength(0)
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.churchOptions).toHaveLength(3)
+    })
+
+    expect(mockFetchChurches).toHaveBeenCalled()
+    expect(result.current.churchOptions[0]).toEqual({ id: 'ANYANG', name: '안양' })
+  })
+
+  it('selectChurch 후 비동기 userChurchId가 수동 선택을 덮어쓰지 않는다', async () => {
+    const { result, rerender } = renderHook(
+      ({ churchId }: { churchId?: string }) => useGallery(churchId),
+      { initialProps: { churchId: undefined } },
+    )
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // CHURCH 카테고리로 전환
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // 수동으로 INCHEON 선택
+    act(() => {
+      result.current.selectChurch('INCHEON')
+    })
+
+    expect(result.current.selectedChurchId).toBe('INCHEON')
+
+    // 비동기로 userChurchId가 SUWON으로 로드됨
+    rerender({ churchId: 'SUWON' })
+
+    // 수동 선택(INCHEON)이 유지되어야 함
+    expect(result.current.selectedChurchId).toBe('INCHEON')
   })
 })

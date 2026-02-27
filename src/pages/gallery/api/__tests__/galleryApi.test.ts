@@ -98,6 +98,36 @@ describe('fetchGalleryPhotos', () => {
     )
   })
 
+  it('churchId를 쿼리 파라미터로 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ images: [], nextCursor: null, hasNext: false })
+
+    await fetchGalleryPhotos({ churchId: 'ANYANG' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/gallery?churchId=ANYANG'
+    )
+  })
+
+  it('churchId와 다른 파라미터를 동시에 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ images: [], nextCursor: null, hasNext: false })
+
+    await fetchGalleryPhotos({ cursor: 50, size: 10, churchId: 'SUWON' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/gallery?size=10&cursor=50&churchId=SUWON'
+    )
+  })
+
+  it('subCategory와 churchId를 동시에 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ images: [], nextCursor: null, hasNext: false })
+
+    await fetchGalleryPhotos({ subCategory: 'RETREAT_2026_WINTER', churchId: 'BUCHEON' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/gallery?subCategory=RETREAT_2026_WINTER&churchId=BUCHEON'
+    )
+  })
+
   it('API 에러 시 에러를 전파한다', async () => {
     mockApiRequest.mockRejectedValue(new Error('Network error'))
 
@@ -287,6 +317,26 @@ describe('fetchFeedPosts', () => {
 
     expect(mockApiRequest).toHaveBeenCalledWith(
       '/posts/feed?size=4&cursor=7&subCategory=RETREAT_2026_WINTER'
+    )
+  })
+
+  it('churchId를 쿼리 파라미터로 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ posts: [], nextCursor: null, hasNext: false })
+
+    await fetchFeedPosts({ churchId: 'ANYANG' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/feed?churchId=ANYANG'
+    )
+  })
+
+  it('churchId와 다른 파라미터를 동시에 전달한다', async () => {
+    mockApiRequest.mockResolvedValue({ posts: [], nextCursor: null, hasNext: false })
+
+    await fetchFeedPosts({ cursor: 5, size: 4, churchId: 'INCHEON' })
+
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      '/posts/feed?size=4&cursor=5&churchId=INCHEON'
     )
   })
 

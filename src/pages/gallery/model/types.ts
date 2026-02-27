@@ -1,4 +1,9 @@
-export type GalleryCategory = 'ALL' | 'RETREAT' | 'WORSHIP' | 'GATHERING'
+export type GalleryCategory = 'ALL' | 'RETREAT' | 'CHURCH' | 'WORSHIP' | 'GATHERING'
+
+export interface ChurchOption {
+  id: string
+  name: string
+}
 
 export type ViewMode = 'grid' | 'feed'
 

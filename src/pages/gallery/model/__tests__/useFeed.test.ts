@@ -69,7 +69,7 @@ describe('useFeed', () => {
     const { result } = renderHook(() => useFeed())
 
     act(() => {
-      result.current.loadFeed('RETREAT_2026_WINTER')
+      result.current.loadFeed({ subCategory: 'RETREAT_2026_WINTER' })
     })
 
     await waitFor(() => {
@@ -80,6 +80,60 @@ describe('useFeed', () => {
       size: 4,
       cursor: null,
       subCategory: 'RETREAT_2026_WINTER',
+    })
+  })
+
+  it('loadFeed에 churchId를 전달할 수 있다', async () => {
+    const { result } = renderHook(() => useFeed())
+
+    act(() => {
+      result.current.loadFeed({ churchId: 'ANYANG' })
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(mockFetchFeedPosts).toHaveBeenCalledWith({
+      size: 4,
+      cursor: null,
+      churchId: 'ANYANG',
+    })
+  })
+
+  it('loadMore에 churchId를 전달할 수 있다', async () => {
+    const nextPost = { ...mockPost, id: 7, content: '다음 피드' }
+    const nextResponse: FeedPostsResponse = {
+      posts: [nextPost],
+      nextCursor: null,
+      hasNext: false,
+    }
+    mockFetchFeedPosts
+      .mockResolvedValueOnce(mockResponse)
+      .mockResolvedValueOnce(nextResponse)
+
+    const { result } = renderHook(() => useFeed())
+
+    act(() => {
+      result.current.loadFeed({ churchId: 'SUWON' })
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.loadMore({ churchId: 'SUWON' })
+    })
+
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(2)
+    })
+
+    expect(mockFetchFeedPosts).toHaveBeenLastCalledWith({
+      size: 4,
+      cursor: 7,
+      churchId: 'SUWON',
     })
   })
 
