@@ -80,3 +80,9 @@ export const fetchChurches = async (): Promise<Church[]> => {
   const response = await apiRequest<{ churches: Church[] }>('/churches')
   return response.churches
 }
+
+export const deletePost = async (postId: number): Promise<void> => {
+  await apiRequest<void>(`/posts/${postId}`, {
+    method: 'DELETE',
+  })
+}

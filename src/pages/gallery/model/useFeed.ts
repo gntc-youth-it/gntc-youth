@@ -69,6 +69,10 @@ export const useFeed = () => {
     loadedRef.current = false
   }, [])
 
+  const removePost = useCallback((postId: number) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId))
+  }, [])
+
   return {
     posts,
     isLoading,
@@ -78,6 +82,7 @@ export const useFeed = () => {
     loadFeed,
     loadMore,
     reset,
+    removePost,
     loaded: loadedRef.current,
   }
 }

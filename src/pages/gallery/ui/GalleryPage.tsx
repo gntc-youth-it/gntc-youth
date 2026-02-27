@@ -4,6 +4,7 @@ import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { useFeed } from '../model/useFeed'
+import { deletePost } from '../api/galleryApi'
 import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage } from '../model/types'
@@ -554,8 +555,31 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
 const GNTC_LOGO_URL = 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp'
 const GNTC_AUTHOR_NAME = 'GNTC YOUTH'
 
-const FeedCard = ({ post, onImageClick }: { post: FeedPost; onImageClick: (url: string) => void }) => {
+const FeedCard = ({
+  post,
+  onImageClick,
+  isMaster,
+  onDeleteClick,
+}: {
+  post: FeedPost
+  onImageClick: (url: string) => void
+  isMaster: boolean
+  onDeleteClick: (postId: number) => void
+}) => {
   const displayName = post.isAuthorPublic ? post.authorName : GNTC_AUTHOR_NAME
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [menuOpen])
 
   return (
   <article className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
@@ -576,13 +600,34 @@ const FeedCard = ({ post, onImageClick }: { post: FeedPost; onImageClick: (url: 
           <span className="text-xs text-[#999999]">{formatFeedDate(post.createdAt)}</span>
         </div>
       </div>
-      <button className="p-1 text-[#CCCCCC] hover:text-[#999999] transition-colors" aria-label="더보기">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="12" cy="19" r="2" />
-        </svg>
-      </button>
+      {isMaster && (
+        <div className="relative" ref={menuRef}>
+          <button
+            className="p-1 text-[#CCCCCC] hover:text-[#999999] transition-colors"
+            aria-label="더보기"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-xl shadow-lg border border-[#E0E0E0] overflow-hidden z-10">
+              <button
+                className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+                onClick={() => {
+                  setMenuOpen(false)
+                  onDeleteClick(post.id)
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
 
     {/* Image carousel */}
@@ -618,18 +663,68 @@ const FeedCard = ({ post, onImageClick }: { post: FeedPost; onImageClick: (url: 
   )
 }
 
+const DeleteConfirmModal = ({
+  onConfirm,
+  onCancel,
+  isDeleting,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+  isDeleting: boolean
+}) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+    <div role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" className="relative bg-white rounded-2xl shadow-2xl w-[320px] mx-4 p-6 flex flex-col items-center gap-4 animate-in">
+      <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <line x1="10" y1="11" x2="10" y2="17" />
+          <line x1="14" y1="11" x2="14" y2="17" />
+        </svg>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <h3 id="delete-dialog-title" className="text-lg font-bold text-[#1A1A1A]">게시글 삭제</h3>
+        <p className="text-sm text-[#666666] text-center">
+          삭제하면 되돌릴 수 없습니다.<br />정말 삭제하시겠습니까?
+        </p>
+      </div>
+      <div className="flex gap-3 w-full mt-2">
+        <button
+          onClick={onCancel}
+          disabled={isDeleting}
+          className="flex-1 py-2.5 rounded-lg bg-[#F0F0F0] text-sm font-medium text-[#666666] hover:bg-[#E0E0E0] transition-colors disabled:opacity-50"
+        >
+          취소
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={isDeleting}
+          className="flex-1 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+        >
+          {isDeleting ? '삭제 중...' : '삭제'}
+        </button>
+      </div>
+    </div>
+  </div>
+)
+
 const FeedContent = ({
   posts,
   hasNext,
   isFetchingMore,
   loadMore,
   onImageClick,
+  isMaster,
+  onDeleteClick,
 }: {
   posts: FeedPost[]
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
   onImageClick: (url: string) => void
+  isMaster: boolean
+  onDeleteClick: (postId: number) => void
 }) => {
   const sentinelRef = useInfiniteScroll(loadMore, {
     enabled: hasNext && !isFetchingMore,
@@ -639,7 +734,7 @@ const FeedContent = ({
     <div className="flex justify-center px-4 py-10">
       <div className="w-full max-w-[600px] flex flex-col gap-6">
         {posts.map((post) => (
-          <FeedCard key={post.id} post={post} onImageClick={onImageClick} />
+          <FeedCard key={post.id} post={post} onImageClick={onImageClick} isMaster={isMaster} onDeleteClick={onDeleteClick} />
         ))}
         {isFetchingMore && (
           <div className="flex justify-center py-8">
@@ -774,8 +869,11 @@ export const GalleryPage = () => {
   const [showRetreatModal, setShowRetreatModal] = useState(false)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const handleCloseLightbox = useCallback(() => setLightboxUrl(null), [])
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const navigate = useNavigate()
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, user } = useAuth()
+  const isMaster = user?.role === 'MASTER'
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
   const albums: GalleryAlbum[] = []
 
@@ -791,7 +889,22 @@ export const GalleryPage = () => {
 
   const feedLoadMore = useCallback(() => {
     feed.loadMore(selectedSubCategory ?? undefined)
-  }, [feed, selectedSubCategory])
+  }, [feed.loadMore, selectedSubCategory])
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (deleteTargetId === null) return
+    setIsDeleting(true)
+    try {
+      await deletePost(deleteTargetId)
+      feed.removePost(deleteTargetId)
+      setDeleteTargetId(null)
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error)
+      alert('게시글 삭제에 실패했습니다.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [deleteTargetId, feed.removePost])
 
   const currentIsLoading = viewMode === 'feed' ? feed.isLoading : isLoading
   const currentError = viewMode === 'feed' ? feed.error : error
@@ -908,6 +1021,8 @@ export const GalleryPage = () => {
                 isFetchingMore={feed.isFetchingMore}
                 loadMore={feedLoadMore}
                 onImageClick={setLightboxUrl}
+                isMaster={isMaster}
+                onDeleteClick={setDeleteTargetId}
               />
             )}
           </div>
@@ -931,6 +1046,15 @@ export const GalleryPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Delete Confirm Modal */}
+      {deleteTargetId !== null && (
+        <DeleteConfirmModal
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTargetId(null)}
+          isDeleting={isDeleting}
+        />
+      )}
 
       {/* Image Lightbox */}
       {lightboxUrl && (

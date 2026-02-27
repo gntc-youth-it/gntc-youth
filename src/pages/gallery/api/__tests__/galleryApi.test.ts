@@ -11,6 +11,7 @@ import {
   getPresignedUrl,
   createPost,
   fetchChurches,
+  deletePost,
 } from '../galleryApi'
 import { apiRequest } from '../../../../shared/api'
 
@@ -293,6 +294,30 @@ describe('fetchFeedPosts', () => {
     mockApiRequest.mockRejectedValue(new Error('Network error'))
 
     await expect(fetchFeedPosts({})).rejects.toThrow('Network error')
+  })
+})
+
+describe('deletePost', () => {
+  it('DELETE /posts/{postId}로 요청한다', async () => {
+    mockApiRequest.mockResolvedValue(undefined)
+
+    await deletePost(42)
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/posts/42', {
+      method: 'DELETE',
+    })
+  })
+
+  it('API 에러 시 에러를 전파한다', async () => {
+    mockApiRequest.mockRejectedValue(new Error('Unauthorized'))
+
+    await expect(deletePost(42)).rejects.toThrow('Unauthorized')
+  })
+
+  it('존재하지 않는 게시글 삭제 시 에러를 전파한다', async () => {
+    mockApiRequest.mockRejectedValue(new Error('Not Found'))
+
+    await expect(deletePost(999)).rejects.toThrow('Not Found')
   })
 })
 
