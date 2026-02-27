@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  ProfileImage,
 } from '../../../shared/ui'
 import { GenderSelector } from './GenderSelector'
 import { getMyProfile, saveProfile, getChurches } from '../api'
@@ -83,6 +84,16 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
       fetchProfile()
     }
   }, [open, fetchProfile])
+
+  // blob URL 메모리 누수 방지
+  useEffect(() => {
+    const currentPreviewUrl = formData.profileImagePreview
+    if (currentPreviewUrl && currentPreviewUrl.startsWith('blob:')) {
+      return () => {
+        URL.revokeObjectURL(currentPreviewUrl)
+      }
+    }
+  }, [formData.profileImagePreview])
 
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -210,22 +221,12 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
 
             {/* Profile Image */}
             <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                {formData.profileImagePreview ? (
-                  <img
-                    src={formData.profileImagePreview}
-                    alt="프로필 이미지"
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center" data-testid="profile-image-fallback">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="2" x2="12" y2="22" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                    </svg>
-                  </div>
-                )}
-              </div>
+              <ProfileImage
+                src={formData.profileImagePreview}
+                alt="프로필 이미지"
+                size={80}
+                fallbackTestId="profile-image-fallback"
+              />
               <input
                 ref={fileInputRef}
                 type="file"
