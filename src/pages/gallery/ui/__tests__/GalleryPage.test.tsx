@@ -4,6 +4,7 @@ import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
 import { useFeed } from '../../model/useFeed'
 import { deletePost } from '../../api/galleryApi'
+import { buildCdnUrl } from '../../../../shared/lib'
 import type { GalleryPhotoItem, SubCategory, FeedPost } from '../../model/types'
 
 const mockNavigate = jest.fn()
@@ -556,7 +557,7 @@ describe('GalleryPage 피드 뷰', () => {
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
     const profileImg = screen.getByAltText('홍길동')
-    expect(profileImg).toHaveAttribute('src', 'https://cdn.gntc-youth.com/uploads/profile1.jpg')
+    expect(profileImg).toHaveAttribute('src', buildCdnUrl(mockFeedPosts[0].authorProfileImageUrl!))
   })
 
   it('그리드 뷰로 전환하면 피드 카드가 사라진다', async () => {
