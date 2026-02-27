@@ -22,6 +22,10 @@ jest.mock('../../../../features/edit-profile', () => ({
   PROFILE_COMPLETION_DISMISSED_KEY: 'profile_completion_dismissed',
 }))
 
+jest.mock('../../../../shared/lib', () => ({
+  buildCdnUrl: (path: string) => `https://cdn.gntc-youth.com/${path}`,
+}))
+
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
 
 const baseAuth = {
@@ -146,5 +150,33 @@ describe('Header 관리자 메뉴', () => {
     await userEvent.click(screen.getByTestId('admin-users-button'))
 
     expect(mockNavigate).toHaveBeenCalledWith('/admin/users')
+  })
+})
+
+describe('Header 프로필 이미지', () => {
+  it('프로필 이미지가 있으면 이미지를 표시한다', () => {
+    mockUseAuth.mockReturnValue({
+      ...baseAuth,
+      isLoggedIn: true,
+      user: { id: 1, name: '홍길동', profileImagePath: 'uploads/profile.jpg' },
+    })
+
+    render(<Header />)
+
+    const img = screen.getAllByAltText('프로필')[0]
+    expect(img).toBeInTheDocument()
+    expect(img).toHaveAttribute('src', 'https://cdn.gntc-youth.com/uploads/profile.jpg')
+  })
+
+  it('프로필 이미지가 없으면 fallback 아이콘을 표시한다', () => {
+    mockUseAuth.mockReturnValue({
+      ...baseAuth,
+      isLoggedIn: true,
+      user: { id: 1, name: '홍길동' },
+    })
+
+    render(<Header />)
+
+    expect(screen.getByTestId('profile-fallback')).toBeInTheDocument()
   })
 })

@@ -18,6 +18,21 @@ jest.mock('../../api', () => ({
   getChurches: jest.fn(),
 }))
 
+jest.mock('../../../../shared/api', () => ({
+  getFilePresignedUrl: jest.fn(),
+}))
+
+jest.mock('../../../../shared/lib', () => ({
+  ...jest.requireActual('../../../../shared/lib'),
+  compressImage: jest.fn(),
+  uploadToS3: jest.fn(),
+  buildCdnUrl: (path: string) => `https://cdn.gntc-youth.com/${path}`,
+}))
+
+jest.mock('../../../../shared/config', () => ({
+  IMAGE_COMPRESSION_OPTIONS: { maxWidth: 1920, maxHeight: 1920, quality: 0.8 },
+}))
+
 const mockGetMyProfile = getMyProfile as jest.MockedFunction<typeof getMyProfile>
 const mockSaveProfile = saveProfile as jest.MockedFunction<typeof saveProfile>
 const mockGetChurches = getChurches as jest.MockedFunction<typeof getChurches>
@@ -30,6 +45,8 @@ const mockProfileResponse = {
   phoneNumber: '010-1234-5678',
   gender: 'MALE',
   genderDisplay: '형제',
+  profileImageId: 10,
+  profileImagePath: 'uploads/profile.jpg',
 }
 
 describe('EditProfileModal', () => {
@@ -150,6 +167,7 @@ describe('EditProfileModal', () => {
         generation: 15,
         phoneNumber: '01012345678',
         gender: 'MALE',
+        profileImageId: 10,
       })
     })
 
@@ -227,5 +245,42 @@ describe('EditProfileModal', () => {
     await waitFor(() => {
       expect(screen.getByText('프로필 정보를 불러오는데 실패했습니다.')).toBeInTheDocument()
     })
+  })
+
+  it('프로필 이미지가 있으면 이미지 프리뷰를 표시한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    const img = screen.getByAltText('프로필 이미지')
+    expect(img).toBeInTheDocument()
+    expect(img).toHaveAttribute('src', 'https://cdn.gntc-youth.com/uploads/profile.jpg')
+  })
+
+  it('프로필 이미지가 없으면 기본 아이콘을 표시한다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      ...mockProfileResponse,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('profile-image-fallback')).toBeInTheDocument()
+  })
+
+  it('프로필 사진 변경 버튼을 렌더링한다', async () => {
+    renderModal()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('프로필 사진 변경')).toBeInTheDocument()
   })
 })

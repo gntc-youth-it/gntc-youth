@@ -6,6 +6,8 @@ export interface UserProfileResponse {
   phoneNumber: string | null
   gender: string | null
   genderDisplay: string | null
+  profileImageId: number | null
+  profileImagePath: string | null
 }
 
 export interface UserProfileRequest {
@@ -14,6 +16,7 @@ export interface UserProfileRequest {
   generation: number | null
   phoneNumber: string | null
   gender: string | null
+  profileImageId: number | null
 }
 
 export interface ChurchResponse {
@@ -31,4 +34,6 @@ export interface ProfileFormData {
   generation: string
   phoneNumber: string
   gender: 'MALE' | 'FEMALE' | null
+  profileImageId: number | null
+  profileImagePreview: string | null
 }

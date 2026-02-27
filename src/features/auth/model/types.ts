@@ -5,6 +5,7 @@ export interface UserInfo {
   role?: string
   provider?: string
   churchId?: string
+  profileImagePath?: string
 }
 
 // API 원본 응답 (snake_case)

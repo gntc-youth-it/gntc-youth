@@ -27,5 +27,6 @@ export const getUserInfoFromToken = (): UserInfo | null => {
     role: payload.role as string | undefined,
     provider: payload.provider as string | undefined,
     churchId: payload.church as string | undefined,
+    profileImagePath: payload.profileImagePath as string | undefined,
   }
 }

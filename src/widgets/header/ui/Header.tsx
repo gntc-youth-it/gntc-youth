@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
 import { EditProfileModal, ProfileCompletionModal, PROFILE_COMPLETION_DISMISSED_KEY } from '../../../features/edit-profile'
+import { ProfileImage } from '../../../shared/ui'
+import { buildCdnUrl } from '../../../shared/lib'
 
 export const Header = () => {
   const navigate = useNavigate()
@@ -213,6 +215,11 @@ export const Header = () => {
             <div className="flex items-center gap-4 pl-6 border-l border-gray-200">
               {isLoggedIn && user ? (
                 <div className="relative flex items-center gap-2" ref={menuRef}>
+                  <ProfileImage
+                    src={user.profileImagePath ? buildCdnUrl(user.profileImagePath) : null}
+                    size={32}
+                    fallbackTestId="profile-fallback"
+                  />
                   <span className="text-sm text-gray-600">{user.name}님 환영합니다</span>
                   <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -283,9 +290,15 @@ export const Header = () => {
         <div className="p-6 border-b border-gray-200">
           {isLoggedIn && user ? (
             <div className="space-y-3">
-              <div>
-                <span className="block text-sm font-medium text-gray-900">{user.name}님</span>
-                <span className="text-sm text-gray-500">환영합니다</span>
+              <div className="flex items-center gap-3">
+                <ProfileImage
+                  src={user.profileImagePath ? buildCdnUrl(user.profileImagePath) : null}
+                  size={40}
+                />
+                <div>
+                  <span className="block text-sm font-medium text-gray-900">{user.name}님</span>
+                  <span className="text-sm text-gray-500">환영합니다</span>
+                </div>
               </div>
               <button
                 onClick={handleEditProfile}

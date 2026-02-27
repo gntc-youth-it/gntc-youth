@@ -1,1 +1,2 @@
-export { getFilePresignedUrl, updateChurchInfo } from './sanctuaryApi'
+export { updateChurchInfo } from './sanctuaryApi'
+export { getFilePresignedUrl } from '../../../shared/api'

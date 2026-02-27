@@ -40,6 +40,8 @@ describe('tokenStorage', () => {
         email: 'test@test.com',
         role: 'USER',
         provider: 'kakao',
+        churchId: undefined,
+        profileImagePath: undefined,
       })
     })
 
@@ -75,6 +77,7 @@ describe('tokenStorage', () => {
         role: undefined,
         provider: undefined,
         churchId: undefined,
+        profileImagePath: undefined,
       })
     })
 
@@ -96,6 +99,26 @@ describe('tokenStorage', () => {
 
       const result = getUserInfoFromToken()
       expect(result?.churchId).toBeUndefined()
+    })
+
+    it('profileImagePath 클레임에서 프로필 이미지 경로를 추출한다', () => {
+      const token = createTestJWT({
+        sub: '10',
+        name: '홍길동',
+        profileImagePath: 'uploads/profile.jpg',
+      })
+      localStorage.setItem('accessToken', token)
+
+      const result = getUserInfoFromToken()
+      expect(result?.profileImagePath).toBe('uploads/profile.jpg')
+    })
+
+    it('profileImagePath가 없으면 undefined이다', () => {
+      const token = createTestJWT({ sub: '1', name: 'Test' })
+      localStorage.setItem('accessToken', token)
+
+      const result = getUserInfoFromToken()
+      expect(result?.profileImagePath).toBeUndefined()
     })
   })
 })

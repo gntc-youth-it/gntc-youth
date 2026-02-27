@@ -1,12 +1,16 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
+  ProfileImage,
 } from '../../../shared/ui'
 import { GenderSelector } from './GenderSelector'
 import { getMyProfile, saveProfile, getChurches } from '../api'
+import { getFilePresignedUrl } from '../../../shared/api'
+import { compressImage, uploadToS3, buildCdnUrl } from '../../../shared/lib'
+import { IMAGE_COMPRESSION_OPTIONS } from '../../../shared/config'
 import type { ProfileFormData, UserProfileRequest, ChurchResponse } from '../model/types'
 
 interface EditProfileModalProps {
@@ -21,6 +25,8 @@ const initialFormData: ProfileFormData = {
   generation: '',
   phoneNumber: '',
   gender: null,
+  profileImageId: null,
+  profileImagePreview: null,
 }
 
 const inputClassName =
@@ -33,12 +39,18 @@ const formatPhoneNumber = (value: string): string => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
 }
 
+type SaveStage = 'idle' | 'compressing' | 'uploading' | 'saving'
+
 export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProfileModalProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
   const [churches, setChurches] = useState<ChurchResponse[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [saveStage, setSaveStage] = useState<SaveStage>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isSaving = saveStage !== 'idle'
 
   const fetchProfile = useCallback(async () => {
     setIsLoading(true)
@@ -55,7 +67,10 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
         generation: profile.generation != null ? String(profile.generation) : '',
         phoneNumber: formatPhoneNumber(profile.phoneNumber || ''),
         gender: (profile.gender === 'MALE' || profile.gender === 'FEMALE') ? profile.gender : null,
+        profileImageId: profile.profileImageId,
+        profileImagePreview: profile.profileImagePath ? buildCdnUrl(profile.profileImagePath) : null,
       })
+      setSelectedFile(null)
     } catch (error) {
       console.error('프로필 정보를 불러오는데 실패했습니다:', error)
       setError('프로필 정보를 불러오는데 실패했습니다.')
@@ -70,8 +85,33 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
     }
   }, [open, fetchProfile])
 
+  // blob URL 메모리 누수 방지
+  useEffect(() => {
+    const currentPreviewUrl = formData.profileImagePreview
+    if (currentPreviewUrl && currentPreviewUrl.startsWith('blob:')) {
+      return () => {
+        URL.revokeObjectURL(currentPreviewUrl)
+      }
+    }
+  }, [formData.profileImagePreview])
+
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const previewUrl = URL.createObjectURL(file)
+    setSelectedFile(file)
+    setFormData((prev) => ({
+      ...prev,
+      profileImagePreview: previewUrl,
+    }))
+    setError(null)
+
+    event.target.value = ''
   }
 
   const handleSave = async () => {
@@ -91,15 +131,36 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
       return
     }
 
-    setIsSaving(true)
     setError(null)
+    let profileImageId = formData.profileImageId
+
     try {
+      // 새 파일이 선택된 경우 압축 + 업로드
+      if (selectedFile) {
+        setSaveStage('compressing')
+        const compressed = await compressImage(selectedFile, IMAGE_COMPRESSION_OPTIONS)
+
+        setSaveStage('uploading')
+        const ext = compressed.blob.type.split('/')[1] || 'webp'
+        const filename = selectedFile.name.replace(/\.[^/.]+$/, '') + `.${ext}`
+        const { fileId, presignedUrl } = await getFilePresignedUrl(
+          filename,
+          compressed.blob.type,
+          compressed.blob.size
+        )
+
+        await uploadToS3(presignedUrl, compressed.blob, compressed.blob.type)
+        profileImageId = fileId
+      }
+
+      setSaveStage('saving')
       const request: UserProfileRequest = {
         name: formData.name,
         churchId: formData.churchId || null,
         generation: formData.generation ? Number(formData.generation) : null,
         phoneNumber: formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '') : null,
         gender: formData.gender,
+        profileImageId,
       }
       await saveProfile(request)
       onSaveSuccess?.()
@@ -108,14 +169,28 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
       console.error('프로필 저장에 실패했습니다:', error)
       setError('프로필 저장에 실패했습니다.')
     } finally {
-      setIsSaving(false)
+      setSaveStage('idle')
     }
   }
 
   const handleCancel = () => {
     setFormData(initialFormData)
+    setSelectedFile(null)
     setError(null)
     onOpenChange(false)
+  }
+
+  const getSaveButtonText = () => {
+    switch (saveStage) {
+      case 'compressing':
+        return '이미지 압축 중...'
+      case 'uploading':
+        return '업로드 중...'
+      case 'saving':
+        return '저장 중...'
+      default:
+        return '저장하기'
+    }
   }
 
   return (
@@ -143,6 +218,32 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
                 {error}
               </p>
             )}
+
+            {/* Profile Image */}
+            <div className="flex flex-col items-center gap-3">
+              <ProfileImage
+                src={formData.profileImagePreview}
+                alt="프로필 이미지"
+                size={80}
+                fallbackTestId="profile-image-fallback"
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                data-testid="profile-image-input"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSaving}
+                className="text-sm font-medium text-[#3B5BDB] hover:text-[#364FC7] transition-colors disabled:opacity-50"
+              >
+                프로필 사진 변경
+              </button>
+            </div>
 
             {/* Form */}
             <div className="flex flex-col gap-6 bg-gray-50 rounded-xl p-8">
@@ -235,7 +336,7 @@ export const EditProfileModal = ({ open, onOpenChange, onSaveSuccess }: EditProf
                 disabled={isSaving}
                 className="px-8 py-3 text-sm font-semibold text-white bg-[#3B5BDB] rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-50"
               >
-                {isSaving ? '저장 중...' : '저장하기'}
+                {getSaveButtonText()}
               </button>
             </div>
           </>

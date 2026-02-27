@@ -1,11 +1,14 @@
 jest.mock('../../../../shared/api', () => ({
   apiRequest: jest.fn(),
+  getFilePresignedUrl: jest.fn(),
 }))
 
-import { getFilePresignedUrl, updateChurchInfo } from '../sanctuaryApi'
+import { getFilePresignedUrl } from '../../../../shared/api'
+import { updateChurchInfo } from '../sanctuaryApi'
 import { apiRequest } from '../../../../shared/api'
 
 const mockApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>
+const mockGetFilePresignedUrl = getFilePresignedUrl as jest.MockedFunction<typeof getFilePresignedUrl>
 
 describe('getFilePresignedUrl', () => {
   beforeEach(() => {
@@ -13,27 +16,20 @@ describe('getFilePresignedUrl', () => {
   })
 
   it('파일 정보로 presigned URL을 요청하고 fileId와 presignedUrl을 반환한다', async () => {
-    mockApiRequest.mockResolvedValue({
+    mockGetFilePresignedUrl.mockResolvedValue({
       fileId: 1,
       presignedUrl: 'https://s3.example.com/uploads/test.jpg',
     })
 
     const result = await getFilePresignedUrl('photo.jpg', 'image/jpeg', 1048576)
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/files/presigned-url', {
-      method: 'POST',
-      body: JSON.stringify({
-        filename: 'photo.jpg',
-        contentType: 'image/jpeg',
-        fileSize: 1048576,
-      }),
-    })
+    expect(mockGetFilePresignedUrl).toHaveBeenCalledWith('photo.jpg', 'image/jpeg', 1048576)
     expect(result.fileId).toBe(1)
     expect(result.presignedUrl).toBe('https://s3.example.com/uploads/test.jpg')
   })
 
   it('API 에러 시 에러를 전파한다', async () => {
-    mockApiRequest.mockRejectedValue(new Error('권한이 없습니다.'))
+    mockGetFilePresignedUrl.mockRejectedValue(new Error('권한이 없습니다.'))
 
     await expect(
       getFilePresignedUrl('photo.jpg', 'image/jpeg', 1024)
