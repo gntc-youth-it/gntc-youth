@@ -682,9 +682,10 @@ const MediaLightbox = ({
     document.body.style.overflow = 'hidden'
     closeButtonRef.current?.focus()
 
-    // 라이트박스 열릴 때 배경 영상 일시정지 (소리 겹침 방지)
+    // 라이트박스 열릴 때 갤러리 내 배경 영상 일시정지 (소리 겹침 방지)
     const pausedVideos: HTMLVideoElement[] = []
-    document.querySelectorAll('video').forEach((v) => {
+    const container = document.getElementById('gallery-content')
+    container?.querySelectorAll('video').forEach((v) => {
       if (v !== lightboxVideoRef.current && !v.paused) {
         v.pause()
         pausedVideos.push(v)
@@ -801,7 +802,7 @@ export const GalleryPage = () => {
   return (
     <>
       <Header />
-      <main className="pt-16 min-h-screen bg-[#F8F9FA]">
+      <main id="gallery-content" className="pt-16 min-h-screen bg-[#F8F9FA]">
         {/* Header Section */}
         <div className="bg-white px-4 sm:px-8 lg:px-[60px] pt-12 pb-10">
           <div className="max-w-7xl mx-auto">
