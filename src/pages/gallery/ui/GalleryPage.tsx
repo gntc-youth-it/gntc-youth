@@ -674,7 +674,7 @@ const DeleteConfirmModal = ({
 }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center">
     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-    <div className="relative bg-white rounded-2xl shadow-2xl w-[320px] mx-4 p-6 flex flex-col items-center gap-4 animate-in">
+    <div role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" className="relative bg-white rounded-2xl shadow-2xl w-[320px] mx-4 p-6 flex flex-col items-center gap-4 animate-in">
       <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />
@@ -684,7 +684,7 @@ const DeleteConfirmModal = ({
         </svg>
       </div>
       <div className="flex flex-col items-center gap-1">
-        <h3 className="text-lg font-bold text-[#1A1A1A]">게시글 삭제</h3>
+        <h3 id="delete-dialog-title" className="text-lg font-bold text-[#1A1A1A]">게시글 삭제</h3>
         <p className="text-sm text-[#666666] text-center">
           삭제하면 되돌릴 수 없습니다.<br />정말 삭제하시겠습니까?
         </p>
@@ -889,7 +889,7 @@ export const GalleryPage = () => {
 
   const feedLoadMore = useCallback(() => {
     feed.loadMore(selectedSubCategory ?? undefined)
-  }, [feed, selectedSubCategory])
+  }, [feed.loadMore, selectedSubCategory])
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteTargetId === null) return
@@ -898,12 +898,13 @@ export const GalleryPage = () => {
       await deletePost(deleteTargetId)
       feed.removePost(deleteTargetId)
       setDeleteTargetId(null)
-    } catch {
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error)
       alert('게시글 삭제에 실패했습니다.')
     } finally {
       setIsDeleting(false)
     }
-  }, [deleteTargetId, feed])
+  }, [deleteTargetId, feed.removePost])
 
   const currentIsLoading = viewMode === 'feed' ? feed.isLoading : isLoading
   const currentError = viewMode === 'feed' ? feed.error : error

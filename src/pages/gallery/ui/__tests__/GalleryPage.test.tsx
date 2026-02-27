@@ -1027,6 +1027,7 @@ describe('GalleryPage 게시글 삭제', () => {
     mockDeletePost.mockRejectedValue(new Error('Unauthorized'))
 
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     render(<GalleryPage />)
 
@@ -1046,6 +1047,7 @@ describe('GalleryPage 게시글 삭제', () => {
     })
 
     alertSpy.mockRestore()
+    consoleSpy.mockRestore()
   })
 
   it('메뉴 외부 클릭 시 메뉴가 닫힌다', async () => {
