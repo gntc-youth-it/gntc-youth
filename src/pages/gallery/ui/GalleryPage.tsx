@@ -7,6 +7,7 @@ import { useFeed } from '../model/useFeed'
 import { deletePost } from '../api/galleryApi'
 import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
+import { ProfileImage } from '../../../shared/ui'
 import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
@@ -700,9 +701,11 @@ const FeedCard = ({
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="flex items-center gap-3">
         {post.isAuthorPublic ? (
-          <div className="w-10 h-10 rounded-full bg-[#3B5BDB] flex items-center justify-center">
-            <span className="text-white text-xs font-bold">{post.authorName.charAt(0)}</span>
-          </div>
+          <ProfileImage
+            src={post.authorProfileImageUrl ? buildCdnUrl(post.authorProfileImageUrl) : null}
+            alt={post.authorName}
+            size={40}
+          />
         ) : (
           <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden p-1">
             <img src={GNTC_LOGO_URL} alt="GNTC Youth" className="w-full h-full object-contain" />
