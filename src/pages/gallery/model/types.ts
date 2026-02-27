@@ -5,42 +5,6 @@ export interface ChurchOption {
   name: string
 }
 
-export const CHURCH_OPTIONS: ChurchOption[] = [
-  { id: 'ANYANG', name: '안양' },
-  { id: 'SUWON', name: '수원' },
-  { id: 'ANSAN', name: '안산' },
-  { id: 'GWACHEON', name: '과천' },
-  { id: 'SIHEUNG', name: '시흥' },
-  { id: 'GWANGMYEONG', name: '광명' },
-  { id: 'BUPYEONG', name: '부평' },
-  { id: 'BUGOK', name: '부곡' },
-  { id: 'PANGYO', name: '판교' },
-  { id: 'YEONGDEUNGPO', name: '영등포' },
-  { id: 'INCHEON', name: '인천' },
-  { id: 'BUCHEON', name: '부천' },
-  { id: 'ILSAN', name: '일산' },
-  { id: 'SIHWA', name: '시화' },
-  { id: 'YEONGTONG', name: '영통' },
-  { id: 'GURI', name: '구리' },
-  { id: 'POIL', name: '포일' },
-  { id: 'JEONWON', name: '전원' },
-  { id: 'GIMPO', name: '김포' },
-  { id: 'PYEONGTAEK', name: '평택' },
-  { id: 'ANJUNG', name: '안중' },
-  { id: 'CHEONAN', name: '천안' },
-  { id: 'YANGJU', name: '양주' },
-  { id: 'GANGNAM', name: '강남' },
-  { id: 'YONGIN', name: '용인' },
-  { id: 'DAEJEON', name: '대전' },
-  { id: 'GWANGJU', name: '광주' },
-  { id: 'SEOSAN', name: '서산' },
-  { id: 'YULJEON', name: '율전' },
-  { id: 'DONGTAN', name: '동탄' },
-  { id: 'DANGJIN', name: '당진' },
-  { id: 'SEJONG', name: '세종' },
-  { id: 'JEONJU_HYOJA', name: '전주효자' },
-]
-
 export type ViewMode = 'grid' | 'feed'
 
 export interface GalleryPhoto {

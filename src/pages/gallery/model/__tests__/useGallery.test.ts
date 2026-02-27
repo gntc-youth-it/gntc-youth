@@ -1,12 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useGallery } from '../useGallery'
-import { fetchGalleryPhotos, fetchSubCategories } from '../../api/galleryApi'
+import { fetchChurches, fetchGalleryPhotos, fetchSubCategories } from '../../api/galleryApi'
 import type { GalleryPhotosResponse, SubCategory } from '../types'
 
 jest.mock('../../api/galleryApi')
 
 const mockFetchGalleryPhotos = fetchGalleryPhotos as jest.MockedFunction<typeof fetchGalleryPhotos>
 const mockFetchSubCategories = fetchSubCategories as jest.MockedFunction<typeof fetchSubCategories>
+const mockFetchChurches = fetchChurches as jest.MockedFunction<typeof fetchChurches>
 
 const mockResponse: GalleryPhotosResponse = {
   images: [
@@ -34,10 +35,17 @@ const mockSubCategories: SubCategory[] = [
   },
 ]
 
+const mockChurches = [
+  { code: 'ANYANG', name: '안양' },
+  { code: 'SUWON', name: '수원' },
+  { code: 'INCHEON', name: '인천' },
+]
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockFetchGalleryPhotos.mockResolvedValue(mockResponse)
   mockFetchSubCategories.mockResolvedValue(mockSubCategories)
+  mockFetchChurches.mockResolvedValue(mockChurches)
 })
 
 describe('useGallery', () => {
@@ -570,10 +578,57 @@ describe('useGallery 성전별', () => {
     })
   })
 
-  it('churchOptions에 성전 목록이 포함되어 있다', () => {
+  it('CHURCH 카테고리 선택 시 fetchChurches API로 성전 목록을 가져온다', async () => {
     const { result } = renderHook(() => useGallery())
 
-    expect(result.current.churchOptions.length).toBeGreaterThan(0)
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.churchOptions).toHaveLength(0)
+
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.churchOptions).toHaveLength(3)
+    })
+
+    expect(mockFetchChurches).toHaveBeenCalled()
     expect(result.current.churchOptions[0]).toEqual({ id: 'ANYANG', name: '안양' })
+  })
+
+  it('selectChurch 후 비동기 userChurchId가 수동 선택을 덮어쓰지 않는다', async () => {
+    const { result, rerender } = renderHook(
+      ({ churchId }: { churchId?: string }) => useGallery(churchId),
+      { initialProps: { churchId: undefined } },
+    )
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // CHURCH 카테고리로 전환
+    act(() => {
+      result.current.setSelectedCategory('CHURCH')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // 수동으로 INCHEON 선택
+    act(() => {
+      result.current.selectChurch('INCHEON')
+    })
+
+    expect(result.current.selectedChurchId).toBe('INCHEON')
+
+    // 비동기로 userChurchId가 SUWON으로 로드됨
+    rerender({ churchId: 'SUWON' })
+
+    // 수동 선택(INCHEON)이 유지되어야 함
+    expect(result.current.selectedChurchId).toBe('INCHEON')
   })
 })

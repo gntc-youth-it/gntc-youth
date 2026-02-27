@@ -1102,12 +1102,12 @@ export const GalleryPage = () => {
         {/* Church Banner */}
         {selectedCategory === 'CHURCH' && (() => {
           const selected = churchOptions.find((c) => c.id === selectedChurchId)
-          return selected ? (
+          return (
             <ChurchBanner
-              churchName={selected.name}
+              churchName={selected?.name ?? selectedChurchId}
               onBrowse={() => setShowChurchModal(true)}
             />
-          ) : null
+          )
         })()}
 
         {/* Church Selector Modal */}

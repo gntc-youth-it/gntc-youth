@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import type { GalleryCategory, GalleryPhotoItem, SubCategory } from './types'
-import { CHURCH_OPTIONS } from './types'
-import { fetchGalleryPhotos, fetchSubCategories } from '../api/galleryApi'
+import type { ChurchOption, GalleryCategory, GalleryPhotoItem, SubCategory } from './types'
+import { fetchChurches, fetchGalleryPhotos, fetchSubCategories } from '../api/galleryApi'
 
 const PAGE_SIZE = 20
 const DEFAULT_CHURCH_ID = 'ANYANG'
@@ -23,6 +22,8 @@ export const useGallery = (userChurchId?: string) => {
   // 성전별 상태
   const [selectedChurchId, setSelectedChurchId] = useState<string>(userChurchId ?? DEFAULT_CHURCH_ID)
   const churchIdInitialized = useRef(false)
+  const [churchOptions, setChurchOptions] = useState<ChurchOption[]>([])
+  const [isLoadingChurches, setIsLoadingChurches] = useState(false)
 
   // 유저 정보가 비동기로 로드된 경우 성전 기본값 동기화
   useEffect(() => {
@@ -92,6 +93,20 @@ export const useGallery = (userChurchId?: string) => {
       setSubCategories([])
       setSelectedSubCategory(null)
       loadPhotos(true, { churchId: selectedChurchId })
+      // 성전 목록이 아직 로드되지 않은 경우 API에서 가져옴
+      if (churchOptions.length === 0) {
+        setIsLoadingChurches(true)
+        fetchChurches()
+          .then((churches) => {
+            setChurchOptions(churches.map((c) => ({ id: c.code, name: c.name })))
+          })
+          .catch(() => {
+            // 실패 시 무시 (사진 로딩에는 영향 없음)
+          })
+          .finally(() => {
+            setIsLoadingChurches(false)
+          })
+      }
     }
   }, [selectedCategory, loadPhotos, selectedChurchId])
 
@@ -107,6 +122,7 @@ export const useGallery = (userChurchId?: string) => {
   // 성전 선택 변경
   const selectChurch = useCallback(
     (churchId: string) => {
+      churchIdInitialized.current = true
       setSelectedChurchId(churchId)
     },
     [],
@@ -139,6 +155,7 @@ export const useGallery = (userChurchId?: string) => {
     // 성전별
     selectedChurchId,
     selectChurch,
-    churchOptions: CHURCH_OPTIONS,
+    churchOptions,
+    isLoadingChurches,
   }
 }
