@@ -16,6 +16,12 @@ const InstagramIcon = () => (
   </svg>
 )
 
+const CONTACT_INFO = {
+  address: '경기도 안양시 만안구 안양로 193',
+  phone: '031-443-3731~2',
+  email: 'gntceum@gmail.com',
+}
+
 export const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-12">
@@ -55,9 +61,9 @@ export const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">연락처</h4>
             <div className="space-y-2 text-gray-400 text-sm">
-              <p>📍 경기도 안양시 만안구 안양로 193</p>
-              <p>📞 031-443-3731~2</p>
-              <p>✉️ gntceum@gmail.com</p>
+              <p>📍 {CONTACT_INFO.address}</p>
+              <p>📞 {CONTACT_INFO.phone}</p>
+              <p>✉️ {CONTACT_INFO.email}</p>
             </div>
           </div>
 
