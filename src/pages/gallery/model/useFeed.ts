@@ -17,7 +17,7 @@ export const useFeed = () => {
   const hasNextRef = useRef(hasNext)
   hasNextRef.current = hasNext
 
-  const loadPosts = useCallback(async (reset: boolean, subCategory?: string) => {
+  const loadPosts = useCallback(async (reset: boolean, opts?: { subCategory?: string; churchId?: string }) => {
     if (reset) {
       setIsLoading(true)
       setPosts([])
@@ -30,7 +30,8 @@ export const useFeed = () => {
       const response = await fetchFeedPosts({
         size: FEED_PAGE_SIZE,
         cursor: reset ? null : cursorRef.current,
-        subCategory,
+        subCategory: opts?.subCategory,
+        churchId: opts?.churchId,
       })
       setPosts((prev) => (reset ? response.posts : [...prev, ...response.posts]))
       setHasNext(response.hasNext)
@@ -45,17 +46,17 @@ export const useFeed = () => {
   }, [])
 
   const loadFeed = useCallback(
-    (subCategory?: string) => {
+    (opts?: { subCategory?: string; churchId?: string }) => {
       loadedRef.current = true
-      loadPosts(true, subCategory)
+      loadPosts(true, opts)
     },
     [loadPosts],
   )
 
   const loadMore = useCallback(
-    (subCategory?: string) => {
+    (opts?: { subCategory?: string; churchId?: string }) => {
       if (!isFetchingMoreRef.current && hasNextRef.current) {
-        loadPosts(false, subCategory)
+        loadPosts(false, opts)
       }
     },
     [loadPosts],

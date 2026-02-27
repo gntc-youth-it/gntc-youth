@@ -7,11 +7,12 @@ import { useFeed } from '../model/useFeed'
 import { deletePost } from '../api/galleryApi'
 import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
   { key: 'RETREAT', label: '수련회' },
+  { key: 'CHURCH', label: '성전별' },
 ]
 
 // ─── Icons ───────────────────────────────────────────────
@@ -350,6 +351,108 @@ const RetreatSelectorModal = ({
                 </span>
                 {isSelected && (
                   <span className="text-[11px] font-semibold text-[#3B5BDB]">현재 보고 있는 행사</span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  </div>
+)
+
+// ─── Church Selector Section ────────────────────────────
+
+const ChurchBanner = ({
+  churchName,
+  onBrowse,
+}: {
+  churchName: string
+  onBrowse: () => void
+}) => (
+  <div className="bg-gradient-to-r from-[#3B5BDB] to-[#5C7CFA] px-4 sm:px-8 lg:px-[60px] py-6">
+    <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-white/70 tracking-[2px] uppercase">CHURCH</span>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+          {churchName} 성전
+        </h2>
+      </div>
+      <button
+        onClick={onBrowse}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-medium hover:bg-white/30 transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+        </svg>
+        다른 성전 보기
+      </button>
+    </div>
+  </div>
+)
+
+const ChurchSelectorModal = ({
+  churchOptions,
+  selectedChurchId,
+  onSelect,
+  onClose,
+}: {
+  churchOptions: ChurchOption[]
+  selectedChurchId: string
+  onSelect: (churchId: string) => void
+  onClose: () => void
+}) => (
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative w-full max-w-lg mx-4 mb-0 sm:mb-0 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] flex flex-col animate-in">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F0F0]">
+        <h3 className="text-lg font-bold text-[#1A1A1A]">성전 목록</h3>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F0F0F0] transition-colors"
+          aria-label="닫기"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* List */}
+      <div className="overflow-y-auto p-4 grid grid-cols-2 gap-2">
+        {churchOptions.map((church) => {
+          const isSelected = selectedChurchId === church.id
+          return (
+            <button
+              key={church.id}
+              onClick={() => {
+                onSelect(church.id)
+                onClose()
+              }}
+              className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
+                isSelected
+                  ? 'bg-[#EDF2FF] ring-1 ring-[#3B5BDB]'
+                  : 'bg-[#FAFAFA] hover:bg-[#F0F0F0]'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                isSelected ? 'bg-[#3B5BDB]' : 'bg-[#E0E0E0]'
+              }`}>
+                <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-[#666666]'}`}>
+                  {church.name.charAt(0)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className={`text-[14px] font-bold leading-tight ${isSelected ? 'text-[#3B5BDB]' : 'text-[#1A1A1A]'}`}>
+                  {church.name}
+                </span>
+                {isSelected && (
+                  <span className="text-[11px] font-semibold text-[#3B5BDB]">선택됨</span>
                 )}
               </div>
             </button>
@@ -851,6 +954,7 @@ const MediaLightbox = ({
 // ─── Main Page ───────────────────────────────────────────
 
 export const GalleryPage = () => {
+  const { isLoggedIn, user } = useAuth()
   const {
     photos,
     isLoading,
@@ -863,16 +967,19 @@ export const GalleryPage = () => {
     subCategories,
     selectedSubCategory,
     selectSubCategory,
-  } = useGallery()
+    selectedChurchId,
+    selectChurch,
+    churchOptions,
+  } = useGallery(user?.churchId)
   const feed = useFeed()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)
+  const [showChurchModal, setShowChurchModal] = useState(false)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const handleCloseLightbox = useCallback(() => setLightboxUrl(null), [])
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const navigate = useNavigate()
-  const { isLoggedIn, user } = useAuth()
   const isMaster = user?.role === 'MASTER'
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
   const albums: GalleryAlbum[] = []
@@ -880,16 +987,27 @@ export const GalleryPage = () => {
   // 피드 뷰로 전환 시 피드 데이터 로드
   useEffect(() => {
     if (viewMode === 'feed') {
-      const subCat = selectedSubCategory ?? undefined
-      feed.loadFeed(subCat)
+      const opts: { subCategory?: string; churchId?: string } = {}
+      if (selectedCategory === 'CHURCH') {
+        opts.churchId = selectedChurchId
+      } else if (selectedSubCategory) {
+        opts.subCategory = selectedSubCategory
+      }
+      feed.loadFeed(opts)
     } else {
       feed.reset()
     }
-  }, [viewMode, selectedSubCategory, feed.loadFeed, feed.reset])
+  }, [viewMode, selectedSubCategory, selectedCategory, selectedChurchId, feed.loadFeed, feed.reset])
 
   const feedLoadMore = useCallback(() => {
-    feed.loadMore(selectedSubCategory ?? undefined)
-  }, [feed.loadMore, selectedSubCategory])
+    const opts: { subCategory?: string; churchId?: string } = {}
+    if (selectedCategory === 'CHURCH') {
+      opts.churchId = selectedChurchId
+    } else if (selectedSubCategory) {
+      opts.subCategory = selectedSubCategory
+    }
+    feed.loadMore(opts)
+  }, [feed.loadMore, selectedSubCategory, selectedCategory, selectedChurchId])
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteTargetId === null) return
@@ -981,6 +1099,27 @@ export const GalleryPage = () => {
           />
         )}
 
+        {/* Church Banner */}
+        {selectedCategory === 'CHURCH' && (() => {
+          const selected = churchOptions.find((c) => c.id === selectedChurchId)
+          return selected ? (
+            <ChurchBanner
+              churchName={selected.name}
+              onBrowse={() => setShowChurchModal(true)}
+            />
+          ) : null
+        })()}
+
+        {/* Church Selector Modal */}
+        {showChurchModal && (
+          <ChurchSelectorModal
+            churchOptions={churchOptions}
+            selectedChurchId={selectedChurchId}
+            onSelect={selectChurch}
+            onClose={() => setShowChurchModal(false)}
+          />
+        )}
+
         {/* Content */}
         {currentIsLoading && (
           <div className="flex justify-center items-center py-20">
@@ -1007,7 +1146,7 @@ export const GalleryPage = () => {
             {viewMode === 'grid' ? (
               <GridContent
                 albums={albums}
-                showAllPhotos={selectedCategory === 'ALL' || selectedSubCategory !== null}
+                showAllPhotos={selectedCategory === 'ALL' || selectedCategory === 'CHURCH' || selectedSubCategory !== null}
                 photos={photos}
                 hasNext={hasNext}
                 isFetchingMore={isFetchingMore}

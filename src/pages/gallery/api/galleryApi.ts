@@ -18,6 +18,7 @@ export const fetchGalleryAlbums = async (): Promise<GalleryResponse> => {
 
 export const fetchGalleryPhotos = async (params: {
   subCategory?: string
+  churchId?: string
   cursor?: number | null
   size?: number
 }): Promise<GalleryPhotosResponse> => {
@@ -30,6 +31,9 @@ export const fetchGalleryPhotos = async (params: {
   }
   if (params.subCategory) {
     searchParams.set('subCategory', params.subCategory)
+  }
+  if (params.churchId) {
+    searchParams.set('churchId', params.churchId)
   }
   const query = searchParams.toString()
   return apiRequest<GalleryPhotosResponse>(`/posts/gallery${query ? `?${query}` : ''}`)
@@ -59,6 +63,7 @@ export const createPost = async (data: CreatePostRequest): Promise<CreatePostRes
 
 export const fetchFeedPosts = async (params: {
   subCategory?: string
+  churchId?: string
   cursor?: number | null
   size?: number
 }): Promise<FeedPostsResponse> => {
@@ -71,6 +76,9 @@ export const fetchFeedPosts = async (params: {
   }
   if (params.subCategory) {
     searchParams.set('subCategory', params.subCategory)
+  }
+  if (params.churchId) {
+    searchParams.set('churchId', params.churchId)
   }
   const query = searchParams.toString()
   return apiRequest<FeedPostsResponse>(`/posts/feed${query ? `?${query}` : ''}`)
