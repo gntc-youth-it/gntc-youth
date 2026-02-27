@@ -52,6 +52,13 @@ const mockSubCategories: SubCategory[] = [
     imageUrl: 'assets/2026-winter-poster.webp',
     startDate: '2026-01-29',
     endDate: '2026-01-31',
+    verse: {
+      bookName: 'ISAIAH',
+      bookDisplayName: '이사야',
+      chapter: 40,
+      verse: 31,
+      content: '오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달려도 곤비하지 아니하겠고 걸어도 피곤하지 아니하리로다',
+    },
   },
   {
     name: 'RETREAT_2025_SUMMER',
@@ -332,6 +339,29 @@ describe('GalleryPage 수련회 히어로 배너', () => {
     expect(screen.queryByRole('button', { name: /다른 행사 보기/ })).not.toBeInTheDocument()
   })
 
+  it('수련회 탭에서 주제말씀이 표시된다', () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    expect(
+      screen.getByText(
+        '오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달려도 곤비하지 아니하겠고 걸어도 피곤하지 아니하리로다 (이사야 40장 31절)',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('verse가 없는 서브카테고리에서는 주제말씀이 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue({
+      ...retreatGallery,
+      selectedSubCategory: 'RETREAT_2025_SUMMER',
+    })
+
+    render(<GalleryPage />)
+
+    expect(screen.queryByText(/이사야 40장 31절/)).not.toBeInTheDocument()
+  })
+
   it('ALL 탭에서는 히어로 배너가 표시되지 않는다', () => {
     mockUseGallery.mockReturnValue(defaultGallery)
 
@@ -368,6 +398,20 @@ describe('GalleryPage 수련회 행사 선택 모달', () => {
 
     expect(screen.getByText('2025 여름 수련회')).toBeInTheDocument()
     expect(screen.getByText('2025.07.10 - 2025.07.12')).toBeInTheDocument()
+  })
+
+  it('모달에서 주제말씀이 있는 행사에는 말씀이 표시된다', async () => {
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /다른 행사 보기/ }))
+
+    const verseElements = screen.getAllByText(
+      /오직 여호와를 앙망하는 자는 새 힘을 얻으리니.*\(이사야 40장 31절\)/,
+    )
+    // 배너 + 모달 총 2개
+    expect(verseElements.length).toBe(2)
   })
 
   it('현재 선택된 행사에 "현재 보고 있는 행사" 라벨이 표시된다', async () => {
