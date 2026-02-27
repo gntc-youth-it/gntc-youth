@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
 import { EditProfileModal, ProfileCompletionModal, PROFILE_COMPLETION_DISMISSED_KEY } from '../../../features/edit-profile'
+import { buildCdnUrl } from '../../../shared/lib'
 
 export const Header = () => {
   const navigate = useNavigate()
@@ -11,8 +12,14 @@ export const Header = () => {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false)
+  const [profileImageError, setProfileImageError] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const adminMenuRef = useRef<HTMLLIElement>(null)
+
+  // 유저 정보 변경 시 이미지 에러 상태 초기화
+  useEffect(() => {
+    setProfileImageError(false)
+  }, [user])
 
   // 로그인 상태에서 교회 정보가 없으면 프로필 완성 모달 표시
   useEffect(() => {
@@ -213,6 +220,21 @@ export const Header = () => {
             <div className="flex items-center gap-4 pl-6 border-l border-gray-200">
               {isLoggedIn && user ? (
                 <div className="relative flex items-center gap-2" ref={menuRef}>
+                  {user.profileImagePath && !profileImageError ? (
+                    <img
+                      src={buildCdnUrl(user.profileImagePath)}
+                      alt="프로필"
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={() => setProfileImageError(true)}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center" data-testid="profile-fallback">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                      </svg>
+                    </div>
+                  )}
                   <span className="text-sm text-gray-600">{user.name}님 환영합니다</span>
                   <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -283,9 +305,26 @@ export const Header = () => {
         <div className="p-6 border-b border-gray-200">
           {isLoggedIn && user ? (
             <div className="space-y-3">
-              <div>
-                <span className="block text-sm font-medium text-gray-900">{user.name}님</span>
-                <span className="text-sm text-gray-500">환영합니다</span>
+              <div className="flex items-center gap-3">
+                {user.profileImagePath && !profileImageError ? (
+                  <img
+                    src={buildCdnUrl(user.profileImagePath)}
+                    alt="프로필"
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    onError={() => setProfileImageError(true)}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="2" x2="12" y2="22" />
+                      <line x1="2" y1="12" x2="22" y2="12" />
+                    </svg>
+                  </div>
+                )}
+                <div>
+                  <span className="block text-sm font-medium text-gray-900">{user.name}님</span>
+                  <span className="text-sm text-gray-500">환영합니다</span>
+                </div>
               </div>
               <button
                 onClick={handleEditProfile}
