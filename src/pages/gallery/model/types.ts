@@ -124,6 +124,7 @@ export interface FeedPost {
   id: number
   authorId: number
   authorName: string
+  authorProfileImageUrl: string | null
   isAuthorPublic: boolean
   subCategory: string
   category: string

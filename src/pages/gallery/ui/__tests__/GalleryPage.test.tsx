@@ -74,6 +74,7 @@ const mockFeedPosts: FeedPost[] = [
     id: 10,
     authorId: 1,
     authorName: '홍길동',
+    authorProfileImageUrl: 'uploads/profile1.jpg',
     isAuthorPublic: true,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
@@ -92,6 +93,7 @@ const mockFeedPosts: FeedPost[] = [
     id: 8,
     authorId: 2,
     authorName: '김영희',
+    authorProfileImageUrl: null,
     isAuthorPublic: false,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
@@ -546,14 +548,15 @@ describe('GalleryPage 피드 뷰', () => {
     expect(screen.queryByText('모든 피드를 불러왔습니다.')).not.toBeInTheDocument()
   })
 
-  it('피드 카드에 작성자 이름 첫 글자가 아바타에 표시된다', async () => {
+  it('피드 카드에 작성자 프로필 이미지가 표시된다', async () => {
     mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [mockFeedPosts[0]] })
 
     render(<GalleryPage />)
 
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
-    expect(screen.getByText('홍')).toBeInTheDocument()
+    const profileImg = screen.getByAltText('홍길동')
+    expect(profileImg).toHaveAttribute('src', 'https://cdn.gntc-youth.com/uploads/profile1.jpg')
   })
 
   it('그리드 뷰로 전환하면 피드 카드가 사라진다', async () => {
@@ -575,6 +578,7 @@ describe('GalleryPage 작성자 공개 여부', () => {
       ...mockFeedPosts[0],
       isAuthorPublic: true,
       authorName: '홍길동',
+      authorProfileImageUrl: 'uploads/profile1.jpg',
     }
     mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [publicPost] })
 
@@ -583,7 +587,7 @@ describe('GalleryPage 작성자 공개 여부', () => {
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
     expect(screen.getByText('홍길동')).toBeInTheDocument()
-    expect(screen.getByText('홍')).toBeInTheDocument() // 이니셜 아바타
+    expect(screen.getByAltText('홍길동')).toBeInTheDocument() // 프로필 이미지
     expect(screen.queryByText('GNTC YOUTH')).not.toBeInTheDocument()
   })
 
@@ -605,7 +609,7 @@ describe('GalleryPage 작성자 공개 여부', () => {
     expect(screen.getByAltText('GNTC Youth')).toBeInTheDocument()
   })
 
-  it('isAuthorPublic: false인 게시글에 이니셜 아바타 대신 로고가 표시된다', async () => {
+  it('isAuthorPublic: false인 게시글에 프로필 이미지 대신 로고가 표시된다', async () => {
     const privatePost: FeedPost = {
       ...mockFeedPosts[0],
       isAuthorPublic: false,
@@ -617,8 +621,8 @@ describe('GalleryPage 작성자 공개 여부', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
-    // 이니셜 아바타('홍')가 표시되지 않아야 함
-    expect(screen.queryByText('홍')).not.toBeInTheDocument()
+    // 프로필 이미지가 표시되지 않아야 함
+    expect(screen.queryByAltText('홍길동')).not.toBeInTheDocument()
     // 로고 이미지가 표시되어야 함
     const logo = screen.getByAltText('GNTC Youth')
     expect(logo).toHaveAttribute('src', 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp')
@@ -728,6 +732,7 @@ describe('GalleryPage 피드 영상 재생', () => {
     id: 12,
     authorId: 1,
     authorName: '홍길동',
+    authorProfileImageUrl: 'uploads/profile1.jpg',
     isAuthorPublic: true,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
@@ -815,6 +820,7 @@ describe('GalleryPage 라이트박스 영상 소리 겹침 방지', () => {
     id: 12,
     authorId: 1,
     authorName: '홍길동',
+    authorProfileImageUrl: 'uploads/profile1.jpg',
     isAuthorPublic: true,
     subCategory: 'RETREAT_2026_WINTER',
     category: 'RETREAT',
