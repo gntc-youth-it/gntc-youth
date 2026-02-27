@@ -667,6 +667,7 @@ const MediaLightbox = ({
   onClose: () => void
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const lightboxVideoRef = useRef<HTMLVideoElement>(null)
   const isVideo = isVideoUrl(imageUrl)
 
   useEffect(() => {
@@ -680,9 +681,30 @@ const MediaLightbox = ({
     document.addEventListener('keydown', handleKeyDown)
     document.body.style.overflow = 'hidden'
     closeButtonRef.current?.focus()
+
+    // 라이트박스 열릴 때 갤러리 내 배경 영상 일시정지 (소리 겹침 방지)
+    const pausedVideos: HTMLVideoElement[] = []
+    const container = document.getElementById('gallery-content')
+    container?.querySelectorAll('video').forEach((v) => {
+      if (v !== lightboxVideoRef.current && !v.paused) {
+        v.pause()
+        pausedVideos.push(v)
+      }
+    })
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
+
+      // 라이트박스 닫힐 때 화면에 보이는 영상 재개
+      pausedVideos.forEach((v) => {
+        if (!v.isConnected) return
+        const rect = v.getBoundingClientRect()
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+        if (rect.height > 0 && visibleHeight / rect.height >= 0.5) {
+          v.play().catch(() => {})
+        }
+      })
     }
   }, [onClose])
 
@@ -708,6 +730,7 @@ const MediaLightbox = ({
       </button>
       {isVideo ? (
         <video
+          ref={lightboxVideoRef}
           src={imageUrl}
           className="max-w-[95vw] max-h-[95vh] object-contain"
           controls
@@ -779,7 +802,7 @@ export const GalleryPage = () => {
   return (
     <>
       <Header />
-      <main className="pt-16 min-h-screen bg-[#F8F9FA]">
+      <main id="gallery-content" className="pt-16 min-h-screen bg-[#F8F9FA]">
         {/* Header Section */}
         <div className="bg-white px-4 sm:px-8 lg:px-[60px] pt-12 pb-10">
           <div className="max-w-7xl mx-auto">
