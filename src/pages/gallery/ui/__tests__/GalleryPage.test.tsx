@@ -753,3 +753,104 @@ describe('GalleryPage 피드 영상 재생', () => {
     expect(dots).toHaveLength(2)
   })
 })
+
+describe('GalleryPage 라이트박스 영상 소리 겹침 방지', () => {
+  const videoOnlyPost: FeedPost = {
+    id: 12,
+    authorId: 1,
+    authorName: '홍길동',
+    isAuthorPublic: true,
+    subCategory: 'RETREAT_2026_WINTER',
+    category: 'RETREAT',
+    status: 'APPROVED',
+    content: '수련회 영상입니다',
+    hashtags: ['#수련회'],
+    churches: ['ANYANG'],
+    images: [{ fileId: 10, filePath: 'uploads/video1.mp4', sortOrder: 1 }],
+    commentCount: 0,
+    createdAt: '2026-02-26T12:00:00',
+  }
+
+  it('라이트박스가 열리면 재생 중인 배경 영상이 일시정지된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    const feedVideo = container.querySelector('video')!
+    Object.defineProperty(feedVideo, 'paused', { value: false, configurable: true })
+    const pauseSpy = jest.fn()
+    feedVideo.pause = pauseSpy
+
+    // 영상 클릭하여 라이트박스 열기
+    await userEvent.click(feedVideo)
+
+    expect(pauseSpy).toHaveBeenCalled()
+  })
+
+  it('이미 일시정지된 배경 영상은 라이트박스가 열려도 pause를 호출하지 않는다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    const feedVideo = container.querySelector('video')!
+    // JSDOM 기본값: paused = true (이미 일시정지 상태)
+    const pauseSpy = jest.fn()
+    feedVideo.pause = pauseSpy
+
+    await userEvent.click(feedVideo)
+
+    expect(pauseSpy).not.toHaveBeenCalled()
+  })
+
+  it('라이트박스가 닫히면 화면에 보이는 배경 영상이 재개된다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    const feedVideo = container.querySelector('video')!
+    Object.defineProperty(feedVideo, 'paused', { value: false, configurable: true })
+    feedVideo.pause = jest.fn()
+    const playSpy = jest.fn().mockResolvedValue(undefined)
+    feedVideo.play = playSpy
+    feedVideo.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 100, bottom: 500, height: 400, left: 0, right: 400, width: 400, x: 0, y: 100,
+    })
+
+    // 라이트박스 열기
+    await userEvent.click(feedVideo)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    // 라이트박스 닫기
+    await userEvent.keyboard('{Escape}')
+
+    expect(playSpy).toHaveBeenCalled()
+  })
+
+  it('화면에 보이지 않는 배경 영상은 라이트박스 닫힐 때 재개하지 않는다', async () => {
+    mockUseFeed.mockReturnValue({ ...defaultFeed, posts: [videoOnlyPost] })
+
+    const { container } = render(<GalleryPage />)
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    const feedVideo = container.querySelector('video')!
+    Object.defineProperty(feedVideo, 'paused', { value: false, configurable: true })
+    feedVideo.pause = jest.fn()
+    const playSpy = jest.fn().mockResolvedValue(undefined)
+    feedVideo.play = playSpy
+    // 영상이 뷰포트 밖으로 스크롤된 상태
+    feedVideo.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: -500, bottom: -100, height: 400, left: 0, right: 400, width: 400, x: 0, y: -500,
+    })
+
+    // 라이트박스 열기
+    await userEvent.click(feedVideo)
+
+    // 라이트박스 닫기
+    await userEvent.keyboard('{Escape}')
+
+    expect(playSpy).not.toHaveBeenCalled()
+  })
+})
