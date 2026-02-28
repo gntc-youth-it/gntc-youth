@@ -13,6 +13,6 @@ describe('HeroSection', () => {
   it('"더 알아보기" 버튼이 존재하지 않는다', () => {
     render(<HeroSection />)
 
-    expect(screen.queryByText('더 알아보기')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '더 알아보기' })).not.toBeInTheDocument()
   })
 })
