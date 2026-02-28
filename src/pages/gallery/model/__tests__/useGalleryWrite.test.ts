@@ -6,6 +6,12 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
 
+let mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
+jest.mock('../../../../features/auth', () => ({
+  useAuth: () => mockAuthValue,
+}))
+
 const mockFetchCategories = jest.fn()
 const mockFetchSubCategories = jest.fn()
 const mockGetPresignedUrl = jest.fn()
@@ -66,6 +72,7 @@ const mockChurches = [
 beforeEach(() => {
   jest.clearAllMocks()
   uuidCounter = 0
+  mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
   mockFetchCategories.mockResolvedValue(mockCategories)
   mockFetchChurches.mockResolvedValue(mockChurches)
   mockFetchSubCategories.mockResolvedValue(mockSubCategories)
@@ -89,7 +96,9 @@ beforeEach(() => {
 })
 
 describe('useGalleryWrite 초기 상태', () => {
-  it('초기 폼 상태가 비어있다', async () => {
+  it('MASTER 사용자의 초기 isAuthorPublic은 false이다', async () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
     const { result } = renderHook(() => useGalleryWrite())
 
     expect(result.current.selectedCategory).toBe('')
@@ -655,6 +664,72 @@ describe('useGalleryWrite 영상 업로드', () => {
     expect(mockCreatePost).toHaveBeenCalledWith(
       expect.objectContaining({
         imageIds: [1, 2],
+      })
+    )
+  })
+})
+
+describe('useGalleryWrite 작성자 공개 권한 (MASTER 전용)', () => {
+  it('MASTER가 아닌 USER는 isAuthorPublic이 항상 true이다', () => {
+    mockAuthValue = { user: { id: 2, name: '김철수', role: 'USER' }, isLoggedIn: true }
+
+    const { result } = renderHook(() => useGalleryWrite())
+
+    expect(result.current.isAuthorPublic).toBe(true)
+  })
+
+  it('MASTER가 아닌 LEADER는 isAuthorPublic이 항상 true이다', () => {
+    mockAuthValue = { user: { id: 3, name: '이영희', role: 'LEADER' }, isLoggedIn: true }
+
+    const { result } = renderHook(() => useGalleryWrite())
+
+    expect(result.current.isAuthorPublic).toBe(true)
+  })
+
+  it('MASTER는 isAuthorPublic 기본값이 false이다', () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
+    const { result } = renderHook(() => useGalleryWrite())
+
+    expect(result.current.isAuthorPublic).toBe(false)
+  })
+
+  it('MASTER는 isAuthorPublic을 true로 변경할 수 있다', () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
+    const { result } = renderHook(() => useGalleryWrite())
+
+    act(() => {
+      result.current.setIsAuthorPublic(true)
+    })
+
+    expect(result.current.isAuthorPublic).toBe(true)
+  })
+
+  it('USER가 게시글 등록 시 isAuthorPublic: true로 전송된다', async () => {
+    mockAuthValue = { user: { id: 2, name: '김철수', role: 'USER' }, isLoggedIn: true }
+
+    const { result } = renderHook(() => useGalleryWrite())
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toEqual(mockSubCategories)
+    })
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
+    })
+
+    await act(async () => {
+      await result.current.handleSubmit()
+    })
+
+    expect(mockCreatePost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isAuthorPublic: true,
       })
     )
   })
