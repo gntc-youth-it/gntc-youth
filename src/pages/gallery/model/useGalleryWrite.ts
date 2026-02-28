@@ -49,7 +49,6 @@ function validateFile(file: File): string | null {
 export const useGalleryWrite = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const isMaster = user?.role === 'MASTER'
 
   // Category state
   const [categories, setCategories] = useState<Category[]>([])
@@ -62,7 +61,13 @@ export const useGalleryWrite = () => {
   const [hashtags, setHashtags] = useState<string[]>([])
   const [selectedChurches, setSelectedChurches] = useState<string[]>([])
   // MASTER: 선택 가능 (기본 비공개), 그 외: 항상 본인 프로필 공개
-  const [isAuthorPublic, setIsAuthorPublic] = useState(!isMaster)
+  const [isAuthorPublic, setIsAuthorPublic] = useState(true)
+
+  useEffect(() => {
+    if (user) {
+      setIsAuthorPublic(user.role !== 'MASTER')
+    }
+  }, [user])
 
   // Media state
   const [mediaItems, setMediaItems] = useState<UploadingImage[]>([])

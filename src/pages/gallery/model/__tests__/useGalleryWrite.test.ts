@@ -97,9 +97,11 @@ beforeEach(() => {
 
 describe('useGalleryWrite 초기 상태', () => {
   it('MASTER 사용자의 초기 isAuthorPublic은 false이다', async () => {
-    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
-
     const { result } = renderHook(() => useGalleryWrite())
+
+    await waitFor(() => {
+      expect(result.current.isAuthorPublic).toBe(false)
+    })
 
     expect(result.current.selectedCategory).toBe('')
     expect(result.current.selectedSubCategory).toBe('')
@@ -670,34 +672,31 @@ describe('useGalleryWrite 영상 업로드', () => {
 })
 
 describe('useGalleryWrite 작성자 공개 권한 (MASTER 전용)', () => {
-  it('MASTER가 아닌 USER는 isAuthorPublic이 항상 true이다', () => {
-    mockAuthValue = { user: { id: 2, name: '김철수', role: 'USER' }, isLoggedIn: true }
+  it.each([
+    { role: 'USER', name: '김철수', id: 2 },
+    { role: 'LEADER', name: '이영희', id: 3 },
+  ])('$role 사용자는 isAuthorPublic이 항상 true이다', ({ role, name, id }) => {
+    mockAuthValue = { user: { id, name, role }, isLoggedIn: true }
 
     const { result } = renderHook(() => useGalleryWrite())
 
     expect(result.current.isAuthorPublic).toBe(true)
   })
 
-  it('MASTER가 아닌 LEADER는 isAuthorPublic이 항상 true이다', () => {
-    mockAuthValue = { user: { id: 3, name: '이영희', role: 'LEADER' }, isLoggedIn: true }
-
+  it('MASTER는 isAuthorPublic 기본값이 false이다', async () => {
     const { result } = renderHook(() => useGalleryWrite())
 
-    expect(result.current.isAuthorPublic).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isAuthorPublic).toBe(false)
+    })
   })
 
-  it('MASTER는 isAuthorPublic 기본값이 false이다', () => {
-    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
-
+  it('MASTER는 isAuthorPublic을 true로 변경할 수 있다', async () => {
     const { result } = renderHook(() => useGalleryWrite())
 
-    expect(result.current.isAuthorPublic).toBe(false)
-  })
-
-  it('MASTER는 isAuthorPublic을 true로 변경할 수 있다', () => {
-    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
-
-    const { result } = renderHook(() => useGalleryWrite())
+    await waitFor(() => {
+      expect(result.current.isAuthorPublic).toBe(false)
+    })
 
     act(() => {
       result.current.setIsAuthorPublic(true)

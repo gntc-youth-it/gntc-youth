@@ -8,7 +8,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
 
-let mockAuthValue = { user: /** @type {any} */ (null), isLoggedIn: false }
+let mockAuthValue = { user: null as { id: number; name: string; role?: string } | null, isLoggedIn: false }
 
 jest.mock('../../../../features/auth', () => ({
   useAuth: () => mockAuthValue,
@@ -313,16 +313,11 @@ describe('GalleryWritePage 작성자 공개 여부 (MASTER 전용)', () => {
     expect(screen.getByText("체크하지 않으면 작성자가 'GNTC YOUTH'로 표시됩니다.")).toBeInTheDocument()
   })
 
-  it('USER 사용자에게 작성자 정보 공개 체크박스가 표시되지 않는다', () => {
-    mockAuthValue = { user: { id: 2, name: '김철수', role: 'USER' }, isLoggedIn: true }
-
-    render(<GalleryWritePage />)
-
-    expect(screen.queryByText('작성자 정보 공개')).not.toBeInTheDocument()
-  })
-
-  it('LEADER 사용자에게 작성자 정보 공개 체크박스가 표시되지 않는다', () => {
-    mockAuthValue = { user: { id: 3, name: '이영희', role: 'LEADER' }, isLoggedIn: true }
+  it.each([
+    { role: 'USER', id: 2, name: '김철수' },
+    { role: 'LEADER', id: 3, name: '이영희' },
+  ])('$role 사용자에게 작성자 정보 공개 체크박스가 표시되지 않는다', ({ role, id, name }) => {
+    mockAuthValue = { user: { id, name, role }, isLoggedIn: true }
 
     render(<GalleryWritePage />)
 
