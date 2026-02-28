@@ -385,7 +385,7 @@ export const EditSanctuaryModal = ({
                   type="button"
                   onClick={handleAddPrayer}
                   disabled={formData.prayers.length >= MAX_PRAYERS || isSaving}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[#3B5BDB] text-white text-[13px] font-medium rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[#3B5BDB] text-white text-sm- font-medium rounded-md hover:bg-[#364FC7] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg
                     width="14"

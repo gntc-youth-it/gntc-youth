@@ -69,7 +69,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
   <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1 shrink-0">
     <button
       onClick={() => onChange('grid')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'grid' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -78,7 +78,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
     </button>
     <button
       onClick={() => onChange('feed')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'feed' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -278,7 +278,7 @@ const RetreatHeroBanner = ({
         {showBrowse && (
           <button
             onClick={onBrowse}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-medium hover:bg-white/30 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" />
@@ -391,7 +391,7 @@ const ChurchBanner = ({
       </div>
       <button
         onClick={onBrowse}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-medium hover:bg-white/30 transition-colors"
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="7" />
@@ -762,7 +762,7 @@ const FeedCard = ({
     {/* Post footer */}
     <div className="flex flex-col gap-2 px-4 pb-4">
       {post.content && (
-        <p className="text-[13px] text-[#333333] leading-relaxed">{post.content}</p>
+        <p className="text-sm- text-[#333333] leading-relaxed">{post.content}</p>
       )}
       {post.hashtags.length > 0 && (
         <span className="text-xs font-medium text-[#3B5BDB]">
@@ -1075,7 +1075,7 @@ export const GalleryPage = () => {
                   <button
                     key={key}
                     onClick={() => setSelectedCategory(key)}
-                    className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-[13px] font-medium whitespace-nowrap transition-colors ${
+                    className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
                       selectedCategory === key
                         ? 'bg-[#3B5BDB] text-white font-semibold'
                         : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
