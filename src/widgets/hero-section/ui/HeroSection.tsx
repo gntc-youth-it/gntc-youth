@@ -43,12 +43,6 @@ export const HeroSection = () => {
               함께 성장하고, 함께 섬기며, 함께 예배하는 청년들의 공동체
             </p>
 
-            <button
-              className="px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/40 active:translate-y-0 transition-all animate-fade-in-up"
-              style={{ animationDelay: '1s', animationFillMode: 'both' }}
-            >
-              더 알아보기
-            </button>
           </div>
 
           {/* Image */}
