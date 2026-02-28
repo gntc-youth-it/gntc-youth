@@ -135,6 +135,7 @@ describe('Header 관리자 메뉴', () => {
 
     expect(screen.getByTestId('admin-dropdown-menu')).toBeInTheDocument()
     expect(screen.getByTestId('admin-users-button')).toBeInTheDocument()
+    expect(screen.getByTestId('admin-posts-button')).toBeInTheDocument()
   })
 
   it('사용자 관리 클릭 시 /admin/users로 이동한다', async () => {
@@ -150,6 +151,21 @@ describe('Header 관리자 메뉴', () => {
     await userEvent.click(screen.getByTestId('admin-users-button'))
 
     expect(mockNavigate).toHaveBeenCalledWith('/admin/users')
+  })
+
+  it('게시물 관리 클릭 시 /admin/posts로 이동한다', async () => {
+    mockUseAuth.mockReturnValue({
+      ...baseAuth,
+      isLoggedIn: true,
+      user: { id: 1, name: '관리자', role: 'MASTER' },
+    })
+
+    render(<Header />)
+
+    await userEvent.click(screen.getByTestId('admin-menu-button'))
+    await userEvent.click(screen.getByTestId('admin-posts-button'))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/posts')
   })
 })
 
