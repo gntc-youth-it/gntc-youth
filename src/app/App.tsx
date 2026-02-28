@@ -4,6 +4,7 @@ import { HomePage } from '../pages/home'
 import { LoginPage } from '../pages/login'
 import { AuthCallbackPage } from '../pages/auth-callback'
 import { AdminUsersPage } from '../pages/admin/users'
+import { AdminPostsPage } from '../pages/admin/posts'
 import { GalleryPage, GalleryWritePage } from '../pages/gallery'
 import './styles/index.css'
 
@@ -18,6 +19,7 @@ export const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/posts" element={<AdminPostsPage />} />
         </Routes>
       </Router>
     </AuthProvider>

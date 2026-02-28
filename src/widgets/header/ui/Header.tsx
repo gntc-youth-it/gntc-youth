@@ -205,6 +205,16 @@ export const Header = () => {
                       >
                         사용자 관리
                       </button>
+                      <button
+                        onClick={() => {
+                          setIsAdminMenuOpen(false)
+                          navigate('/admin/posts')
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-testid="admin-posts-button"
+                      >
+                        게시물 관리
+                      </button>
                     </div>
                   )}
                 </li>
@@ -367,6 +377,15 @@ export const Header = () => {
                 className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 사용자 관리
+              </button>
+              <button
+                onClick={() => {
+                  handleNavClick()
+                  navigate('/admin/posts')
+                }}
+                className="block text-gray-600 hover:text-gray-900 font-medium transition-colors mt-3"
+              >
+                게시물 관리
               </button>
             </li>
           )}
