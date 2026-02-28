@@ -303,22 +303,30 @@ describe('GalleryWritePage 제출', () => {
   })
 })
 
-describe('GalleryWritePage 작성자 공개 여부', () => {
-  it('작성자 정보 공개 체크박스가 표시된다', () => {
+describe('GalleryWritePage 작성자 공개 여부 (MASTER 전용)', () => {
+  it('MASTER 사용자에게 작성자 정보 공개 체크박스가 표시된다', () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
     render(<GalleryWritePage />)
 
     expect(screen.getByText('작성자 정보 공개')).toBeInTheDocument()
     expect(screen.getByText("체크하지 않으면 작성자가 'GNTC YOUTH'로 표시됩니다.")).toBeInTheDocument()
   })
 
-  it('기본값은 체크 해제 상태이다', () => {
+  it.each([
+    { role: 'USER', id: 2, name: '김철수' },
+    { role: 'LEADER', id: 3, name: '이영희' },
+  ])('$role 사용자에게 작성자 정보 공개 체크박스가 표시되지 않는다', ({ role, id, name }) => {
+    mockAuthValue = { user: { id, name, role }, isLoggedIn: true }
+
     render(<GalleryWritePage />)
 
-    const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
-    expect(checkbox).not.toBeChecked()
+    expect(screen.queryByText('작성자 정보 공개')).not.toBeInTheDocument()
   })
 
-  it('체크박스 클릭 시 setIsAuthorPublic이 호출된다', async () => {
+  it('MASTER: 체크박스 클릭 시 setIsAuthorPublic이 호출된다', async () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
+
     render(<GalleryWritePage />)
 
     const checkbox = screen.getByRole('checkbox', { name: /작성자 정보 공개/ })
@@ -327,7 +335,8 @@ describe('GalleryWritePage 작성자 공개 여부', () => {
     expect(mockSetIsAuthorPublic).toHaveBeenCalledWith(true)
   })
 
-  it('isAuthorPublic이 true이면 체크 상태로 표시된다', () => {
+  it('MASTER: isAuthorPublic이 true이면 체크 상태로 표시된다', () => {
+    mockAuthValue = { user: { id: 1, name: '홍길동', role: 'MASTER' }, isLoggedIn: true }
     mockWriteHookValue = { ...defaultWriteHook, isAuthorPublic: true }
 
     render(<GalleryWritePage />)
