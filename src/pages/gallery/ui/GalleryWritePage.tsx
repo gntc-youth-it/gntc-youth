@@ -424,23 +424,25 @@ export const GalleryWritePage = () => {
               )}
             </div>
 
-            {/* Author Public Toggle */}
-            <div className="bg-white rounded-2xl p-6">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAuthorPublic}
-                  onChange={(e) => setIsAuthorPublic(e.target.checked)}
-                  className="w-5 h-5 text-[#3B5BDB] border-gray-300 rounded focus:ring-[#3B5BDB]"
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold text-[#1A1A1A]">작성자 정보 공개</span>
-                  <span className="text-xs text-[#999999]">
-                    체크하지 않으면 작성자가 'GNTC YOUTH'로 표시됩니다.
-                  </span>
-                </div>
-              </label>
-            </div>
+            {/* Author Public Toggle - MASTER only */}
+            {user?.role === 'MASTER' && (
+              <div className="bg-white rounded-2xl p-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAuthorPublic}
+                    onChange={(e) => setIsAuthorPublic(e.target.checked)}
+                    className="w-5 h-5 text-[#3B5BDB] border-gray-300 rounded focus:ring-[#3B5BDB]"
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-[#1A1A1A]">작성자 정보 공개</span>
+                    <span className="text-xs text-[#999999]">
+                      체크하지 않으면 작성자가 'GNTC YOUTH'로 표시됩니다.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            )}
 
             {/* Error message */}
             {submitError && (
