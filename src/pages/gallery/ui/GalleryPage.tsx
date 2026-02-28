@@ -66,10 +66,10 @@ const BookmarkIcon = () => (
 // ─── View Toggle ─────────────────────────────────────────
 
 const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mode: ViewMode) => void }) => (
-  <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1">
+  <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1 shrink-0">
     <button
       onClick={() => onChange('grid')}
-      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'grid' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -78,7 +78,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
     </button>
     <button
       onClick={() => onChange('feed')}
-      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'feed' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -1069,13 +1069,13 @@ export const GalleryPage = () => {
             </div>
 
             {/* Nav bar: categories + view toggle */}
-            <div className="flex items-center justify-between mt-6 gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-6 gap-3 sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
                 {CATEGORIES.map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => setSelectedCategory(key)}
-                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-colors ${
+                    className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-[13px] font-medium whitespace-nowrap transition-colors ${
                       selectedCategory === key
                         ? 'bg-[#3B5BDB] text-white font-semibold'
                         : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
