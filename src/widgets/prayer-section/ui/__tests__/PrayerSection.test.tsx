@@ -400,7 +400,7 @@ describe('PrayerSection 사진 캐러셀', () => {
     expect(screen.queryByLabelText('사진 1 보기')).not.toBeInTheDocument()
   })
 
-  it('사진이 여러 장이면 다음 화살표 버튼과 도트 인디케이터가 표시된다', () => {
+  it('사진이 여러 장이면 갤러리 스트립으로 표시되며 첫 번째가 선택된다', () => {
     mockUseChurchInfo.mockReturnValue({
       churchInfo: {
         churchId: 'ANYANG',
@@ -416,12 +416,9 @@ describe('PrayerSection 사진 캐러셀', () => {
 
     render(<PrayerSection />)
 
-    // 첫 번째 사진이므로 이전 화살표는 없고, 다음 화살표만 표시
-    expect(screen.queryByLabelText('이전 사진')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('다음 사진')).toBeInTheDocument()
-    // 도트 인디케이터 3개
-    expect(screen.getByLabelText('사진 1 보기')).toBeInTheDocument()
-    expect(screen.getByLabelText('사진 2 보기')).toBeInTheDocument()
-    expect(screen.getByLabelText('사진 3 보기')).toBeInTheDocument()
+    // 첫 번째 사진이 선택(확대) 상태, 나머지는 선택 가능 상태
+    expect(screen.getByLabelText('사진 1 확대')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 2 선택')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 3 선택')).toBeInTheDocument()
   })
 })

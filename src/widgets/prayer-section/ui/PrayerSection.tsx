@@ -20,23 +20,15 @@ const ChurchPhotoCarousel = ({
 }) => {
   const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0))
-  }
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, photos.length - 1))
-  }
+  const stripRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        left: currentIndex * scrollRef.current.offsetWidth,
-        behavior: 'smooth',
-      })
-    }
+    const container = stripRef.current
+    if (!container) return
+    const selected = container.children[currentIndex] as HTMLElement
+    if (!selected) return
+    const scrollLeft = selected.offsetLeft - container.offsetWidth / 2 + selected.offsetWidth / 2
+    container.scrollTo?.({ left: scrollLeft, behavior: 'smooth' })
   }, [currentIndex])
 
   const handleMoreClick = () => {
@@ -76,71 +68,49 @@ const ChurchPhotoCarousel = ({
         </button>
       </div>
 
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          className="flex overflow-hidden rounded-xl"
-        >
-          {photos.map((photo, index) => (
-            <div
-              key={`${photo}-${index}`}
-              className="w-full flex-shrink-0"
-            >
-              <img
-                src={buildCdnUrl(photo)}
-                alt={`성전 사진 ${index + 1}`}
-                className="w-full h-48 sm:h-64 md:h-72 object-cover"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
-              />
-            </div>
-          ))}
+      {photos.length === 1 ? (
+        <div className="rounded-xl overflow-hidden">
+          <img
+            src={buildCdnUrl(photos[0])}
+            alt="성전 사진 1"
+            className="w-full h-48 sm:h-64 md:h-72 object-cover"
+            onError={(e) => {
+              ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+            }}
+          />
         </div>
-
-        {photos.length > 1 && (
-          <>
-            {currentIndex > 0 && (
+      ) : (
+        <div
+          ref={stripRef}
+          className="flex items-center gap-2 px-3 py-4 overflow-x-auto scrollbar-hide bg-gray-100 rounded-xl"
+        >
+          {photos.map((photo, idx) => {
+            const isSelected = idx === currentIndex
+            return (
               <button
+                key={`${photo}-${idx}`}
                 type="button"
-                onClick={handlePrev}
-                aria-label="이전 사진"
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ease-out ${
+                  isSelected
+                    ? 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-blue-600 shadow-lg'
+                    : 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
+                }`}
+                aria-label={isSelected ? `사진 ${idx + 1} 확대` : `사진 ${idx + 1} 선택`}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-            {currentIndex < photos.length - 1 && (
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label="다음 사진"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
-
-            <div className="flex justify-center gap-1.5 mt-3">
-              {photos.map((photo, index) => (
-                <button
-                  key={`${photo}-${index}`}
-                  type="button"
-                  onClick={() => setCurrentIndex(index)}
-                  aria-label={`사진 ${index + 1} 보기`}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
+                <img
+                  src={buildCdnUrl(photo)}
+                  alt={`성전 사진 ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                  }}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
