@@ -13,6 +13,12 @@ jest.mock('../../../../entities/church', () => ({
   ),
 }))
 
+const mockNavigate = jest.fn()
+
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}))
+
 jest.mock('../../../../features/auth', () => ({
   useAuth: jest.fn(),
 }))
@@ -45,12 +51,20 @@ jest.mock('../../../../shared/ui', () => {
 })
 
 jest.mock('../../../../shared/lib', () => ({
-  buildCdnUrl: (path: string) => `https://cdn.test${path}`,
+  buildCdnUrl: (path: string) => `https://cdn.test/${path}`,
+}))
+
+jest.mock('../../../../shared/config', () => ({
+  FALLBACK_IMAGE_URL: 'https://cdn.test/fallback.jpg',
 }))
 
 jest.mock('../../model/usePrayerAnimation', () => ({
   usePrayerAnimation: () => ({ isVisible: true, resetAnimation: jest.fn() }),
 }))
+
+beforeAll(() => {
+  Element.prototype.scrollTo = jest.fn()
+})
 
 const mockUseChurches = useChurches as jest.MockedFunction<typeof useChurches>
 const mockUseChurchInfo = useChurchInfo as jest.MockedFunction<typeof useChurchInfo>
@@ -69,6 +83,7 @@ const mockChurchInfoResult = {
     prayerTopics: [
       { id: 1, content: '기도제목1', sortOrder: 1 },
     ],
+    randomPhotos: [],
   },
   isLoading: false,
   notFound: false,
@@ -267,5 +282,146 @@ describe('PrayerSection 수정 버튼 권한', () => {
 
       expect(screen.queryByText('성전 정보 작성하기')).not.toBeInTheDocument()
     })
+  })
+})
+
+describe('PrayerSection 사진 캐러셀', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockNavigate.mockClear()
+    mockUseChurches.mockReturnValue({
+      churches,
+      isLoading: false,
+    } as ReturnType<typeof useChurches>)
+    mockUseAuth.mockReturnValue({
+      ...baseAuthValue,
+      user: { id: 4, name: 'Member', role: 'MEMBER', churchId: 'ANYANG' },
+    })
+  })
+
+  it('randomPhotos가 있으면 사진 섹션이 표시된다', () => {
+    mockUseChurchInfo.mockReturnValue({
+      churchInfo: {
+        churchId: 'ANYANG',
+        groupPhotoFileId: null,
+        groupPhotoPath: null,
+        prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
+        randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg', 'uploads/img3.jpg'],
+      },
+      isLoading: false,
+      notFound: false,
+      error: null,
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    expect(screen.getByText('사진')).toBeInTheDocument()
+    expect(screen.getByText('더보기')).toBeInTheDocument()
+    expect(screen.getAllByRole('img')).toHaveLength(3)
+  })
+
+  it('randomPhotos가 빈 배열이면 사진 섹션이 표시되지 않는다', () => {
+    mockUseChurchInfo.mockReturnValue({
+      ...mockChurchInfoResult,
+      churchInfo: {
+        ...mockChurchInfoResult.churchInfo!,
+        randomPhotos: [],
+      },
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    expect(screen.queryByText('사진')).not.toBeInTheDocument()
+    expect(screen.queryByText('더보기')).not.toBeInTheDocument()
+  })
+
+  it('randomPhotos가 7개 미만이면 있는 만큼만 표시한다', () => {
+    mockUseChurchInfo.mockReturnValue({
+      churchInfo: {
+        churchId: 'ANYANG',
+        groupPhotoFileId: null,
+        groupPhotoPath: null,
+        prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
+        randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg'],
+      },
+      isLoading: false,
+      notFound: false,
+      error: null,
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    expect(screen.getAllByRole('img')).toHaveLength(2)
+  })
+
+  it('더보기 버튼 클릭 시 갤러리 성전별 페이지로 이동한다', async () => {
+    const user = userEvent.setup()
+    mockUseChurchInfo.mockReturnValue({
+      churchInfo: {
+        churchId: 'ANYANG',
+        groupPhotoFileId: null,
+        groupPhotoPath: null,
+        prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
+        randomPhotos: ['uploads/img1.jpg'],
+      },
+      isLoading: false,
+      notFound: false,
+      error: null,
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    await user.click(screen.getByText('더보기'))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/gallery?category=CHURCH&churchId=ANYANG')
+  })
+
+  it('사진이 1장이면 네비게이션 화살표와 도트가 표시되지 않는다', () => {
+    mockUseChurchInfo.mockReturnValue({
+      churchInfo: {
+        churchId: 'ANYANG',
+        groupPhotoFileId: null,
+        groupPhotoPath: null,
+        prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
+        randomPhotos: ['uploads/img1.jpg'],
+      },
+      isLoading: false,
+      notFound: false,
+      error: null,
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    expect(screen.getAllByRole('img')).toHaveLength(1)
+    // 좌우 화살표 버튼이 없어야 함
+    expect(screen.queryByLabelText('이전 사진')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('다음 사진')).not.toBeInTheDocument()
+    // 도트 인디케이터도 없어야 함
+    expect(screen.queryByLabelText('사진 1 보기')).not.toBeInTheDocument()
+  })
+
+  it('사진이 여러 장이면 다음 화살표 버튼과 도트 인디케이터가 표시된다', () => {
+    mockUseChurchInfo.mockReturnValue({
+      churchInfo: {
+        churchId: 'ANYANG',
+        groupPhotoFileId: null,
+        groupPhotoPath: null,
+        prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
+        randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg', 'uploads/img3.jpg'],
+      },
+      isLoading: false,
+      notFound: false,
+      error: null,
+    } as ReturnType<typeof useChurchInfo>)
+
+    render(<PrayerSection />)
+
+    // 첫 번째 사진이므로 이전 화살표는 없고, 다음 화살표만 표시
+    expect(screen.queryByLabelText('이전 사진')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('다음 사진')).toBeInTheDocument()
+    // 도트 인디케이터 3개
+    expect(screen.getByLabelText('사진 1 보기')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 2 보기')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 3 보기')).toBeInTheDocument()
   })
 })

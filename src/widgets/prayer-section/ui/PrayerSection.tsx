@@ -1,11 +1,149 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
 import { ChurchMedia, PrayerList, useChurches, useChurchInfo } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
 import { buildCdnUrl } from '../../../shared/lib'
+import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { usePrayerAnimation } from '../model/usePrayerAnimation'
+
+const ChurchPhotoCarousel = ({
+  photos,
+  churchCode,
+  isVisible,
+}: {
+  photos: string[]
+  churchCode: string
+  isVisible: boolean
+}) => {
+  const navigate = useNavigate()
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0))
+  }
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => Math.min(prev + 1, photos.length - 1))
+  }
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: currentIndex * scrollRef.current.offsetWidth,
+        behavior: 'smooth',
+      })
+    }
+  }, [currentIndex])
+
+  const handleMoreClick = () => {
+    navigate(`/gallery?category=CHURCH&churchId=${churchCode}`)
+  }
+
+  return (
+    <div
+      className={`w-full max-w-3xl mt-8 transition-all duration-500 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+      style={{ transitionDelay: '0.5s' }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-xl font-semibold text-blue-600">사진</h4>
+        <button
+          type="button"
+          onClick={handleMoreClick}
+          className="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          더보기
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9 18l6-6-6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex overflow-hidden rounded-xl"
+        >
+          {photos.map((photo, index) => (
+            <div
+              key={`${photo}-${index}`}
+              className="w-full flex-shrink-0"
+            >
+              <img
+                src={buildCdnUrl(photo)}
+                alt={`성전 사진 ${index + 1}`}
+                className="w-full h-48 sm:h-64 md:h-72 object-cover"
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {photos.length > 1 && (
+          <>
+            {currentIndex > 0 && (
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="이전 사진"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+            )}
+            {currentIndex < photos.length - 1 && (
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="다음 사진"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            )}
+
+            <div className="flex justify-center gap-1.5 mt-3">
+              {photos.map((photo, index) => (
+                <button
+                  key={`${photo}-${index}`}
+                  type="button"
+                  onClick={() => setCurrentIndex(index)}
+                  aria-label={`사진 ${index + 1} 보기`}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const ChurchTabContent = ({
   churchCode,
@@ -239,6 +377,14 @@ const ChurchTabContent = ({
               </div>
             )}
           </div>
+
+          {churchInfo?.randomPhotos && churchInfo.randomPhotos.length > 0 && (
+            <ChurchPhotoCarousel
+              photos={churchInfo.randomPhotos}
+              churchCode={churchCode}
+              isVisible={isVisible}
+            />
+          )}
         </div>
       )}
     </div>

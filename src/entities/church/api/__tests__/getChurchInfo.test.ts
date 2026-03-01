@@ -20,6 +20,7 @@ describe('getChurchInfo', () => {
         { id: 1, content: '기도제목 1', sortOrder: 1 },
         { id: 2, content: '기도제목 2', sortOrder: 2 },
       ],
+      randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg'],
     }
     mockApiRequest.mockResolvedValue(mockResponse)
 
@@ -34,6 +35,7 @@ describe('getChurchInfo', () => {
       churchId: 'suwon',
       groupPhotoPath: null,
       prayerTopics: [],
+      randomPhotos: [],
     }
     mockApiRequest.mockResolvedValue(mockResponse)
 

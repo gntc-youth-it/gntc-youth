@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
@@ -968,6 +968,15 @@ const MediaLightbox = ({
 
 export const GalleryPage = () => {
   const { isLoggedIn, user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const initialParams = useMemo(() => {
+    const category = searchParams.get('category') as GalleryCategory | null
+    const churchId = searchParams.get('churchId')
+    return {
+      category: category && CATEGORIES.some((c) => c.key === category) ? category : undefined,
+      churchId: churchId ?? undefined,
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const {
     photos,
     isLoading,
@@ -983,7 +992,7 @@ export const GalleryPage = () => {
     selectedChurchId,
     selectChurch,
     churchOptions,
-  } = useGallery(user?.churchId)
+  } = useGallery(user?.churchId, initialParams.category, initialParams.churchId)
   const feed = useFeed()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)

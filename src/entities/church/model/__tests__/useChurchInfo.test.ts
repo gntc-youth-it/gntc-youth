@@ -30,6 +30,7 @@ describe('useChurchInfo', () => {
         { id: 1, content: '기도제목 1', sortOrder: 1 },
         { id: 2, content: '기도제목 2', sortOrder: 2 },
       ],
+      randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg'],
     }
     mockGetChurchInfo.mockResolvedValue(mockResponse)
 
@@ -91,6 +92,7 @@ describe('useChurchInfo', () => {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
       prayerTopics: [{ id: 1, content: '수원 기도제목', sortOrder: 1 }],
+      randomPhotos: [],
     }
     mockGetChurchInfo.mockResolvedValueOnce(mockResponse)
     rerender({ churchId: 'suwon' })
@@ -108,6 +110,7 @@ describe('useChurchInfo', () => {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
       prayerTopics: [{ id: 1, content: '수원 기도제목', sortOrder: 1 }],
+      randomPhotos: [],
     }
     mockGetChurchInfo.mockResolvedValueOnce(suwonResponse)
 
@@ -142,11 +145,13 @@ describe('useChurchInfo', () => {
       churchId: 'anyang',
       groupPhotoPath: '/uploads/anyang.mp4',
       prayerTopics: [{ id: 1, content: '안양 기도제목', sortOrder: 1 }],
+      randomPhotos: ['uploads/a1.jpg'],
     }
     const mockResponse2 = {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
       prayerTopics: [{ id: 2, content: '수원 기도제목', sortOrder: 1 }],
+      randomPhotos: [],
     }
 
     mockGetChurchInfo.mockResolvedValueOnce(mockResponse1)
