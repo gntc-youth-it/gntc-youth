@@ -18,6 +18,9 @@ const ChurchPhotoCarousel = ({
   churchCode: string
   isVisible: boolean
 }) => {
+  const SELECTED_CLASSES = 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-blue-600 shadow-lg'
+  const UNSELECTED_CLASSES = 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
+
   const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(0)
   const stripRef = useRef<HTMLDivElement>(null)
@@ -25,8 +28,8 @@ const ChurchPhotoCarousel = ({
   useEffect(() => {
     const container = stripRef.current
     if (!container) return
-    const selected = container.children[currentIndex] as HTMLElement
-    if (!selected) return
+    const selected = container.children[currentIndex]
+    if (!(selected instanceof HTMLElement)) return
     const scrollLeft = selected.offsetLeft - container.offsetWidth / 2 + selected.offsetWidth / 2
     container.scrollTo?.({ left: scrollLeft, behavior: 'smooth' })
   }, [currentIndex])
@@ -92,9 +95,7 @@ const ChurchPhotoCarousel = ({
                 type="button"
                 onClick={() => setCurrentIndex(idx)}
                 className={`relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ease-out ${
-                  isSelected
-                    ? 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-blue-600 shadow-lg'
-                    : 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
+                  isSelected ? SELECTED_CLASSES : UNSELECTED_CLASSES
                 }`}
                 aria-label={isSelected ? `사진 ${idx + 1} 확대` : `사진 ${idx + 1} 선택`}
               >
