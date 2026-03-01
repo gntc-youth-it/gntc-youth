@@ -608,19 +608,20 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
       ref={stripRef}
       className="flex items-center gap-2 px-3 py-4 overflow-x-auto scrollbar-hide bg-[#F4F5F7]"
     >
-      {allUrls.map((url, idx) => {
+      {images.map((image, idx) => {
+        const url = allUrls[idx]
         const isSelected = idx === currentIndex
         const isVid = isVideoUrl(url)
         return (
           <button
-            key={idx}
+            key={image.fileId}
             onClick={() => isSelected ? onImageClick(allUrls, idx) : setCurrentIndex(idx)}
             className={`relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ease-out ${
               isSelected
                 ? 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-[#3B5BDB] shadow-lg'
                 : 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
             }`}
-            aria-label={isSelected ? `사진 ${idx + 1} 크게 보기` : `사진 ${idx + 1} 선택`}
+            aria-label={isSelected ? `사진 ${image.sortOrder} 크게 보기` : `사진 ${image.sortOrder} 선택`}
           >
             {isVid ? (
               <>
@@ -632,7 +633,7 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
                 </div>
               </>
             ) : (
-              <img src={url} alt={`사진 ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              <img src={url} alt={`사진 ${image.sortOrder}`} className="w-full h-full object-cover" loading="lazy" />
             )}
           </button>
         )
@@ -1001,7 +1002,7 @@ const MediaLightbox = ({
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10 max-w-[90vw] overflow-x-auto scrollbar-hide px-2 py-1">
           {imageUrls.map((url, idx) => (
             <button
-              key={idx}
+              key={url}
               onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx) }}
               className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all ${
                 idx === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-40 hover:opacity-70'
