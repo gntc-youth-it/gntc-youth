@@ -393,15 +393,14 @@ describe('PrayerSection 사진 캐러셀', () => {
     render(<PrayerSection />)
 
     expect(screen.getAllByRole('img')).toHaveLength(1)
-    // 좌우 화살표 버튼이 없어야 함 (더보기 버튼만 존재)
-    const buttons = screen.getAllByRole('button')
-    const arrowButtons = buttons.filter(
-      (btn) => !btn.textContent?.includes('더보기') && !btn.textContent
-    )
-    expect(arrowButtons).toHaveLength(0)
+    // 좌우 화살표 버튼이 없어야 함
+    expect(screen.queryByLabelText('이전 사진')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('다음 사진')).not.toBeInTheDocument()
+    // 도트 인디케이터도 없어야 함
+    expect(screen.queryByLabelText('사진 1 보기')).not.toBeInTheDocument()
   })
 
-  it('사진이 여러 장이면 다음 화살표 버튼이 표시된다', () => {
+  it('사진이 여러 장이면 다음 화살표 버튼과 도트 인디케이터가 표시된다', () => {
     mockUseChurchInfo.mockReturnValue({
       churchInfo: {
         churchId: 'ANYANG',
@@ -417,10 +416,12 @@ describe('PrayerSection 사진 캐러셀', () => {
 
     render(<PrayerSection />)
 
-    // 도트 인디케이터 3개가 있어야 함
-    const allButtons = screen.getAllByRole('button')
-    // 더보기 + 다음 화살표 + 도트 3개 = 5개 (이전 화살표는 첫 사진이므로 없음)
-    // 성전 탭 버튼들도 있으므로, 도트 인디케이터는 클래스로 확인
-    expect(screen.getByText('사진')).toBeInTheDocument()
+    // 첫 번째 사진이므로 이전 화살표는 없고, 다음 화살표만 표시
+    expect(screen.queryByLabelText('이전 사진')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('다음 사진')).toBeInTheDocument()
+    // 도트 인디케이터 3개
+    expect(screen.getByLabelText('사진 1 보기')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 2 보기')).toBeInTheDocument()
+    expect(screen.getByLabelText('사진 3 보기')).toBeInTheDocument()
   })
 })

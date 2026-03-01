@@ -973,7 +973,7 @@ export const GalleryPage = () => {
     const category = searchParams.get('category') as GalleryCategory | null
     const churchId = searchParams.get('churchId')
     return {
-      category: category && ['ALL', 'RETREAT', 'CHURCH'].includes(category) ? category : undefined,
+      category: category && CATEGORIES.some((c) => c.key === category) ? category : undefined,
       churchId: churchId ?? undefined,
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

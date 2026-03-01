@@ -83,7 +83,7 @@ const ChurchPhotoCarousel = ({
         >
           {photos.map((photo, index) => (
             <div
-              key={photo}
+              key={`${photo}-${index}`}
               className="w-full flex-shrink-0"
             >
               <img
@@ -104,6 +104,7 @@ const ChurchPhotoCarousel = ({
               <button
                 type="button"
                 onClick={handlePrev}
+                aria-label="이전 사진"
                 className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -115,6 +116,7 @@ const ChurchPhotoCarousel = ({
               <button
                 type="button"
                 onClick={handleNext}
+                aria-label="다음 사진"
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,9 +128,10 @@ const ChurchPhotoCarousel = ({
             <div className="flex justify-center gap-1.5 mt-3">
               {photos.map((photo, index) => (
                 <button
-                  key={photo}
+                  key={`${photo}-${index}`}
                   type="button"
                   onClick={() => setCurrentIndex(index)}
+                  aria-label={`사진 ${index + 1} 보기`}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
