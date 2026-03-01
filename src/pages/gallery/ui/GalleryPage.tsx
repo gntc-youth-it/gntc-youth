@@ -1,19 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
 import { Header } from '../../../widgets/header'
-import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
-import { useFeed } from '../model/useFeed'
-import { deletePost } from '../api/galleryApi'
-import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
+import { buildCdnUrl } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import { ProfileImage } from '../../../shared/ui'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, ViewMode } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
   { key: 'RETREAT', label: '수련회' },
-  { key: 'CHURCH', label: '성전별' },
 ]
 
 // ─── Icons ───────────────────────────────────────────────
@@ -66,10 +60,10 @@ const BookmarkIcon = () => (
 // ─── View Toggle ─────────────────────────────────────────
 
 const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mode: ViewMode) => void }) => (
-  <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1 shrink-0">
+  <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1">
     <button
       onClick={() => onChange('grid')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
         viewMode === 'grid' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -78,7 +72,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
     </button>
     <button
       onClick={() => onChange('feed')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
         viewMode === 'feed' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -90,15 +84,14 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
 
 // ─── Grid View Components ────────────────────────────────
 
-const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (urls: string[], index: number) => void }) => {
+const GalleryGrid = ({ album }: { album: GalleryAlbum }) => {
   const columnCount = 4
-  const allUrls = album.photos.map((photo) => buildCdnUrl(photo.url))
-  const columns: { url: string; originalIndex: number }[][] = Array.from({ length: columnCount }, () => [])
+  const columns: string[][] = Array.from({ length: columnCount }, () => [])
   const heights = new Array(columnCount).fill(0)
 
-  album.photos.forEach((photo, idx) => {
+  album.photos.forEach((photo) => {
     const shortest = heights.indexOf(Math.min(...heights))
-    columns[shortest].push({ url: buildCdnUrl(photo.url), originalIndex: idx })
+    columns[shortest].push(buildCdnUrl(photo.url))
     heights[shortest] += 1
   })
 
@@ -106,11 +99,11 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {columns.map((col, colIdx) => (
         <div key={colIdx} className="flex flex-col gap-3">
-          {col.map((item, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(allUrls, item.originalIndex)}>
+          {col.map((url, imgIdx) => (
+            <div key={imgIdx} className="overflow-hidden rounded-xl">
               <img
-                src={item.url}
-                alt={`${album.title} 사진 ${item.originalIndex + 1}`}
+                src={url}
+                alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
                 className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
                 loading="lazy"
                 onError={(e) => {
@@ -125,7 +118,7 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
   )
 }
 
-const AlbumSection = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (urls: string[], index: number) => void }) => (
+const AlbumSection = ({ album }: { album: GalleryAlbum }) => (
   <section className="flex flex-col gap-5">
     <div className="flex items-end justify-between">
       <div className="flex flex-col gap-1">
@@ -134,596 +127,128 @@ const AlbumSection = ({ album, onImageClick }: { album: GalleryAlbum; onImageCli
       </div>
       <span className="text-sm text-[#999999]">{album.photoCount}장의 사진</span>
     </div>
-    <GalleryGrid album={album} onImageClick={onImageClick} />
+    <GalleryGrid album={album} />
   </section>
 )
 
-const AllPhotosGrid = ({
-  photos,
-  hasNext,
-  isFetchingMore,
-  loadMore,
-  onImageClick,
-}: {
-  photos: GalleryPhotoItem[]
-  hasNext: boolean
-  isFetchingMore: boolean
-  loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
-}) => {
-  const sentinelRef = useInfiniteScroll(loadMore, {
-    enabled: hasNext && !isFetchingMore,
-  })
+const GridContent = ({ albums }: { albums: GalleryAlbum[] }) => (
+  <div className="px-4 sm:px-8 lg:px-[60px] py-10">
+    <div className="max-w-7xl mx-auto flex flex-col gap-10">
+      {albums.map((album, idx) => (
+        <div key={album.id}>
+          <AlbumSection album={album} />
+          {idx < albums.length - 1 && <div className="h-px bg-[#E0E0E0] mt-10" />}
+        </div>
+      ))}
+    </div>
+  </div>
+)
 
-  const allUrls = useMemo(() => photos.map((p) => buildCdnUrl(p.url)), [photos])
+// ─── Feed View Components ────────────────────────────────
+
+const FeedImageCarousel = ({ album }: { album: GalleryAlbum }) => {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const photos = album.photos
+
+  const goTo = (idx: number) => {
+    if (idx >= 0 && idx < photos.length) setCurrentIndex(idx)
+  }
+
+  if (photos.length === 0) return null
 
   return (
-    <>
-      <p className="text-sm text-[#999999] mb-4">
-        총 {photos.length}장{hasNext ? '+' : ''}의 사진
-      </p>
-      <div className="columns-2 md:columns-4 gap-3">
-        {photos.map((photo, idx) => (
-          <div
-            key={photo.id}
-            className="mb-3 break-inside-avoid overflow-hidden rounded-xl cursor-pointer"
-            onClick={() => onImageClick(allUrls, idx)}
-          >
+    <div className="relative">
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {photos.map((photo) => (
             <img
+              key={photo.id}
               src={buildCdnUrl(photo.url)}
-              alt={`갤러리 사진 ${idx + 1}`}
-              className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+              alt={album.title}
+              className="w-full h-[360px] sm:h-[400px] object-cover flex-shrink-0"
               loading="lazy"
               onError={(e) => {
                 ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
               }}
             />
-          </div>
-        ))}
-      </div>
-      {isFetchingMore && (
-        <div className="flex justify-center py-8">
-          <div className="w-6 h-6 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
+          ))}
         </div>
-      )}
-      {!hasNext && photos.length > 0 && (
-        <p className="text-center text-sm text-[#999999] py-8">
-          모든 사진을 불러왔습니다.
-        </p>
-      )}
-      <div ref={sentinelRef} className="h-1" />
-    </>
-  )
-}
+      </div>
 
-const GridContent = ({
-  albums,
-  showAllPhotos,
-  photos,
-  hasNext,
-  isFetchingMore,
-  loadMore,
-  onImageClick,
-}: {
-  albums: GalleryAlbum[]
-  showAllPhotos: boolean
-  photos: GalleryPhotoItem[]
-  hasNext: boolean
-  isFetchingMore: boolean
-  loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
-}) => (
-  <div className="px-4 sm:px-8 lg:px-[60px] py-10">
-    <div className="max-w-7xl mx-auto flex flex-col gap-10">
-      {showAllPhotos ? (
-        <AllPhotosGrid
-          photos={photos}
-          hasNext={hasNext}
-          isFetchingMore={isFetchingMore}
-          loadMore={loadMore}
-          onImageClick={onImageClick}
-        />
-      ) : (
-        albums.map((album, idx) => (
-          <div key={album.id}>
-            <AlbumSection album={album} onImageClick={onImageClick} />
-            {idx < albums.length - 1 && <div className="h-px bg-[#E0E0E0] mt-10" />}
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-)
-
-// ─── Retreat Sub-Category Section ────────────────────────
-
-const formatRetreatDate = (start: string, end: string) => {
-  const s = new Date(start)
-  const e = new Date(end)
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-  return `${fmt(s)} - ${fmt(e)}`
-}
-
-const RetreatHeroBanner = ({
-  sub,
-  showBrowse,
-  onBrowse,
-}: {
-  sub: SubCategory
-  showBrowse: boolean
-  onBrowse: () => void
-}) => (
-  <div className="relative h-[320px] sm:h-[400px] overflow-hidden">
-    <img
-      src={buildCdnUrl(sub.imageUrl)}
-      alt={sub.displayName}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-      }}
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-    <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 lg:px-[60px] pb-8">
-      <div className="max-w-7xl mx-auto flex items-end justify-between">
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold text-white/70 tracking-[2px] uppercase">RETREAT</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
-            {sub.displayName}
-          </h2>
-          <p className="text-sm text-white/80">{formatRetreatDate(sub.startDate, sub.endDate)}</p>
-          {sub.verse && (
-            <p className="text-sm text-white/70 mt-1">
-              {sub.verse.content} ({sub.verse.bookDisplayName} {sub.verse.chapter}장 {sub.verse.verse}절)
-            </p>
+      {/* Navigation arrows */}
+      {photos.length > 1 && (
+        <>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goTo(currentIndex - 1)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+              aria-label="이전 사진"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
           )}
+          {currentIndex < photos.length - 1 && (
+            <button
+              onClick={() => goTo(currentIndex + 1)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+              aria-label="다음 사진"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Dots indicator */}
+      {photos.length > 1 && (
+        <div className="flex justify-center gap-1.5 py-3">
+          {photos.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goTo(idx)}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                idx === currentIndex ? 'bg-[#3B5BDB]' : 'bg-[#D0D0D0]'
+              }`}
+              aria-label={`사진 ${idx + 1}`}
+            />
+          ))}
         </div>
-        {showBrowse && (
-          <button
-            onClick={onBrowse}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-            </svg>
-            다른 행사 보기
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)
-
-const RetreatSelectorModal = ({
-  subCategories,
-  selectedSubCategory,
-  onSelect,
-  onClose,
-}: {
-  subCategories: SubCategory[]
-  selectedSubCategory: string | null
-  onSelect: (name: string) => void
-  onClose: () => void
-}) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-    <div className="relative w-full max-w-lg mx-4 mb-0 sm:mb-0 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] flex flex-col animate-in">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F0F0]">
-        <h3 className="text-lg font-bold text-[#1A1A1A]">수련회 행사 목록</h3>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F0F0F0] transition-colors"
-          aria-label="닫기"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-
-      {/* List */}
-      <div className="overflow-y-auto p-4 flex flex-col gap-3">
-        {subCategories.map((sub) => {
-          const isSelected = selectedSubCategory === sub.name
-          return (
-            <button
-              key={sub.name}
-              onClick={() => {
-                onSelect(sub.name)
-                onClose()
-              }}
-              className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 text-left ${
-                isSelected
-                  ? 'bg-[#EDF2FF] ring-1 ring-[#3B5BDB]'
-                  : 'bg-[#FAFAFA] hover:bg-[#F0F0F0]'
-              }`}
-            >
-              <img
-                src={buildCdnUrl(sub.imageUrl)}
-                alt={sub.displayName}
-                className="w-16 h-20 rounded-lg object-cover flex-shrink-0"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
-              />
-              <div className="flex flex-col gap-1 min-w-0">
-                <span className={`text-[15px] font-bold leading-tight ${isSelected ? 'text-[#3B5BDB]' : 'text-[#1A1A1A]'}`}>
-                  {sub.displayName}
-                </span>
-                <span className="text-[12px] text-[#999999]">
-                  {formatRetreatDate(sub.startDate, sub.endDate)}
-                </span>
-                {sub.verse && (
-                  <span className="text-[11px] text-[#777777] leading-snug">
-                    {sub.verse.content} ({sub.verse.bookDisplayName} {sub.verse.chapter}장 {sub.verse.verse}절)
-                  </span>
-                )}
-                {isSelected && (
-                  <span className="text-[11px] font-semibold text-[#3B5BDB]">현재 보고 있는 행사</span>
-                )}
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  </div>
-)
-
-// ─── Church Selector Section ────────────────────────────
-
-const ChurchBanner = ({
-  churchName,
-  onBrowse,
-}: {
-  churchName: string
-  onBrowse: () => void
-}) => (
-  <div className="bg-gradient-to-r from-[#3B5BDB] to-[#5C7CFA] px-4 sm:px-8 lg:px-[60px] py-6">
-    <div className="max-w-7xl mx-auto flex items-center justify-between">
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-white/70 tracking-[2px] uppercase">CHURCH</span>
-        <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
-          {churchName} 성전
-        </h2>
-      </div>
-      <button
-        onClick={onBrowse}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-        </svg>
-        다른 성전 보기
-      </button>
-    </div>
-  </div>
-)
-
-const ChurchSelectorModal = ({
-  churchOptions,
-  selectedChurchId,
-  onSelect,
-  onClose,
-}: {
-  churchOptions: ChurchOption[]
-  selectedChurchId: string
-  onSelect: (churchId: string) => void
-  onClose: () => void
-}) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-    <div className="relative w-full max-w-lg mx-4 mb-0 sm:mb-0 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] flex flex-col animate-in">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F0F0]">
-        <h3 className="text-lg font-bold text-[#1A1A1A]">성전 목록</h3>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F0F0F0] transition-colors"
-          aria-label="닫기"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-
-      {/* List */}
-      <div className="overflow-y-auto p-4 grid grid-cols-2 gap-2">
-        {churchOptions.map((church) => {
-          const isSelected = selectedChurchId === church.id
-          return (
-            <button
-              key={church.id}
-              onClick={() => {
-                onSelect(church.id)
-                onClose()
-              }}
-              className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
-                isSelected
-                  ? 'bg-[#EDF2FF] ring-1 ring-[#3B5BDB]'
-                  : 'bg-[#FAFAFA] hover:bg-[#F0F0F0]'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                isSelected ? 'bg-[#3B5BDB]' : 'bg-[#E0E0E0]'
-              }`}>
-                <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-[#666666]'}`}>
-                  {church.name.charAt(0)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className={`text-[14px] font-bold leading-tight ${isSelected ? 'text-[#3B5BDB]' : 'text-[#1A1A1A]'}`}>
-                  {church.name}
-                </span>
-                {isSelected && (
-                  <span className="text-[11px] font-semibold text-[#3B5BDB]">선택됨</span>
-                )}
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  </div>
-)
-
-// ─── Feed Video Player ──────────────────────────────────
-
-const MutedIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <line x1="23" y1="9" x2="17" y2="15" />
-    <line x1="17" y1="9" x2="23" y2="15" />
-  </svg>
-)
-
-const UnmutedIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-  </svg>
-)
-
-const FeedVideoPlayer = ({ src, onVideoClick }: { src: string; onVideoClick: (url: string) => void }) => {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [isMuted, setIsMuted] = useState(true)
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            video.play().catch(() => {/* autoplay blocked */})
-          } else {
-            video.pause()
-          }
-        })
-      },
-      { threshold: 0.5 }
-    )
-
-    observer.observe(video)
-    return () => observer.disconnect()
-  }, [])
-
-  const toggleMute = useCallback(() => {
-    const video = videoRef.current
-    if (!video) return
-    video.muted = !video.muted
-    setIsMuted(video.muted)
-  }, [])
-
-  return (
-    <div className="relative w-full h-[360px] sm:h-[400px] cursor-pointer" onClick={() => onVideoClick(src)}>
-      <video
-        ref={videoRef}
-        src={src}
-        className="w-full h-full object-cover"
-        loop
-        muted
-        playsInline
-        preload="metadata"
-      />
-      <button
-        className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white"
-        onClick={(e) => {
-          e.stopPropagation()
-          toggleMute()
-        }}
-        aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
-      >
-        {isMuted ? <MutedIcon /> : <UnmutedIcon />}
-      </button>
+      )}
     </div>
   )
 }
 
-// ─── Feed View Components ────────────────────────────────
-
-const formatFeedDate = (dateStr: string) => {
-  const utcStr = /(Z|[+-]\d{2}(?::\d{2})?)$/.test(dateStr) ? dateStr : dateStr + 'Z'
-  const date = new Date(utcStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  const diffHour = Math.floor(diffMs / 3600000)
-  const diffDay = Math.floor(diffMs / 86400000)
-
-  if (diffMin < 1) return '방금 전'
-  if (diffMin < 60) return `${diffMin}분 전`
-  if (diffHour < 24) return `${diffHour}시간 전`
-  if (diffDay < 7) return `${diffDay}일 전`
-
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
-}
-
-const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; onImageClick: (urls: string[], index: number) => void }) => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const stripRef = useRef<HTMLDivElement>(null)
-  const allUrls = useMemo(() => images.map((img) => buildCdnUrl(img.filePath)), [images])
-
-  useEffect(() => {
-    const container = stripRef.current
-    if (!container) return
-    const selected = container.children[currentIndex] as HTMLElement
-    if (!selected) return
-    const scrollLeft = selected.offsetLeft - container.offsetWidth / 2 + selected.offsetWidth / 2
-    container.scrollTo?.({ left: scrollLeft, behavior: 'smooth' })
-  }, [currentIndex])
-
-  if (images.length === 0) return null
-
-  if (images.length === 1) {
-    const url = allUrls[0]
-    const isVid = isVideoUrl(url)
-    return isVid ? (
-      <FeedVideoPlayer src={url} onVideoClick={() => onImageClick(allUrls, 0)} />
-    ) : (
-      <img
-        src={url}
-        alt={`사진 ${images[0].sortOrder}`}
-        className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
-        loading="lazy"
-        onClick={() => onImageClick(allUrls, 0)}
-        onError={(e) => { ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL }}
-      />
-    )
-  }
-
-  return (
-    <div
-      ref={stripRef}
-      className="flex items-center gap-2 px-3 py-4 overflow-x-auto scrollbar-hide bg-[#F4F5F7]"
-    >
-      {images.map((image, idx) => {
-        const url = allUrls[idx]
-        const isSelected = idx === currentIndex
-        const isVid = isVideoUrl(url)
-        return (
-          <button
-            key={image.fileId}
-            onClick={() => isSelected ? onImageClick(allUrls, idx) : setCurrentIndex(idx)}
-            className={`relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ease-out ${
-              isSelected
-                ? 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-[#3B5BDB] shadow-lg'
-                : 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
-            }`}
-            aria-label={isSelected ? `사진 ${image.sortOrder} 크게 보기` : `사진 ${image.sortOrder} 선택`}
-          >
-            {isVid ? (
-              <>
-                <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <img src={url} alt={`사진 ${image.sortOrder}`} className="w-full h-full object-cover" loading="lazy" />
-            )}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-const GNTC_LOGO_URL = 'https://cdn.gntc-youth.com/assets/gntc-youth-logo-black.webp'
-const GNTC_AUTHOR_NAME = 'GNTC YOUTH'
-
-const FeedCard = ({
-  post,
-  onImageClick,
-  isMaster,
-  onDeleteClick,
-}: {
-  post: FeedPost
-  onImageClick: (urls: string[], index: number) => void
-  isMaster: boolean
-  onDeleteClick: (postId: number) => void
-}) => {
-  const displayName = post.isAuthorPublic ? post.authorName : GNTC_AUTHOR_NAME
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [menuOpen])
-
-  return (
+const FeedCard = ({ album }: { album: GalleryAlbum }) => (
   <article className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
     {/* Post header */}
     <div className="flex items-center justify-between px-4 py-3.5">
       <div className="flex items-center gap-3">
-        {post.isAuthorPublic ? (
-          <ProfileImage
-            src={post.authorProfileImageUrl ? buildCdnUrl(post.authorProfileImageUrl) : null}
-            alt={post.authorName}
-            size={40}
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden p-1">
-            <img src={GNTC_LOGO_URL} alt="GNTC Youth" className="w-full h-full object-contain" />
-          </div>
-        )}
+        <div className="w-10 h-10 rounded-full bg-[#3B5BDB] flex items-center justify-center">
+          <span className="text-white text-xs font-bold">G</span>
+        </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>
-          <span className="text-xs text-[#999999]">{formatFeedDate(post.createdAt)}</span>
+          <span className="text-sm font-bold text-[#1A1A1A]">GNTC-YOUTH</span>
+          <span className="text-xs text-[#999999]">{album.dateFormatted}</span>
         </div>
       </div>
-      {isMaster && (
-        <div className="relative" ref={menuRef}>
-          <button
-            className="p-1 text-[#CCCCCC] hover:text-[#999999] transition-colors"
-            aria-label="더보기"
-            onClick={() => setMenuOpen((prev) => !prev)}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-xl shadow-lg border border-[#E0E0E0] overflow-hidden z-10">
-              <button
-                className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
-                onClick={() => {
-                  setMenuOpen(false)
-                  onDeleteClick(post.id)
-                }}
-              >
-                삭제
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <button className="p-1 text-[#CCCCCC] hover:text-[#999999] transition-colors" aria-label="더보기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
+        </svg>
+      </button>
     </div>
 
     {/* Image carousel */}
-    <FeedImageCarousel images={post.images} onImageClick={onImageClick} />
+    <FeedImageCarousel album={album} />
 
     {/* Action bar */}
     <div className="flex items-center justify-between px-4 py-3">
@@ -737,384 +262,39 @@ const FeedCard = ({
 
     {/* Post footer */}
     <div className="flex flex-col gap-2 px-4 pb-4">
-      {post.content && (
-        <p className="text-sm- text-[#333333] leading-relaxed">{post.content}</p>
-      )}
-      {post.hashtags.length > 0 && (
+      <span className="text-[13px] font-semibold text-[#1A1A1A]">
+        ❤️ {album.likeCount}명이 좋아합니다
+      </span>
+      <p className="text-[13px] text-[#333333] leading-relaxed">{album.caption}</p>
+      {album.tags.length > 0 && (
         <span className="text-xs font-medium text-[#3B5BDB]">
-          {post.hashtags.map((t) => t.startsWith('#') ? t : `#${t}`).join(' ')}
-        </span>
-      )}
-      {post.commentCount > 0 && (
-        <span className="text-xs text-[#999999]">
-          댓글 {post.commentCount}개
+          {album.tags.map((t) => `#${t}`).join(' ')}
         </span>
       )}
     </div>
   </article>
-  )
-}
+)
 
-const DeleteConfirmModal = ({
-  onConfirm,
-  onCancel,
-  isDeleting,
-}: {
-  onConfirm: () => void
-  onCancel: () => void
-  isDeleting: boolean
-}) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center">
-    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-    <div role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" className="relative bg-white rounded-2xl shadow-2xl w-[320px] mx-4 p-6 flex flex-col items-center gap-4 animate-in">
-      <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          <line x1="10" y1="11" x2="10" y2="17" />
-          <line x1="14" y1="11" x2="14" y2="17" />
-        </svg>
-      </div>
-      <div className="flex flex-col items-center gap-1">
-        <h3 id="delete-dialog-title" className="text-lg font-bold text-[#1A1A1A]">게시글 삭제</h3>
-        <p className="text-sm text-[#666666] text-center">
-          삭제하면 되돌릴 수 없습니다.<br />정말 삭제하시겠습니까?
-        </p>
-      </div>
-      <div className="flex gap-3 w-full mt-2">
-        <button
-          onClick={onCancel}
-          disabled={isDeleting}
-          className="flex-1 py-2.5 rounded-lg bg-[#F0F0F0] text-sm font-medium text-[#666666] hover:bg-[#E0E0E0] transition-colors disabled:opacity-50"
-        >
-          취소
-        </button>
-        <button
-          onClick={onConfirm}
-          disabled={isDeleting}
-          className="flex-1 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50"
-        >
-          {isDeleting ? '삭제 중...' : '삭제'}
-        </button>
-      </div>
+const FeedContent = ({ albums }: { albums: GalleryAlbum[] }) => (
+  <div className="flex justify-center px-4 py-10">
+    <div className="w-full max-w-[600px] flex flex-col gap-6">
+      {albums.map((album) => (
+        <FeedCard key={album.id} album={album} />
+      ))}
     </div>
   </div>
 )
 
-const FeedContent = ({
-  posts,
-  hasNext,
-  isFetchingMore,
-  loadMore,
-  onImageClick,
-  isMaster,
-  onDeleteClick,
-}: {
-  posts: FeedPost[]
-  hasNext: boolean
-  isFetchingMore: boolean
-  loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
-  isMaster: boolean
-  onDeleteClick: (postId: number) => void
-}) => {
-  const sentinelRef = useInfiniteScroll(loadMore, {
-    enabled: hasNext && !isFetchingMore,
-  })
-
-  return (
-    <div className="flex justify-center px-4 py-10">
-      <div className="w-full max-w-[600px] flex flex-col gap-6">
-        {posts.map((post) => (
-          <FeedCard key={post.id} post={post} onImageClick={onImageClick} isMaster={isMaster} onDeleteClick={onDeleteClick} />
-        ))}
-        {isFetchingMore && (
-          <div className="flex justify-center py-8">
-            <div className="w-6 h-6 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-        {!hasNext && posts.length > 0 && (
-          <p className="text-center text-sm text-[#999999] py-8">
-            모든 피드를 불러왔습니다.
-          </p>
-        )}
-        <div ref={sentinelRef} className="h-1" />
-      </div>
-    </div>
-  )
-}
-
-// ─── Media Lightbox ─────────────────────────────────────
-
-const MediaLightbox = ({
-  imageUrls,
-  initialIndex,
-  onClose,
-}: {
-  imageUrls: string[]
-  initialIndex: number
-  onClose: () => void
-}) => {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-  const lightboxVideoRef = useRef<HTMLVideoElement>(null)
-  const touchStartX = useRef(0)
-  const total = imageUrls.length
-  const currentUrl = imageUrls[currentIndex]
-  const isVideo = isVideoUrl(currentUrl)
-
-  // Scroll lock + background video pause (mount only)
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    closeButtonRef.current?.focus()
-
-    const pausedVideos: HTMLVideoElement[] = []
-    const container = document.getElementById('gallery-content')
-    container?.querySelectorAll('video').forEach((v) => {
-      if (!v.paused) {
-        v.pause()
-        pausedVideos.push(v)
-      }
-    })
-
-    return () => {
-      document.body.style.overflow = ''
-      pausedVideos.forEach((v) => {
-        if (!v.isConnected) return
-        const rect = v.getBoundingClientRect()
-        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
-        if (rect.height > 0 && visibleHeight / rect.height >= 0.5) {
-          v.play().catch(() => {})
-        }
-      })
-    }
-  }, [])
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft' && currentIndex > 0) setCurrentIndex(currentIndex - 1)
-      if (e.key === 'ArrowRight' && currentIndex < total - 1) setCurrentIndex(currentIndex + 1)
-      if (e.key === 'Tab') {
-        e.preventDefault()
-        closeButtonRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, currentIndex, total])
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = touchStartX.current - e.changedTouches[0].clientX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0 && currentIndex < total - 1) setCurrentIndex(currentIndex + 1)
-      else if (diff < 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1)
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-      onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      data-testid="lightbox-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={isVideo ? '동영상 확대 보기' : '이미지 확대 보기'}
-    >
-      {/* Close */}
-      <button
-        ref={closeButtonRef}
-        onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-        aria-label="닫기"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-
-      {/* Counter */}
-      {total > 1 && (
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white/15 text-white text-sm font-medium z-10">
-          {currentIndex + 1} / {total}
-        </div>
-      )}
-
-      {/* Prev */}
-      {total > 1 && currentIndex > 0 && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setCurrentIndex(currentIndex - 1) }}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-colors z-10"
-          aria-label="이전"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-      )}
-
-      {/* Next */}
-      {total > 1 && currentIndex < total - 1 && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setCurrentIndex(currentIndex + 1) }}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-colors z-10"
-          aria-label="다음"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      )}
-
-      {/* Content */}
-      {isVideo ? (
-        <video
-          ref={lightboxVideoRef}
-          src={currentUrl}
-          className="max-w-[90vw] max-h-[80vh] object-contain"
-          controls
-          autoPlay
-          playsInline
-          onClick={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <img
-          src={currentUrl}
-          alt="확대 사진"
-          className="max-w-[90vw] max-h-[80vh] object-contain"
-          onClick={(e) => e.stopPropagation()}
-          onError={(e) => {
-            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-          }}
-        />
-      )}
-
-      {/* Thumbnail strip */}
-      {total > 1 && total <= 20 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10 max-w-[90vw] overflow-x-auto scrollbar-hide px-2 py-1">
-          {imageUrls.map((url, idx) => (
-            <button
-              key={url}
-              onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx) }}
-              className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all ${
-                idx === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-40 hover:opacity-70'
-              }`}
-              aria-label={`사진 ${idx + 1}`}
-            >
-              {isVideoUrl(url) ? (
-                <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
-              ) : (
-                <img src={url} alt="" className="w-full h-full object-cover" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Main Page ───────────────────────────────────────────
 
 export const GalleryPage = () => {
-  const { isLoggedIn, user } = useAuth()
-  const [searchParams] = useSearchParams()
-  const initialParams = useMemo(() => {
-    const category = searchParams.get('category') as GalleryCategory | null
-    const churchId = searchParams.get('churchId')
-    return {
-      category: category && CATEGORIES.some((c) => c.key === category) ? category : undefined,
-      churchId: churchId ?? undefined,
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const {
-    photos,
-    isLoading,
-    isFetchingMore,
-    error,
-    hasNext,
-    loadMore,
-    selectedCategory,
-    setSelectedCategory,
-    subCategories,
-    selectedSubCategory,
-    selectSubCategory,
-    selectedChurchId,
-    selectChurch,
-    churchOptions,
-  } = useGallery(user?.churchId, initialParams.category, initialParams.churchId)
-  const feed = useFeed()
+  const { albums, isLoading, error, selectedCategory, setSelectedCategory } = useGallery()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
-  const [showRetreatModal, setShowRetreatModal] = useState(false)
-  const [showChurchModal, setShowChurchModal] = useState(false)
-  const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null)
-  const handleCloseLightbox = useCallback(() => setLightbox(null), [])
-  const handleImageClick = useCallback((urls: string[], index: number) => setLightbox({ urls, index }), [])
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const navigate = useNavigate()
-  const isMaster = user?.role === 'MASTER'
-  // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
-  const albums: GalleryAlbum[] = []
-
-  // 피드 뷰로 전환 시 피드 데이터 로드
-  useEffect(() => {
-    if (viewMode === 'feed') {
-      const opts: { subCategory?: string; churchId?: string } = {}
-      if (selectedCategory === 'CHURCH') {
-        opts.churchId = selectedChurchId
-      } else if (selectedSubCategory) {
-        opts.subCategory = selectedSubCategory
-      }
-      feed.loadFeed(opts)
-    } else {
-      feed.reset()
-    }
-  }, [viewMode, selectedSubCategory, selectedCategory, selectedChurchId, feed.loadFeed, feed.reset])
-
-  const feedLoadMore = useCallback(() => {
-    const opts: { subCategory?: string; churchId?: string } = {}
-    if (selectedCategory === 'CHURCH') {
-      opts.churchId = selectedChurchId
-    } else if (selectedSubCategory) {
-      opts.subCategory = selectedSubCategory
-    }
-    feed.loadMore(opts)
-  }, [feed.loadMore, selectedSubCategory, selectedCategory, selectedChurchId])
-
-  const handleDeleteConfirm = useCallback(async () => {
-    if (deleteTargetId === null) return
-    setIsDeleting(true)
-    try {
-      await deletePost(deleteTargetId)
-      feed.removePost(deleteTargetId)
-      setDeleteTargetId(null)
-    } catch (error) {
-      console.error('게시글 삭제 실패:', error)
-      alert('게시글 삭제에 실패했습니다.')
-    } finally {
-      setIsDeleting(false)
-    }
-  }, [deleteTargetId, feed.removePost])
-
-  const currentIsLoading = viewMode === 'feed' ? feed.isLoading : isLoading
-  const currentError = viewMode === 'feed' ? feed.error : error
-  const hasContent = viewMode === 'feed'
-    ? feed.posts.length > 0
-    : photos.length > 0 || albums.length > 0
 
   return (
     <>
       <Header />
-      <main id="gallery-content" className="pt-16 min-h-screen bg-[#F8F9FA]">
+      <main className="pt-16 min-h-screen bg-[#F8F9FA]">
         {/* Header Section */}
         <div className="bg-white px-4 sm:px-8 lg:px-[60px] pt-12 pb-10">
           <div className="max-w-7xl mx-auto">
@@ -1124,26 +304,19 @@ export const GalleryPage = () => {
                   GALLERY
                 </h1>
                 <p className="text-sm text-[#666666]">
-                  은혜와진리교회 청년봉사선교회 · 사진 갤러리</p>
+                  은혜와진리교회 청년봉사선교회 · 사진 갤러리
+                </p>
               </div>
-              {isLoggedIn && (
-                <button
-                  onClick={() => navigate('/gallery/write')}
-                  className="px-5 py-2.5 bg-[#3B5BDB] text-white text-sm font-semibold rounded-lg hover:bg-[#364FC7] transition-colors shrink-0"
-                >
-                  글쓰기
-                </button>
-              )}
             </div>
 
             {/* Nav bar: categories + view toggle */}
-            <div className="flex items-center justify-between mt-6 gap-3 sm:gap-4">
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center justify-between mt-6 gap-4">
+              <div className="flex items-center gap-2">
                 {CATEGORIES.map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => setSelectedCategory(key)}
-                    className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
+                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-colors ${
                       selectedCategory === key
                         ? 'bg-[#3B5BDB] text-white font-semibold'
                         : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
@@ -1158,92 +331,31 @@ export const GalleryPage = () => {
           </div>
         </div>
 
-        {/* Retreat Hero Banner */}
-        {selectedCategory === 'RETREAT' && subCategories.length > 0 && (() => {
-          const selected = subCategories.find((s) => s.name === selectedSubCategory)
-          return selected ? (
-            <RetreatHeroBanner
-              sub={selected}
-              showBrowse={subCategories.length > 1}
-              onBrowse={() => setShowRetreatModal(true)}
-            />
-          ) : null
-        })()}
-
-        {/* Retreat Selector Modal */}
-        {showRetreatModal && (
-          <RetreatSelectorModal
-            subCategories={subCategories}
-            selectedSubCategory={selectedSubCategory}
-            onSelect={selectSubCategory}
-            onClose={() => setShowRetreatModal(false)}
-          />
-        )}
-
-        {/* Church Banner */}
-        {selectedCategory === 'CHURCH' && (() => {
-          const selected = churchOptions.find((c) => c.id === selectedChurchId)
-          return (
-            <ChurchBanner
-              churchName={selected?.name ?? selectedChurchId}
-              onBrowse={() => setShowChurchModal(true)}
-            />
-          )
-        })()}
-
-        {/* Church Selector Modal */}
-        {showChurchModal && (
-          <ChurchSelectorModal
-            churchOptions={churchOptions}
-            selectedChurchId={selectedChurchId}
-            onSelect={selectChurch}
-            onClose={() => setShowChurchModal(false)}
-          />
-        )}
-
         {/* Content */}
-        {currentIsLoading && (
+        {isLoading && (
           <div className="flex justify-center items-center py-20">
             <div className="w-8 h-8 border-2 border-[#3B5BDB] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
-        {currentError && (
+        {error && (
           <div className="text-center py-20">
-            <p className="text-[#999999] text-sm">{currentError}</p>
+            <p className="text-[#999999] text-sm">{error}</p>
           </div>
         )}
 
-        {!currentIsLoading && !currentError && !hasContent && (
+        {!isLoading && !error && albums.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-[#999999] text-sm">
-              {viewMode === 'feed' ? '아직 등록된 피드가 없습니다.' : '아직 등록된 갤러리가 없습니다.'}
-            </p>
+            <p className="text-[#999999] text-sm">아직 등록된 갤러리가 없습니다.</p>
           </div>
         )}
 
-        {!currentIsLoading && !currentError && hasContent && (
+        {!isLoading && !error && albums.length > 0 && (
           <div className="transition-opacity duration-300">
             {viewMode === 'grid' ? (
-              <GridContent
-                albums={albums}
-                showAllPhotos={selectedCategory === 'ALL' || selectedCategory === 'CHURCH' || selectedSubCategory !== null}
-                photos={photos}
-                hasNext={hasNext}
-                isFetchingMore={isFetchingMore}
-                loadMore={loadMore}
-                onImageClick={handleImageClick}
-              />
+              <GridContent albums={albums} />
             ) : (
-              <FeedContent
-                posts={feed.posts}
-                hasNext={feed.hasNext}
-                isFetchingMore={feed.isFetchingMore}
-                loadMore={feedLoadMore}
-                onImageClick={handleImageClick}
-                isMaster={isMaster}
-                onDeleteClick={setDeleteTargetId}
-              />
+              <FeedContent albums={albums} />
             )}
           </div>
         )}
@@ -1266,20 +378,6 @@ export const GalleryPage = () => {
           </div>
         </div>
       </main>
-
-      {/* Delete Confirm Modal */}
-      {deleteTargetId !== null && (
-        <DeleteConfirmModal
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeleteTargetId(null)}
-          isDeleting={isDeleting}
-        />
-      )}
-
-      {/* Image Lightbox */}
-      {lightbox && (
-        <MediaLightbox imageUrls={lightbox.urls} initialIndex={lightbox.index} onClose={handleCloseLightbox} />
-      )}
     </>
   )
 }
