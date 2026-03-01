@@ -90,15 +90,14 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
 
 // ─── Grid View Components ────────────────────────────────
 
-const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (urls: string[], index: number) => void }) => {
+const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => {
   const columnCount = 4
-  const allUrls = album.photos.map((photo) => buildCdnUrl(photo.url))
-  const columns: { url: string; originalIndex: number }[][] = Array.from({ length: columnCount }, () => [])
+  const columns: string[][] = Array.from({ length: columnCount }, () => [])
   const heights = new Array(columnCount).fill(0)
 
-  album.photos.forEach((photo, idx) => {
+  album.photos.forEach((photo) => {
     const shortest = heights.indexOf(Math.min(...heights))
-    columns[shortest].push({ url: buildCdnUrl(photo.url), originalIndex: idx })
+    columns[shortest].push(buildCdnUrl(photo.url))
     heights[shortest] += 1
   })
 
@@ -106,11 +105,11 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {columns.map((col, colIdx) => (
         <div key={colIdx} className="flex flex-col gap-3">
-          {col.map((item, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(allUrls, item.originalIndex)}>
+          {col.map((url, imgIdx) => (
+            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(url)}>
               <img
-                src={item.url}
-                alt={`${album.title} 사진 ${item.originalIndex + 1}`}
+                src={url}
+                alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
                 className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
                 loading="lazy"
                 onError={(e) => {
@@ -125,7 +124,7 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
   )
 }
 
-const AlbumSection = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (urls: string[], index: number) => void }) => (
+const AlbumSection = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => (
   <section className="flex flex-col gap-5">
     <div className="flex items-end justify-between">
       <div className="flex flex-col gap-1">
@@ -149,13 +148,11 @@ const AllPhotosGrid = ({
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
+  onImageClick: (url: string) => void
 }) => {
   const sentinelRef = useInfiniteScroll(loadMore, {
     enabled: hasNext && !isFetchingMore,
   })
-
-  const allUrls = useMemo(() => photos.map((p) => buildCdnUrl(p.url)), [photos])
 
   return (
     <>
@@ -167,7 +164,7 @@ const AllPhotosGrid = ({
           <div
             key={photo.id}
             className="mb-3 break-inside-avoid overflow-hidden rounded-xl cursor-pointer"
-            onClick={() => onImageClick(allUrls, idx)}
+            onClick={() => onImageClick(buildCdnUrl(photo.url))}
           >
             <img
               src={buildCdnUrl(photo.url)}
@@ -211,7 +208,7 @@ const GridContent = ({
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
+  onImageClick: (url: string) => void
 }) => (
   <div className="px-4 sm:px-8 lg:px-[60px] py-10">
     <div className="max-w-7xl mx-auto flex flex-col gap-10">
@@ -570,74 +567,101 @@ const formatFeedDate = (dateStr: string) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
-const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; onImageClick: (urls: string[], index: number) => void }) => {
+const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; onImageClick: (url: string) => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const stripRef = useRef<HTMLDivElement>(null)
-  const allUrls = useMemo(() => images.map((img) => buildCdnUrl(img.filePath)), [images])
 
-  useEffect(() => {
-    const container = stripRef.current
-    if (!container) return
-    const selected = container.children[currentIndex] as HTMLElement
-    if (!selected) return
-    const scrollLeft = selected.offsetLeft - container.offsetWidth / 2 + selected.offsetWidth / 2
-    container.scrollTo?.({ left: scrollLeft, behavior: 'smooth' })
-  }, [currentIndex])
+  const goTo = (idx: number) => {
+    if (idx >= 0 && idx < images.length) setCurrentIndex(idx)
+  }
 
   if (images.length === 0) return null
 
-  if (images.length === 1) {
-    const url = allUrls[0]
-    const isVid = isVideoUrl(url)
-    return isVid ? (
-      <FeedVideoPlayer src={url} onVideoClick={() => onImageClick(allUrls, 0)} />
-    ) : (
-      <img
-        src={url}
-        alt={`사진 ${images[0].sortOrder}`}
-        className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
-        loading="lazy"
-        onClick={() => onImageClick(allUrls, 0)}
-        onError={(e) => { ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL }}
-      />
-    )
-  }
-
   return (
-    <div
-      ref={stripRef}
-      className="flex items-center gap-2 px-3 py-4 overflow-x-auto scrollbar-hide bg-[#F4F5F7]"
-    >
-      {images.map((image, idx) => {
-        const url = allUrls[idx]
-        const isSelected = idx === currentIndex
-        const isVid = isVideoUrl(url)
-        return (
-          <button
-            key={image.fileId}
-            onClick={() => isSelected ? onImageClick(allUrls, idx) : setCurrentIndex(idx)}
-            className={`relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ease-out ${
-              isSelected
-                ? 'w-[200px] h-[260px] sm:w-[240px] sm:h-[300px] ring-2 ring-[#3B5BDB] shadow-lg'
-                : 'w-[72px] h-[92px] sm:w-[80px] sm:h-[100px] opacity-50 hover:opacity-80'
-            }`}
-            aria-label={isSelected ? `사진 ${image.sortOrder} 크게 보기` : `사진 ${image.sortOrder} 선택`}
-          >
-            {isVid ? (
-              <>
-                <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <img src={url} alt={`사진 ${image.sortOrder}`} className="w-full h-full object-cover" loading="lazy" />
-            )}
-          </button>
-        )
-      })}
+    <div className="relative">
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {images.map((image, idx) => {
+            const url = buildCdnUrl(image.filePath)
+            const isVideo = isVideoUrl(url)
+
+            return (
+              <div key={image.fileId} className="w-full flex-shrink-0">
+                {isVideo ? (
+                  idx === currentIndex ? (
+                    <FeedVideoPlayer src={url} onVideoClick={onImageClick} />
+                  ) : (
+                    <video
+                      src={url}
+                      className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
+                      muted
+                      preload="metadata"
+                      onClick={() => onImageClick(url)}
+                    />
+                  )
+                ) : (
+                  <img
+                    src={url}
+                    alt={`사진 ${image.sortOrder}`}
+                    className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
+                    loading="lazy"
+                    onClick={() => onImageClick(url)}
+                    onError={(e) => {
+                      ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Navigation arrows */}
+      {images.length > 1 && (
+        <>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => goTo(currentIndex - 1)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+              aria-label="이전 사진"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+          )}
+          {currentIndex < images.length - 1 && (
+            <button
+              onClick={() => goTo(currentIndex + 1)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+              aria-label="다음 사진"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Dots indicator */}
+      {images.length > 1 && (
+        <div className="flex justify-center gap-1.5 py-3">
+          {images.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goTo(idx)}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                idx === currentIndex ? 'bg-[#3B5BDB]' : 'bg-[#D0D0D0]'
+              }`}
+              aria-label={`사진 ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -652,7 +676,7 @@ const FeedCard = ({
   onDeleteClick,
 }: {
   post: FeedPost
-  onImageClick: (urls: string[], index: number) => void
+  onImageClick: (url: string) => void
   isMaster: boolean
   onDeleteClick: (postId: number) => void
 }) => {
@@ -814,7 +838,7 @@ const FeedContent = ({
   hasNext: boolean
   isFetchingMore: boolean
   loadMore: () => void
-  onImageClick: (urls: string[], index: number) => void
+  onImageClick: (url: string) => void
   isMaster: boolean
   onDeleteClick: (postId: number) => void
 }) => {
@@ -847,38 +871,43 @@ const FeedContent = ({
 // ─── Media Lightbox ─────────────────────────────────────
 
 const MediaLightbox = ({
-  imageUrls,
-  initialIndex,
+  imageUrl,
   onClose,
 }: {
-  imageUrls: string[]
-  initialIndex: number
+  imageUrl: string
   onClose: () => void
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const lightboxVideoRef = useRef<HTMLVideoElement>(null)
-  const touchStartX = useRef(0)
-  const total = imageUrls.length
-  const currentUrl = imageUrls[currentIndex]
-  const isVideo = isVideoUrl(currentUrl)
+  const isVideo = isVideoUrl(imageUrl)
 
-  // Scroll lock + background video pause (mount only)
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        closeButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
     document.body.style.overflow = 'hidden'
     closeButtonRef.current?.focus()
 
+    // 라이트박스 열릴 때 갤러리 내 배경 영상 일시정지 (소리 겹침 방지)
     const pausedVideos: HTMLVideoElement[] = []
     const container = document.getElementById('gallery-content')
     container?.querySelectorAll('video').forEach((v) => {
-      if (!v.paused) {
+      if (v !== lightboxVideoRef.current && !v.paused) {
         v.pause()
         pausedVideos.push(v)
       }
     })
 
     return () => {
+      document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
+
+      // 라이트박스 닫힐 때 화면에 보이는 영상 재개
       pausedVideos.forEach((v) => {
         if (!v.isConnected) return
         const rect = v.getBoundingClientRect()
@@ -888,47 +917,17 @@ const MediaLightbox = ({
         }
       })
     }
-  }, [])
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft' && currentIndex > 0) setCurrentIndex(currentIndex - 1)
-      if (e.key === 'ArrowRight' && currentIndex < total - 1) setCurrentIndex(currentIndex + 1)
-      if (e.key === 'Tab') {
-        e.preventDefault()
-        closeButtonRef.current?.focus()
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, currentIndex, total])
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = touchStartX.current - e.changedTouches[0].clientX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0 && currentIndex < total - 1) setCurrentIndex(currentIndex + 1)
-      else if (diff < 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1)
-    }
-  }
+  }, [onClose])
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
       onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       data-testid="lightbox-overlay"
       role="dialog"
       aria-modal="true"
       aria-label={isVideo ? '동영상 확대 보기' : '이미지 확대 보기'}
     >
-      {/* Close */}
       <button
         ref={closeButtonRef}
         onClick={onClose}
@@ -940,46 +939,11 @@ const MediaLightbox = ({
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-
-      {/* Counter */}
-      {total > 1 && (
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white/15 text-white text-sm font-medium z-10">
-          {currentIndex + 1} / {total}
-        </div>
-      )}
-
-      {/* Prev */}
-      {total > 1 && currentIndex > 0 && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setCurrentIndex(currentIndex - 1) }}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-colors z-10"
-          aria-label="이전"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-      )}
-
-      {/* Next */}
-      {total > 1 && currentIndex < total - 1 && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setCurrentIndex(currentIndex + 1) }}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-colors z-10"
-          aria-label="다음"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      )}
-
-      {/* Content */}
       {isVideo ? (
         <video
           ref={lightboxVideoRef}
-          src={currentUrl}
-          className="max-w-[90vw] max-h-[80vh] object-contain"
+          src={imageUrl}
+          className="max-w-[95vw] max-h-[95vh] object-contain"
           controls
           autoPlay
           playsInline
@@ -987,36 +951,14 @@ const MediaLightbox = ({
         />
       ) : (
         <img
-          src={currentUrl}
+          src={imageUrl}
           alt="확대 사진"
-          className="max-w-[90vw] max-h-[80vh] object-contain"
+          className="max-w-[95vw] max-h-[95vh] object-contain"
           onClick={(e) => e.stopPropagation()}
           onError={(e) => {
             ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
           }}
         />
-      )}
-
-      {/* Thumbnail strip */}
-      {total > 1 && total <= 20 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10 max-w-[90vw] overflow-x-auto scrollbar-hide px-2 py-1">
-          {imageUrls.map((url, idx) => (
-            <button
-              key={url}
-              onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx) }}
-              className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all ${
-                idx === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-40 hover:opacity-70'
-              }`}
-              aria-label={`사진 ${idx + 1}`}
-            >
-              {isVideoUrl(url) ? (
-                <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
-              ) : (
-                <img src={url} alt="" className="w-full h-full object-cover" />
-              )}
-            </button>
-          ))}
-        </div>
       )}
     </div>
   )
@@ -1055,9 +997,8 @@ export const GalleryPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showRetreatModal, setShowRetreatModal] = useState(false)
   const [showChurchModal, setShowChurchModal] = useState(false)
-  const [lightbox, setLightbox] = useState<{ urls: string[]; index: number } | null>(null)
-  const handleCloseLightbox = useCallback(() => setLightbox(null), [])
-  const handleImageClick = useCallback((urls: string[], index: number) => setLightbox({ urls, index }), [])
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const handleCloseLightbox = useCallback(() => setLightboxUrl(null), [])
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const navigate = useNavigate()
@@ -1232,7 +1173,7 @@ export const GalleryPage = () => {
                 hasNext={hasNext}
                 isFetchingMore={isFetchingMore}
                 loadMore={loadMore}
-                onImageClick={handleImageClick}
+                onImageClick={setLightboxUrl}
               />
             ) : (
               <FeedContent
@@ -1240,7 +1181,7 @@ export const GalleryPage = () => {
                 hasNext={feed.hasNext}
                 isFetchingMore={feed.isFetchingMore}
                 loadMore={feedLoadMore}
-                onImageClick={handleImageClick}
+                onImageClick={setLightboxUrl}
                 isMaster={isMaster}
                 onDeleteClick={setDeleteTargetId}
               />
@@ -1277,8 +1218,8 @@ export const GalleryPage = () => {
       )}
 
       {/* Image Lightbox */}
-      {lightbox && (
-        <MediaLightbox imageUrls={lightbox.urls} initialIndex={lightbox.index} onClose={handleCloseLightbox} />
+      {lightboxUrl && (
+        <MediaLightbox imageUrl={lightboxUrl} onClose={handleCloseLightbox} />
       )}
     </>
   )
