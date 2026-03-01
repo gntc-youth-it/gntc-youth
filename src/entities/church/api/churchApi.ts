@@ -20,6 +20,7 @@ export interface ChurchInfoResponse {
   groupPhotoFileId: number | null
   groupPhotoPath: string | null
   prayerTopics: PrayerTopicResponse[]
+  randomPhotos: string[]
 }
 
 export const getChurches = async (): Promise<ChurchItem[]> => {

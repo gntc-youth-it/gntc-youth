@@ -8,9 +8,11 @@ import { buildCdnUrl } from '../../../../shared/lib'
 import type { GalleryPhotoItem, SubCategory, FeedPost } from '../../model/types'
 
 const mockNavigate = jest.fn()
+const mockSearchParams = new URLSearchParams()
 
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  useSearchParams: () => [mockSearchParams],
 }))
 
 const mockUseAuth = jest.fn()

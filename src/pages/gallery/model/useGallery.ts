@@ -5,8 +5,8 @@ import { fetchChurches, fetchGalleryPhotos, fetchSubCategories } from '../api/ga
 const PAGE_SIZE = 20
 const DEFAULT_CHURCH_ID = 'ANYANG'
 
-export const useGallery = (userChurchId?: string) => {
-  const [selectedCategory, setSelectedCategory] = useState<GalleryCategory>('ALL')
+export const useGallery = (userChurchId?: string, initialCategory?: GalleryCategory, initialChurchId?: string) => {
+  const [selectedCategory, setSelectedCategory] = useState<GalleryCategory>(initialCategory ?? 'ALL')
   const [photos, setPhotos] = useState<GalleryPhotoItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
@@ -20,8 +20,8 @@ export const useGallery = (userChurchId?: string) => {
   const [isLoadingSubCategories, setIsLoadingSubCategories] = useState(false)
 
   // 성전별 상태
-  const [selectedChurchId, setSelectedChurchId] = useState<string>(userChurchId ?? DEFAULT_CHURCH_ID)
-  const churchIdInitialized = useRef(false)
+  const [selectedChurchId, setSelectedChurchId] = useState<string>(initialChurchId ?? userChurchId ?? DEFAULT_CHURCH_ID)
+  const churchIdInitialized = useRef(!!initialChurchId)
   const [churchOptions, setChurchOptions] = useState<ChurchOption[]>([])
   const [isLoadingChurches, setIsLoadingChurches] = useState(false)
 
