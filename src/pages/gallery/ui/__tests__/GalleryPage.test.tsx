@@ -123,10 +123,6 @@ const defaultGallery = {
   selectedSubCategory: null as string | null,
   selectSubCategory: jest.fn(),
   isLoadingSubCategories: false,
-  selectedChurchId: '',
-  selectChurch: jest.fn(),
-  churchOptions: [] as { id: string; name: string }[],
-  isLoadingChurches: false,
 }
 
 const defaultFeed = {
