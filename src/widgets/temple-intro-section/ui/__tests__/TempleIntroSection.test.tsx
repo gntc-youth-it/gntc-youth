@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { PrayerSection } from '../PrayerSection'
+import { TempleIntroSection } from '../TempleIntroSection'
 import { useChurches, useChurchInfo } from '../../../../entities/church'
 import { useAuth } from '../../../../features/auth'
 
@@ -58,8 +58,8 @@ jest.mock('../../../../shared/config', () => ({
   FALLBACK_IMAGE_URL: 'https://cdn.test/fallback.jpg',
 }))
 
-jest.mock('../../model/usePrayerAnimation', () => ({
-  usePrayerAnimation: () => ({ isVisible: true, resetAnimation: jest.fn() }),
+jest.mock('../../model/useTempleIntroAnimation', () => ({
+  useTempleIntroAnimation: () => ({ isVisible: true, resetAnimation: jest.fn() }),
 }))
 
 beforeAll(() => {
@@ -97,7 +97,7 @@ const baseAuthValue = {
   refreshUser: jest.fn(),
 }
 
-describe('PrayerSection 수정 버튼 권한', () => {
+describe('TempleIntroSection 수정 버튼 권한', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseChurches.mockReturnValue({
@@ -113,7 +113,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 1, name: 'Admin', role: 'MASTER' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.getByText('수정')).toBeInTheDocument()
     expect(screen.getByText('성전 정보 수정하기')).toBeInTheDocument()
@@ -125,7 +125,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 2, name: 'Leader', role: 'LEADER', churchId: 'ANYANG' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // 기본 탭이 ANYANG이므로 수정 버튼 노출
     expect(screen.getByText('수정')).toBeInTheDocument()
@@ -138,7 +138,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'BUSAN' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // BUSAN은 목록에 없으므로 기본 탭은 ANYANG → 수정 버튼 없음
     expect(screen.queryByText('수정')).not.toBeInTheDocument()
@@ -152,7 +152,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'SUWON' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // 초기: 본인 성전(SUWON)이 자동 선택되어 수정 버튼 노출
     expect(screen.getByText('수정')).toBeInTheDocument()
@@ -172,7 +172,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 2, name: 'Leader', role: 'LEADER', churchId: 'ANYANG' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // 초기: ANYANG 탭 → 수정 버튼 노출
     expect(screen.getByText('수정')).toBeInTheDocument()
@@ -191,7 +191,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 4, name: 'Member', role: 'MEMBER', churchId: 'ANYANG' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.queryByText('수정')).not.toBeInTheDocument()
     expect(screen.queryByText('성전 정보 수정하기')).not.toBeInTheDocument()
@@ -204,7 +204,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       isLoggedIn: false,
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.queryByText('수정')).not.toBeInTheDocument()
     expect(screen.queryByText('성전 정보 수정하기')).not.toBeInTheDocument()
@@ -217,7 +217,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
       user: { id: 1, name: 'Admin', role: 'MASTER' },
     })
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // ANYANG 탭
     expect(screen.getByText('수정')).toBeInTheDocument()
@@ -245,7 +245,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
         user: { id: 1, name: 'Admin', role: 'MASTER' },
       })
 
-      render(<PrayerSection />)
+      render(<TempleIntroSection />)
 
       expect(screen.getByText('성전 정보 작성하기')).toBeInTheDocument()
     })
@@ -256,7 +256,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
         user: { id: 2, name: 'Leader', role: 'LEADER', churchId: 'ANYANG' },
       })
 
-      render(<PrayerSection />)
+      render(<TempleIntroSection />)
 
       expect(screen.getByText('성전 정보 작성하기')).toBeInTheDocument()
     })
@@ -267,7 +267,7 @@ describe('PrayerSection 수정 버튼 권한', () => {
         user: { id: 3, name: 'Leader2', role: 'LEADER', churchId: 'BUSAN' },
       })
 
-      render(<PrayerSection />)
+      render(<TempleIntroSection />)
 
       expect(screen.queryByText('성전 정보 작성하기')).not.toBeInTheDocument()
     })
@@ -278,14 +278,14 @@ describe('PrayerSection 수정 버튼 권한', () => {
         user: { id: 4, name: 'Member', role: 'MEMBER', churchId: 'ANYANG' },
       })
 
-      render(<PrayerSection />)
+      render(<TempleIntroSection />)
 
       expect(screen.queryByText('성전 정보 작성하기')).not.toBeInTheDocument()
     })
   })
 })
 
-describe('PrayerSection 사진 캐러셀', () => {
+describe('TempleIntroSection 사진 캐러셀', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockNavigate.mockClear()
@@ -313,7 +313,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       error: null,
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.getByText('사진')).toBeInTheDocument()
     expect(screen.getByText('더보기')).toBeInTheDocument()
@@ -329,7 +329,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       },
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.queryByText('사진')).not.toBeInTheDocument()
     expect(screen.queryByText('더보기')).not.toBeInTheDocument()
@@ -349,7 +349,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       error: null,
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.getAllByRole('img')).toHaveLength(2)
   })
@@ -369,7 +369,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       error: null,
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     await user.click(screen.getByText('더보기'))
 
@@ -390,7 +390,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       error: null,
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     expect(screen.getAllByRole('img')).toHaveLength(1)
     // 좌우 화살표 버튼이 없어야 함
@@ -414,7 +414,7 @@ describe('PrayerSection 사진 캐러셀', () => {
       error: null,
     } as ReturnType<typeof useChurchInfo>)
 
-    render(<PrayerSection />)
+    render(<TempleIntroSection />)
 
     // 첫 번째 사진이 선택(확대) 상태, 나머지는 선택 가능 상태
     expect(screen.getByLabelText('사진 1 확대')).toBeInTheDocument()

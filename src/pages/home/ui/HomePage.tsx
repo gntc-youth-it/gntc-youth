@@ -1,7 +1,7 @@
 import { Header } from '../../../widgets/header'
 import { HeroSection } from '../../../widgets/hero-section'
 import { AboutSection } from '../../../widgets/about-section'
-import { PrayerSection } from '../../../widgets/prayer-section'
+import { TempleIntroSection } from '../../../widgets/temple-intro-section'
 import { Footer } from '../../../widgets/footer'
 
 export const HomePage = () => {
@@ -11,7 +11,7 @@ export const HomePage = () => {
       <main className="pt-16">
         <HeroSection />
         <AboutSection />
-        <PrayerSection />
+        <TempleIntroSection />
       </main>
       <Footer />
     </>
