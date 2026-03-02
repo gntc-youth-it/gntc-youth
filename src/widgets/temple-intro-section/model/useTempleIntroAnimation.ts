@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export const usePrayerAnimation = () => {
+export const useTempleIntroAnimation = (sectionRef: React.RefObject<HTMLElement>) => {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -14,13 +14,13 @@ export const usePrayerAnimation = () => {
       { threshold: 0.1 }
     )
 
-    const prayerSection = document.getElementById('prayer')
-    if (prayerSection) {
-      observer.observe(prayerSection)
+    const templeIntroSection = sectionRef.current
+    if (templeIntroSection) {
+      observer.observe(templeIntroSection)
     }
 
     return () => observer.disconnect()
-  }, [])
+  }, [sectionRef])
 
   useEffect(() => {
     const timer = setTimeout(() => {

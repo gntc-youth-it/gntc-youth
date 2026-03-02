@@ -7,7 +7,7 @@ import { buildCdnUrl } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
-import { usePrayerAnimation } from '../model/usePrayerAnimation'
+import { useTempleIntroAnimation } from '../model/useTempleIntroAnimation'
 
 const ChurchPhotoCarousel = ({
   photos,
@@ -362,11 +362,12 @@ const ChurchTabContent = ({
   )
 }
 
-export const PrayerSection = () => {
+export const TempleIntroSection = () => {
   const { churches, isLoading } = useChurches()
   const [activeTab, setActiveTab] = useState('')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const { isVisible, resetAnimation } = usePrayerAnimation()
+  const sectionRef = useRef<HTMLElement>(null)
+  const { isVisible, resetAnimation } = useTempleIntroAnimation(sectionRef)
   const { user } = useAuth()
 
   // 로그인한 사용자의 성전을 기본 탭으로, 없으면 첫 번째 성전
@@ -386,7 +387,7 @@ export const PrayerSection = () => {
 
   if (isLoading) {
     return (
-      <section id="prayer" className="py-24 bg-gray-50">
+      <section ref={sectionRef} id="temple-intro" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-gray-200 rounded w-80 mx-auto" />
@@ -398,19 +399,19 @@ export const PrayerSection = () => {
   }
 
   return (
-    <section id="prayer" className="py-24 bg-gray-50">
+    <section ref={sectionRef} id="temple-intro" className="py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2
           className={`text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4 tracking-tight transition-all duration-500 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          각 성전 청년봉사선교회 기도제목
+          성전을 소개합니다
         </h2>
 
         <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-          {churches.length}개 성전의 청년봉사선교회를 위한 기도제목입니다. 각 성전을 클릭하여
-          기도제목을 확인하세요.
+          {churches.length}개 성전의 청년봉사선교회를 소개합니다. 각 성전을 클릭하여
+          자세한 내용을 확인하세요.
         </p>
 
         <Tabs value={effectiveTab} onValueChange={handleTabChange} className="w-full">

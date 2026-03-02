@@ -13,7 +13,7 @@ export const TableOfContents = ({ isVisible }: TableOfContentsProps) => {
   const items = [
     { id: 'home', label: '홈' },
     { id: 'about', label: '청년부 소개' },
-    { id: 'prayer', label: '기도제목' },
+    { id: 'temple-intro', label: '성전 소개' },
   ]
 
   return (
