@@ -2,6 +2,9 @@ import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
+import { EditProfileModal } from '../../../features/edit-profile'
+import { getMyProfile } from '../../../features/edit-profile/api'
+import { ProfileRequiredDialog } from './ProfileRequiredDialog'
 import { useGalleryWrite } from '../model/useGalleryWrite'
 import type { UploadingImage } from '../model/types'
 
@@ -124,11 +127,14 @@ const HashtagChip = ({ tag, onRemove }: { tag: string; onRemove: () => void }) =
 
 export const GalleryWritePage = () => {
   const navigate = useNavigate()
-  const { user, isLoggedIn } = useAuth()
+  const { user, isLoggedIn, refreshUser } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [hashtagInput, setHashtagInput] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [showChurches, setShowChurches] = useState(false)
+  const [showProfileConfirm, setShowProfileConfirm] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [isCheckingProfile, setIsCheckingProfile] = useState(false)
 
   const {
     categories,
@@ -198,9 +204,37 @@ export const GalleryWritePage = () => {
     }
   }
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // 프로필 완성 여부 확인 (성전, 기수)
+    try {
+      setIsCheckingProfile(true)
+      const profile = await getMyProfile()
+      if (!profile.churchId || profile.generation == null) {
+        setShowProfileConfirm(true)
+        return
+      }
+    } catch {
+      // 프로필 확인 실패 시 게시글 등록 진행
+    } finally {
+      setIsCheckingProfile(false)
+    }
+
     handleSubmit()
+  }
+
+  const handleProfileConfirm = () => {
+    setShowProfileConfirm(false)
+    setShowProfileModal(true)
+  }
+
+  const handleProfileSaveSuccess = async () => {
+    try {
+      await refreshUser()
+    } catch {
+      // 토큰 갱신 실패 시 무시
+    }
   }
 
   // Auth guard
@@ -454,14 +488,28 @@ export const GalleryWritePage = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || !selectedSubCategory}
+              disabled={isSubmitting || isCheckingProfile || !selectedSubCategory}
               className="w-full py-3.5 bg-[#3B5BDB] text-white text-base font-semibold rounded-xl hover:bg-[#364FC7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? '등록 중...' : '게시글 등록'}
+              {isCheckingProfile ? '확인 중...' : isSubmitting ? '등록 중...' : '게시글 등록'}
             </button>
           </form>
         </div>
       </main>
+
+      {/* 프로필 미완성 확인 다이얼로그 */}
+      <ProfileRequiredDialog
+        open={showProfileConfirm}
+        onConfirm={handleProfileConfirm}
+        onCancel={() => setShowProfileConfirm(false)}
+      />
+
+      {/* 내 정보 수정 모달 */}
+      <EditProfileModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        onSaveSuccess={handleProfileSaveSuccess}
+      />
     </>
   )
 }
