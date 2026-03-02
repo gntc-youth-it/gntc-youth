@@ -29,15 +29,12 @@ jest.mock('../../../../features/edit-profile/api', () => ({
   getMyProfile: (...args: unknown[]) => mockGetMyProfile(...args),
 }))
 
-const mockOnSaveSuccess = jest.fn()
-
 jest.mock('../../../../features/edit-profile', () => ({
   EditProfileModal: ({ open, onOpenChange, onSaveSuccess }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSaveSuccess?: () => void
   }) => {
-    mockOnSaveSuccess.mockImplementation(onSaveSuccess)
     return open ? (
       <div data-testid="edit-profile-modal">
         <button onClick={() => { onSaveSuccess?.(); onOpenChange(false) }}>
