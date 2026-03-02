@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryWritePage } from '../GalleryWritePage'
 
@@ -8,7 +8,12 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
 
-let mockAuthValue = { user: null as { id: number; name: string; role?: string } | null, isLoggedIn: false }
+const mockRefreshUser = jest.fn().mockResolvedValue(undefined)
+let mockAuthValue = {
+  user: null as { id: number; name: string; role?: string } | null,
+  isLoggedIn: false,
+  refreshUser: mockRefreshUser,
+}
 
 jest.mock('../../../../features/auth', () => ({
   useAuth: () => mockAuthValue,
@@ -16,6 +21,32 @@ jest.mock('../../../../features/auth', () => ({
 
 jest.mock('../../../../widgets/header', () => ({
   Header: () => <div data-testid="header">Header</div>,
+}))
+
+const mockGetMyProfile = jest.fn()
+
+jest.mock('../../../../features/edit-profile/api', () => ({
+  getMyProfile: (...args: unknown[]) => mockGetMyProfile(...args),
+}))
+
+const mockOnSaveSuccess = jest.fn()
+
+jest.mock('../../../../features/edit-profile', () => ({
+  EditProfileModal: ({ open, onOpenChange, onSaveSuccess }: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onSaveSuccess?: () => void
+  }) => {
+    mockOnSaveSuccess.mockImplementation(onSaveSuccess)
+    return open ? (
+      <div data-testid="edit-profile-modal">
+        <button onClick={() => { onSaveSuccess?.(); onOpenChange(false) }}>
+          저장하기
+        </button>
+        <button onClick={() => onOpenChange(false)}>취소</button>
+      </div>
+    ) : null
+  },
 }))
 
 const mockHandleSubmit = jest.fn()
@@ -66,8 +97,23 @@ jest.mock('../../model/useGalleryWrite', () => ({
 
 beforeEach(() => {
   jest.clearAllMocks()
-  mockAuthValue = { user: { id: 1, name: '홍길동', role: 'USER' }, isLoggedIn: true }
+  mockAuthValue = {
+    user: { id: 1, name: '홍길동', role: 'USER' },
+    isLoggedIn: true,
+    refreshUser: mockRefreshUser,
+  }
   mockWriteHookValue = { ...defaultWriteHook }
+  mockGetMyProfile.mockResolvedValue({
+    name: '홍길동',
+    churchId: 'ANYANG',
+    churchName: '안양',
+    generation: 1,
+    phoneNumber: null,
+    gender: 'MALE',
+    genderDisplay: '남성',
+    profileImageId: null,
+    profileImagePath: null,
+  })
 })
 
 describe('GalleryWritePage 인증 가드', () => {
@@ -292,14 +338,30 @@ describe('GalleryWritePage 제출', () => {
     expect(screen.getByText('카테고리를 선택해주세요.')).toBeInTheDocument()
   })
 
-  it('폼 제출 시 handleSubmit이 호출된다', async () => {
+  it('프로필 완성 시 폼 제출하면 handleSubmit이 호출된다', async () => {
     mockWriteHookValue = { ...defaultWriteHook, selectedSubCategory: 'RETREAT_2026_WINTER' }
 
     render(<GalleryWritePage />)
 
     await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
 
-    expect(mockHandleSubmit).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(mockGetMyProfile).toHaveBeenCalledTimes(1)
+      expect(mockHandleSubmit).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('프로필 확인 API 실패 시에도 handleSubmit이 호출된다', async () => {
+    mockGetMyProfile.mockRejectedValue(new Error('Network error'))
+    mockWriteHookValue = { ...defaultWriteHook, selectedSubCategory: 'RETREAT_2026_WINTER' }
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(mockHandleSubmit).toHaveBeenCalledTimes(1)
+    })
   })
 })
 
@@ -426,5 +488,207 @@ describe('GalleryWritePage 미디어 프리뷰', () => {
     const img = container.querySelector('img[src="blob:image-url"]')
     expect(img).toBeInTheDocument()
     expect(container.querySelector('video')).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryWritePage 프로필 미완성 시 정보 입력 안내', () => {
+  beforeEach(() => {
+    mockWriteHookValue = { ...defaultWriteHook, selectedSubCategory: 'RETREAT_2026_WINTER' }
+  })
+
+  it('성전 정보가 없으면 컨펌 다이얼로그가 표시된다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: 1,
+      phoneNumber: null,
+      gender: 'MALE',
+      genderDisplay: '남성',
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('추가 정보가 필요합니다')).toBeInTheDocument()
+      expect(screen.getByText('게시글 검수를 위해 성전 정보와 기수 정보가 필요합니다.')).toBeInTheDocument()
+    })
+    expect(mockHandleSubmit).not.toHaveBeenCalled()
+  })
+
+  it('기수 정보가 없으면 컨펌 다이얼로그가 표시된다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: 'ANYANG',
+      churchName: '안양',
+      generation: null,
+      phoneNumber: null,
+      gender: 'MALE',
+      genderDisplay: '남성',
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('추가 정보가 필요합니다')).toBeInTheDocument()
+    })
+    expect(mockHandleSubmit).not.toHaveBeenCalled()
+  })
+
+  it('성전과 기수가 모두 없으면 컨펌 다이얼로그가 표시된다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: null,
+      phoneNumber: null,
+      gender: null,
+      genderDisplay: null,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('추가 정보가 필요합니다')).toBeInTheDocument()
+    })
+    expect(mockHandleSubmit).not.toHaveBeenCalled()
+  })
+
+  it('취소 버튼 클릭 시 컨펌 다이얼로그가 닫힌다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: null,
+      phoneNumber: null,
+      gender: null,
+      genderDisplay: null,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('추가 정보가 필요합니다')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: '취소' }))
+
+    expect(screen.queryByText('추가 정보가 필요합니다')).not.toBeInTheDocument()
+  })
+
+  it('정보 입력하기 클릭 시 내 정보 수정 모달이 열린다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: null,
+      phoneNumber: null,
+      gender: null,
+      genderDisplay: null,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('정보 입력하기')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: '정보 입력하기' }))
+
+    expect(screen.queryByText('추가 정보가 필요합니다')).not.toBeInTheDocument()
+    expect(screen.getByTestId('edit-profile-modal')).toBeInTheDocument()
+  })
+
+  it('프로필 저장 성공 시 토큰이 갱신된다', async () => {
+    mockGetMyProfile.mockResolvedValue({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: null,
+      phoneNumber: null,
+      gender: null,
+      genderDisplay: null,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    // 게시글 등록 → 컨펌 → 정보 입력하기 → 모달 열림
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+    await waitFor(() => {
+      expect(screen.getByText('정보 입력하기')).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole('button', { name: '정보 입력하기' }))
+
+    // 모달에서 저장하기 클릭
+    await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    await waitFor(() => {
+      expect(mockRefreshUser).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('프로필 완성 후 재등록 시 handleSubmit이 호출된다', async () => {
+    // 첫 번째 호출: 프로필 미완성
+    mockGetMyProfile.mockResolvedValueOnce({
+      name: '홍길동',
+      churchId: null,
+      churchName: null,
+      generation: null,
+      phoneNumber: null,
+      gender: null,
+      genderDisplay: null,
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    render(<GalleryWritePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+    await waitFor(() => {
+      expect(screen.getByText('정보 입력하기')).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole('button', { name: '정보 입력하기' }))
+    await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    // 두 번째 호출: 프로필 완성
+    mockGetMyProfile.mockResolvedValueOnce({
+      name: '홍길동',
+      churchId: 'ANYANG',
+      churchName: '안양',
+      generation: 1,
+      phoneNumber: null,
+      gender: 'MALE',
+      genderDisplay: '남성',
+      profileImageId: null,
+      profileImagePath: null,
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: '게시글 등록' }))
+
+    await waitFor(() => {
+      expect(mockHandleSubmit).toHaveBeenCalledTimes(1)
+    })
   })
 })
