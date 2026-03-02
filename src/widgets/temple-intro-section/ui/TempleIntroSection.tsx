@@ -366,7 +366,8 @@ export const TempleIntroSection = () => {
   const { churches, isLoading } = useChurches()
   const [activeTab, setActiveTab] = useState('')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const { isVisible, resetAnimation } = useTempleIntroAnimation()
+  const sectionRef = useRef<HTMLElement>(null)
+  const { isVisible, resetAnimation } = useTempleIntroAnimation(sectionRef)
   const { user } = useAuth()
 
   // 로그인한 사용자의 성전을 기본 탭으로, 없으면 첫 번째 성전
@@ -386,7 +387,7 @@ export const TempleIntroSection = () => {
 
   if (isLoading) {
     return (
-      <section id="temple-intro" className="py-24 bg-gray-50">
+      <section ref={sectionRef} id="temple-intro" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-pulse space-y-4">
             <div className="h-10 bg-gray-200 rounded w-80 mx-auto" />
@@ -398,7 +399,7 @@ export const TempleIntroSection = () => {
   }
 
   return (
-    <section id="temple-intro" className="py-24 bg-gray-50">
+    <section ref={sectionRef} id="temple-intro" className="py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2
           className={`text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4 tracking-tight transition-all duration-500 ${
