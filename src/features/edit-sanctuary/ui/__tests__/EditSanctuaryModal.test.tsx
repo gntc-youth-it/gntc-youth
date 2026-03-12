@@ -33,6 +33,10 @@ jest.mock('../../api', () => ({
   updateChurchInfo: jest.fn(),
 }))
 
+jest.mock('../BibleVersePickerModal', () => ({
+  BibleVersePickerModal: () => null,
+}))
+
 const mockUseChurchInfo = useChurchInfo as jest.MockedFunction<typeof useChurchInfo>
 const mockClearCache = clearChurchInfoCache as jest.MockedFunction<typeof clearChurchInfoCache>
 const mockCompressImage = compressImage as jest.MockedFunction<typeof compressImage>
@@ -47,6 +51,7 @@ const mockChurchInfo = {
   groupPhotoFileId: 7,
   groupPhotoPath: '/photos/anyang.jpg',
   instagramId: 'anyang_youth',
+  themeVerse: null,
   prayerTopics: [
     { id: 1, content: '교회의 부흥을 위해', sortOrder: 1 },
     { id: 2, content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -142,6 +147,7 @@ describe('EditSanctuaryModal', () => {
           groupPhotoFileId: 7,
           instagramId: null,
           prayerTopics: expect.any(Array),
+          themeVerseId: null,
         })
       })
     })
@@ -231,6 +237,7 @@ describe('EditSanctuaryModal', () => {
             { content: '교회의 부흥을 위해', sortOrder: 1 },
             { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
           ],
+          themeVerseId: null,
         })
       })
 
@@ -259,6 +266,7 @@ describe('EditSanctuaryModal', () => {
           groupPhotoFileId: null,
           instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
+          themeVerseId: null,
         })
       })
     })
@@ -336,6 +344,7 @@ describe('EditSanctuaryModal', () => {
           groupPhotoFileId: 42,
           instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
+          themeVerseId: null,
         })
       })
     })
@@ -385,6 +394,7 @@ describe('EditSanctuaryModal', () => {
           groupPhotoFileId: 99,
           instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
+          themeVerseId: null,
         })
       })
     })
@@ -416,6 +426,7 @@ describe('EditSanctuaryModal', () => {
           groupPhotoFileId: 50,
           instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
+          themeVerseId: null,
         })
       })
     })
@@ -477,6 +488,103 @@ describe('EditSanctuaryModal', () => {
 
       await waitFor(() => {
         expect(screen.getByText('네트워크 오류로 업로드에 실패했습니다.')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('주제 말씀', () => {
+    it('기존 주제 말씀이 있으면 표시한다', () => {
+      mockUseChurchInfo.mockReturnValue({
+        churchInfo: {
+          ...mockChurchInfo,
+          themeVerse: {
+            verseId: 101,
+            bookName: '요한복음',
+            chapter: 1,
+            verseNumber: 1,
+            content: '태초에 말씀이 계시니라',
+          },
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useChurchInfo>)
+
+      renderModal()
+
+      expect(screen.getByText('요한복음 1장 1절')).toBeInTheDocument()
+      expect(screen.getByText('태초에 말씀이 계시니라')).toBeInTheDocument()
+    })
+
+    it('주제 말씀이 없으면 말씀 선택하기 버튼을 표시한다', () => {
+      renderModal()
+
+      expect(screen.getByText('말씀 선택하기')).toBeInTheDocument()
+    })
+
+    it('기존 주제 말씀이 있을 때 저장하면 해당 verseId를 전송한다', async () => {
+      mockUseChurchInfo.mockReturnValue({
+        churchInfo: {
+          ...mockChurchInfo,
+          themeVerse: {
+            verseId: 101,
+            bookName: '요한복음',
+            chapter: 1,
+            verseNumber: 1,
+            content: '태초에 말씀이 계시니라',
+          },
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useChurchInfo>)
+
+      const user = userEvent.setup()
+      renderModal()
+
+      await user.click(screen.getByText('저장하기'))
+
+      await waitFor(() => {
+        expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
+          groupPhotoFileId: 7,
+          instagramId: 'anyang_youth',
+          prayerTopics: expect.any(Array),
+          themeVerseId: 101,
+        })
+      })
+    })
+
+    it('주제 말씀 삭제 버튼을 누르면 null로 저장한다', async () => {
+      mockUseChurchInfo.mockReturnValue({
+        churchInfo: {
+          ...mockChurchInfo,
+          themeVerse: {
+            verseId: 101,
+            bookName: '요한복음',
+            chapter: 1,
+            verseNumber: 1,
+            content: '태초에 말씀이 계시니라',
+          },
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useChurchInfo>)
+
+      const user = userEvent.setup()
+      renderModal()
+
+      await user.click(screen.getByText('삭제'))
+
+      expect(screen.queryByText('태초에 말씀이 계시니라')).not.toBeInTheDocument()
+      expect(screen.getByText('말씀 선택하기')).toBeInTheDocument()
+
+      await user.click(screen.getByText('저장하기'))
+
+      await waitFor(() => {
+        expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
+          groupPhotoFileId: 7,
+          instagramId: 'anyang_youth',
+          prayerTopics: expect.any(Array),
+          themeVerseId: null,
+        })
       })
     })
   })

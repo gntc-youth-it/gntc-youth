@@ -52,6 +52,7 @@ describe('updateChurchInfo', () => {
         { content: '교회의 부흥을 위해', sortOrder: 1 },
         { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
       ],
+      themeVerseId: null,
     })
 
     expect(mockApiRequest).toHaveBeenCalledWith('/churches/ANYANG/info', {
@@ -63,6 +64,7 @@ describe('updateChurchInfo', () => {
           { content: '교회의 부흥을 위해', sortOrder: 1 },
           { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
         ],
+        themeVerseId: null,
       }),
     })
   })
@@ -74,6 +76,7 @@ describe('updateChurchInfo', () => {
       groupPhotoFileId: null,
       instagramId: null,
       prayerTopics: [{ content: '기도제목 1', sortOrder: 1 }],
+      themeVerseId: null,
     })
 
     expect(mockApiRequest).toHaveBeenCalledWith('/churches/SUWON/info', {
@@ -82,6 +85,7 @@ describe('updateChurchInfo', () => {
         groupPhotoFileId: null,
         instagramId: null,
         prayerTopics: [{ content: '기도제목 1', sortOrder: 1 }],
+        themeVerseId: null,
       }),
     })
   })
@@ -94,6 +98,7 @@ describe('updateChurchInfo', () => {
         groupPhotoFileId: null,
         instagramId: null,
         prayerTopics: [{ content: 'test', sortOrder: 1 }],
+        themeVerseId: null,
       })
     ).rejects.toThrow('서버 오류')
   })
