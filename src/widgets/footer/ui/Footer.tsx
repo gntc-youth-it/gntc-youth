@@ -1,18 +1,14 @@
-const InstagramIcon = () => (
+const KakaoTalkIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    fill="currentColor"
+    aria-hidden="true"
+    focusable="false"
   >
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    <path d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.66 6.67-.15.53-.96 3.4-.99 3.63 0 0-.02.17.09.24.11.06.24.01.24.01.32-.04 3.7-2.44 4.28-2.86.56.08 1.14.12 1.72.12 5.52 0 10-3.58 10-7.81C22 6.58 17.52 3 12 3z" />
   </svg>
 )
 
@@ -20,6 +16,10 @@ const CONTACT_INFO = {
   address: '경기도 안양시 만안구 안양로 193',
   phone: '031-443-3731~2',
   email: 'gntceum@gmail.com',
+}
+
+const SOCIAL_LINKS = {
+  kakao: 'https://pf.kakao.com/_xjrYZX',
 }
 
 export const Footer = () => {
@@ -69,16 +69,16 @@ export const Footer = () => {
 
           {/* Social */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">소셜 미디어</h4>
+            <h4 className="text-lg font-semibold mb-4">카카오톡</h4>
             <div className="flex gap-4">
               <a
-                href="https://www.instagram.com/gntc_youth/"
+                href={SOCIAL_LINKS.kakao}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <InstagramIcon />
-                Instagram
+                <KakaoTalkIcon />
+                카카오톡 채널
               </a>
             </div>
           </div>
