@@ -20,7 +20,7 @@ interface BibleVersePickerModalProps {
 
 export interface SelectedVerse {
   verseId: number
-  bookCode: string
+  bookCode?: string
   bookName: string
   chapter: number
   verseNumber: number
@@ -59,7 +59,10 @@ export const BibleVersePickerModal = ({
     setLoading(true)
     fetchBibleBooks()
       .then(setBooks)
-      .catch(() => setError('성경 목록을 불러오지 못했습니다.'))
+      .catch((err) => {
+        console.error('성경 목록을 불러오지 못했습니다:', err)
+        setError('성경 목록을 불러오지 못했습니다.')
+      })
       .finally(() => setLoading(false))
   }, [open, reset])
 
@@ -71,7 +74,8 @@ export const BibleVersePickerModal = ({
       const count = await fetchChapterCount(book.bookCode)
       setChapterCount(count)
       setStep('chapter')
-    } catch {
+    } catch (err) {
+      console.error('장 정보를 불러오지 못했습니다:', err)
       setError('장 정보를 불러오지 못했습니다.')
     } finally {
       setLoading(false)
@@ -87,7 +91,8 @@ export const BibleVersePickerModal = ({
       const v = await fetchVerses(selectedBook.bookCode, chapter)
       setVerses(v)
       setStep('verse')
-    } catch {
+    } catch (err) {
+      console.error('말씀을 불러오지 못했습니다:', err)
       setError('말씀을 불러오지 못했습니다.')
     } finally {
       setLoading(false)

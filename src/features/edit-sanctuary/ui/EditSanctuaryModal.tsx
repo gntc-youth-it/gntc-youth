@@ -47,6 +47,12 @@ export const EditSanctuaryModal = ({
   const [biblePickerOpen, setBiblePickerOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    if (!open) {
+      setBiblePickerOpen(false)
+    }
+  }, [open])
+
   const isSaving = saveStage !== 'idle'
 
   useEffect(() => {
@@ -68,7 +74,6 @@ export const EditSanctuaryModal = ({
         churchInfo.themeVerse
           ? {
               verseId: churchInfo.themeVerse.verseId,
-              bookCode: '',
               bookName: churchInfo.themeVerse.bookName,
               chapter: churchInfo.themeVerse.chapter,
               verseNumber: churchInfo.themeVerse.verseNumber,
