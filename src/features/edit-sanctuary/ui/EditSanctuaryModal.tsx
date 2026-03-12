@@ -352,7 +352,7 @@ export const EditSanctuaryModal = ({
                   type="text"
                   value={formData.instagramId}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, instagramId: e.target.value }))
+                    setFormData((prev) => ({ ...prev, instagramId: e.target.value.replace(/[^a-zA-Z0-9_.]/g, '') }))
                   }
                   placeholder="인스타그램 아이디"
                   maxLength={30}

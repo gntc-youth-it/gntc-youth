@@ -311,7 +311,7 @@ const ChurchTabContent = ({
 
           {churchInfo?.instagramId && (
             <a
-              href={`https://instagram.com/${churchInfo.instagramId}/`}
+              href={`https://instagram.com/${churchInfo.instagramId.replace(/^@/, '')}/`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mb-8 px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-full hover:bg-pink-100 transition-colors"
@@ -341,7 +341,7 @@ const ChurchTabContent = ({
                 />
                 <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
               </svg>
-              @{churchInfo.instagramId}
+              @{churchInfo.instagramId.replace(/^@/, '')}
             </a>
           )}
 
