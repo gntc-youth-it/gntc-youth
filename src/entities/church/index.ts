@@ -1,5 +1,5 @@
 export type { Church } from './model'
-export type { ChurchItem, ChurchInfoResponse, PrayerTopicResponse } from './api'
+export type { ChurchItem, ChurchInfoResponse, PrayerTopicResponse, ThemeVerseResponse } from './api'
 export { CHURCHES } from './model'
 export { useChurches } from './model'
 export { useChurchInfo, clearChurchInfoCache } from './model'

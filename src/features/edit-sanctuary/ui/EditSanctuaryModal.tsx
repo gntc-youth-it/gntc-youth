@@ -11,6 +11,8 @@ import { getMediaType, buildCdnUrl, compressImage, compressVideo, isVideoCompres
 import { IMAGE_COMPRESSION_OPTIONS, VIDEO_COMPRESSION_OPTIONS } from '../../../shared/config'
 import { getFilePresignedUrl, updateChurchInfo } from '../api'
 import type { SanctuaryFormData } from '../model/types'
+import { BibleVersePickerModal } from './BibleVersePickerModal'
+import type { SelectedVerse } from './BibleVersePickerModal'
 
 interface EditSanctuaryModalProps {
   open: boolean
@@ -41,7 +43,15 @@ export const EditSanctuaryModal = ({
   const [saveStage, setSaveStage] = useState<SaveStage>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [selectedVerse, setSelectedVerse] = useState<SelectedVerse | null>(null)
+  const [biblePickerOpen, setBiblePickerOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!open) {
+      setBiblePickerOpen(false)
+    }
+  }, [open])
 
   const isSaving = saveStage !== 'idle'
 
@@ -60,6 +70,17 @@ export const EditSanctuaryModal = ({
       })
       setOriginalFileId(churchInfo.groupPhotoFileId ?? null)
       setSelectedFile(null)
+      setSelectedVerse(
+        churchInfo.themeVerse
+          ? {
+              verseId: churchInfo.themeVerse.verseId,
+              bookName: churchInfo.themeVerse.bookName,
+              chapter: churchInfo.themeVerse.chapter,
+              verseNumber: churchInfo.themeVerse.verseNumber,
+              content: churchInfo.themeVerse.content,
+            }
+          : null
+      )
       setSaveStage('idle')
       setUploadProgress(0)
       setError(null)
@@ -159,6 +180,7 @@ export const EditSanctuaryModal = ({
           content,
           sortOrder: index + 1,
         })),
+        themeVerseId: selectedVerse?.verseId ?? null,
       })
 
       clearChurchInfoCache(churchId)
@@ -365,6 +387,67 @@ export const EditSanctuaryModal = ({
               </p>
             </div>
 
+            {/* Theme Verse Section */}
+            <div className="flex flex-col gap-4 bg-[#F8F9FA] rounded-xl p-6">
+              <h3 className="text-base font-semibold text-[#333333]">
+                주제 말씀
+              </h3>
+              {selectedVerse ? (
+                <div className="flex flex-col gap-3">
+                  <div className="bg-white rounded-lg p-4 border border-[#E0E0E0]">
+                    <p className="text-xs font-medium text-[#3B5BDB] mb-1.5">
+                      {selectedVerse.bookName} {selectedVerse.chapter}장 {selectedVerse.verseNumber}절
+                    </p>
+                    <p className="text-sm text-[#333333] leading-relaxed">
+                      {selectedVerse.content}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBiblePickerOpen(true)}
+                      disabled={isSaving}
+                      className="flex-1 h-10 text-sm font-medium text-[#3B5BDB] bg-white border border-[#3B5BDB] rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
+                    >
+                      변경하기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVerse(null)}
+                      disabled={isSaving}
+                      className="h-10 px-4 text-sm font-medium text-[#DC2626] bg-white border border-[#E0E0E0] rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setBiblePickerOpen(true)}
+                  disabled={isSaving}
+                  className="w-full h-11 flex items-center justify-center gap-2 bg-white border border-[#3B5BDB] rounded-md text-sm font-medium text-[#3B5BDB] hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                  </svg>
+                  말씀 선택하기
+                </button>
+              )}
+              <p className="text-xs text-[#9CA3AF]">
+                성전의 주제 말씀을 설정하면 성전 소개에 표시됩니다
+              </p>
+            </div>
+
             {/* Info Section */}
             <div className="flex flex-col gap-4 bg-[#FFF7ED] rounded-xl p-6">
               <div className="flex items-center gap-2">
@@ -501,6 +584,11 @@ export const EditSanctuaryModal = ({
           </button>
         </div>
       </DialogContent>
+      <BibleVersePickerModal
+        open={biblePickerOpen}
+        onOpenChange={setBiblePickerOpen}
+        onSelect={setSelectedVerse}
+      />
     </Dialog>
   )
 }
