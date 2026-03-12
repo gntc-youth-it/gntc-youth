@@ -309,6 +309,42 @@ const ChurchTabContent = ({
             </button>
           )}
 
+          {churchInfo?.instagramId && (
+            <a
+              href={`https://instagram.com/${churchInfo.instagramId}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mb-8 px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-full hover:bg-pink-100 transition-colors"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="2"
+                  y="2"
+                  width="20"
+                  height="20"
+                  rx="5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
+              </svg>
+              @{churchInfo.instagramId}
+            </a>
+          )}
+
           <div className="text-left">
             <h4 className="text-xl font-semibold text-blue-600 mb-6">기도제목</h4>
             {prayers.length > 0 ? (
