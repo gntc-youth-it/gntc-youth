@@ -34,6 +34,7 @@ export const EditSanctuaryModal = ({
     prayers: [],
     media: '',
     mediaType: 'image',
+    instagramId: '',
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [originalFileId, setOriginalFileId] = useState<number | null>(null)
@@ -55,6 +56,7 @@ export const EditSanctuaryModal = ({
           .map((t: PrayerTopicResponse) => t.content),
         media: mediaUrl,
         mediaType: mediaUrl ? getMediaType(mediaUrl) : 'image',
+        instagramId: churchInfo.instagramId ?? '',
       })
       setOriginalFileId(churchInfo.groupPhotoFileId ?? null)
       setSelectedFile(null)
@@ -152,6 +154,7 @@ export const EditSanctuaryModal = ({
       setSaveStage('saving')
       await updateChurchInfo(churchId, {
         groupPhotoFileId: fileId,
+        instagramId: formData.instagramId.trim() || null,
         prayerTopics: nonEmptyPrayers.map((content, index) => ({
           content,
           sortOrder: index + 1,
@@ -336,6 +339,30 @@ export const EditSanctuaryModal = ({
                   이미지 (JPG, PNG) 또는 동영상 (MP4, MOV) 파일만 업로드 가능
                 </p>
               </div>
+            </div>
+
+            {/* Instagram ID Section */}
+            <div className="flex flex-col gap-4 bg-[#F8F9FA] rounded-xl p-6">
+              <h3 className="text-base font-semibold text-[#333333]">
+                인스타그램
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[#666666] flex-shrink-0">@</span>
+                <input
+                  type="text"
+                  value={formData.instagramId}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, instagramId: e.target.value.replace(/[^a-zA-Z0-9_.]/g, '') }))
+                  }
+                  placeholder="인스타그램 아이디"
+                  maxLength={30}
+                  disabled={isSaving}
+                  className="flex-1 h-10 px-3 bg-white rounded-md text-sm text-[#333333] border border-[#E0E0E0] outline-none focus:ring-2 focus:ring-[#3B5BDB] transition-all disabled:opacity-50"
+                />
+              </div>
+              <p className="text-xs text-[#9CA3AF]">
+                인스타그램 아이디를 입력하면 성전 소개에 링크가 표시됩니다
+              </p>
             </div>
 
             {/* Info Section */}

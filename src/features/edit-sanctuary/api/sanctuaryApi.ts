@@ -7,6 +7,7 @@ interface PrayerTopicRequest {
 
 interface UpdateChurchInfoRequest {
   groupPhotoFileId: number | null
+  instagramId: string | null
   prayerTopics: PrayerTopicRequest[]
 }
 

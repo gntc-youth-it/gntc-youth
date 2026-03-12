@@ -19,6 +19,7 @@ export interface ChurchInfoResponse {
   churchId: string
   groupPhotoFileId: number | null
   groupPhotoPath: string | null
+  instagramId: string | null
   prayerTopics: PrayerTopicResponse[]
   randomPhotos: string[]
 }
