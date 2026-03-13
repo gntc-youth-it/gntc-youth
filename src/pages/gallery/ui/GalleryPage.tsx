@@ -161,6 +161,8 @@ const LazyImage = ({
 
 // ─── Grid View Components ────────────────────────────────
 
+const GRID_MEDIA_CLASS = 'w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300'
+
 const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => {
   const columnCount = 4
   const columns: string[][] = Array.from({ length: columnCount }, () => [])
@@ -185,7 +187,7 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
               {isVideoUrl(url) ? (
                 <video
                   src={url}
-                  className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                  className={GRID_MEDIA_CLASS}
                   muted
                   loop
                   playsInline
@@ -197,7 +199,7 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
                   src={url}
                   alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
                   className="rounded-xl"
-                  imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                  imgClassName={GRID_MEDIA_CLASS}
                   onClick={() => onImageClick(url)}
                 />
               )}
@@ -245,33 +247,36 @@ const AllPhotosGrid = ({
         총 {photos.length}장{hasNext ? '+' : ''}의 사진
       </p>
       <div className="columns-2 md:columns-4 gap-3">
-        {photos.map((photo, idx) => (
-          <div
-            key={photo.id}
-            className="mb-3 break-inside-avoid rounded-xl cursor-pointer"
-            style={{ contentVisibility: 'auto', containIntrinsicSize: '0 250px' }}
-          >
-            {isVideoUrl(photo.url) ? (
-              <video
-                src={buildCdnUrl(photo.url)}
-                className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                onClick={() => onImageClick(buildCdnUrl(photo.url))}
-              />
-            ) : (
-              <LazyImage
-                src={buildCdnUrl(photo.url)}
-                alt={`갤러리 사진 ${idx + 1}`}
-                className="rounded-xl"
-                imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
-                onClick={() => onImageClick(buildCdnUrl(photo.url))}
-              />
-            )}
-          </div>
-        ))}
+        {photos.map((photo, idx) => {
+          const url = buildCdnUrl(photo.url)
+          return (
+            <div
+              key={photo.id}
+              className="mb-3 break-inside-avoid rounded-xl cursor-pointer"
+              style={{ contentVisibility: 'auto', containIntrinsicSize: '0 250px' }}
+            >
+              {isVideoUrl(photo.url) ? (
+                <video
+                  src={url}
+                  className={GRID_MEDIA_CLASS}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  onClick={() => onImageClick(url)}
+                />
+              ) : (
+                <LazyImage
+                  src={url}
+                  alt={`갤러리 사진 ${idx + 1}`}
+                  className="rounded-xl"
+                  imgClassName={GRID_MEDIA_CLASS}
+                  onClick={() => onImageClick(url)}
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
       {isFetchingMore && (
         <div className="flex justify-center py-8">
