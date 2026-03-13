@@ -94,38 +94,49 @@ const LazyImage = ({
   src,
   alt,
   className,
+  imgClassName,
   onClick,
 }: {
   src: string
   alt: string
   className?: string
+  imgClassName?: string
   onClick?: () => void
 }) => {
   const [loaded, setLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    setLoaded(false)
+    setHasError(false)
+  }, [src])
 
   useEffect(() => {
     // 이미 캐시된 이미지는 즉시 표시
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
       setLoaded(true)
     }
-  }, [])
+  }, [src])
 
   return (
-    <div className="relative overflow-hidden" onClick={onClick}>
+    <div className={`relative overflow-hidden ${className ?? ''}`} onClick={onClick}>
       {!loaded && (
-        <div className="absolute inset-0 bg-[#E8E8E8] animate-pulse rounded-xl" />
+        <div className="absolute inset-0 bg-[#E8E8E8] animate-pulse" />
       )}
       <img
         ref={imgRef}
         src={src}
         alt={alt}
-        className={`${className ?? ''} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`${imgClassName ?? ''} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={(e) => {
-          ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+          if (!hasError) {
+            setHasError(true)
+            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+          }
           setLoaded(true)
         }}
       />
@@ -159,7 +170,8 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
               <LazyImage
                 src={url}
                 alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
-                className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                className="rounded-xl"
+                imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
                 onClick={() => onImageClick(url)}
               />
             </div>
@@ -215,7 +227,8 @@ const AllPhotosGrid = ({
             <LazyImage
               src={buildCdnUrl(photo.url)}
               alt={`갤러리 사진 ${idx + 1}`}
-              className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+              className="rounded-xl"
+              imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
               onClick={() => onImageClick(buildCdnUrl(photo.url))}
             />
           </div>
@@ -648,7 +661,7 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
                   <LazyImage
                     src={url}
                     alt={`사진 ${image.sortOrder}`}
-                    className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
+                    imgClassName="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
                     onClick={() => onImageClick(url)}
                   />
                 )}
