@@ -88,6 +88,51 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
   </div>
 )
 
+// ─── Lazy Image with skeleton + fade-in ──────────────────
+
+const LazyImage = ({
+  src,
+  alt,
+  className,
+  onClick,
+}: {
+  src: string
+  alt: string
+  className?: string
+  onClick?: () => void
+}) => {
+  const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    // 이미 캐시된 이미지는 즉시 표시
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true)
+    }
+  }, [])
+
+  return (
+    <div className="relative overflow-hidden" onClick={onClick}>
+      {!loaded && (
+        <div className="absolute inset-0 bg-[#E8E8E8] animate-pulse rounded-xl" />
+      )}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className={`${className ?? ''} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={(e) => {
+          ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+          setLoaded(true)
+        }}
+      />
+    </div>
+  )
+}
+
 // ─── Grid View Components ────────────────────────────────
 
 const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => {
@@ -106,15 +151,16 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
       {columns.map((col, colIdx) => (
         <div key={colIdx} className="flex flex-col gap-3">
           {col.map((url, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(url)}>
-              <img
+            <div
+              key={imgIdx}
+              className="rounded-xl cursor-pointer"
+              style={{ contentVisibility: 'auto', containIntrinsicSize: '0 200px' }}
+            >
+              <LazyImage
                 src={url}
                 alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
+                className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                onClick={() => onImageClick(url)}
               />
             </div>
           ))}
@@ -163,17 +209,14 @@ const AllPhotosGrid = ({
         {photos.map((photo, idx) => (
           <div
             key={photo.id}
-            className="mb-3 break-inside-avoid overflow-hidden rounded-xl cursor-pointer"
-            onClick={() => onImageClick(buildCdnUrl(photo.url))}
+            className="mb-3 break-inside-avoid rounded-xl cursor-pointer"
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '0 250px' }}
           >
-            <img
+            <LazyImage
               src={buildCdnUrl(photo.url)}
               alt={`갤러리 사진 ${idx + 1}`}
-              className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-              onError={(e) => {
-                ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-              }}
+              className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+              onClick={() => onImageClick(buildCdnUrl(photo.url))}
             />
           </div>
         ))}
@@ -602,15 +645,11 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
                     />
                   )
                 ) : (
-                  <img
+                  <LazyImage
                     src={url}
                     alt={`사진 ${image.sortOrder}`}
                     className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
-                    loading="lazy"
                     onClick={() => onImageClick(url)}
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                    }}
                   />
                 )}
               </div>
