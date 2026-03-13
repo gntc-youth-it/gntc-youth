@@ -182,13 +182,25 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
               className="rounded-xl cursor-pointer"
               style={{ contentVisibility: 'auto', containIntrinsicSize: '0 200px' }}
             >
-              <LazyImage
-                src={url}
-                alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
-                className="rounded-xl"
-                imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
-                onClick={() => onImageClick(url)}
-              />
+              {isVideoUrl(url) ? (
+                <video
+                  src={url}
+                  className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  onClick={() => onImageClick(url)}
+                />
+              ) : (
+                <LazyImage
+                  src={url}
+                  alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
+                  className="rounded-xl"
+                  imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                  onClick={() => onImageClick(url)}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -239,13 +251,25 @@ const AllPhotosGrid = ({
             className="mb-3 break-inside-avoid rounded-xl cursor-pointer"
             style={{ contentVisibility: 'auto', containIntrinsicSize: '0 250px' }}
           >
-            <LazyImage
-              src={buildCdnUrl(photo.url)}
-              alt={`갤러리 사진 ${idx + 1}`}
-              className="rounded-xl"
-              imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
-              onClick={() => onImageClick(buildCdnUrl(photo.url))}
-            />
+            {isVideoUrl(photo.url) ? (
+              <video
+                src={buildCdnUrl(photo.url)}
+                className="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onClick={() => onImageClick(buildCdnUrl(photo.url))}
+              />
+            ) : (
+              <LazyImage
+                src={buildCdnUrl(photo.url)}
+                alt={`갤러리 사진 ${idx + 1}`}
+                className="rounded-xl"
+                imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                onClick={() => onImageClick(buildCdnUrl(photo.url))}
+              />
+            )}
           </div>
         ))}
       </div>
