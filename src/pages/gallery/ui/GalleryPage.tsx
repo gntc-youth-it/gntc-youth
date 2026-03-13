@@ -119,8 +119,23 @@ const LazyImage = ({
     }
   }, [src])
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
   return (
-    <div className={`relative overflow-hidden ${className ?? ''}`} onClick={onClick}>
+    <div
+      className={`relative overflow-hidden ${className ?? ''}`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? alt : undefined}
+    >
       {!loaded && (
         <div className="absolute inset-0 bg-[#E8E8E8] animate-pulse" />
       )}
@@ -128,7 +143,7 @@ const LazyImage = ({
         ref={imgRef}
         src={src}
         alt={alt}
-        className={`${imgClassName ?? ''} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`${imgClassName ?? ''} transition-[opacity,transform] duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
