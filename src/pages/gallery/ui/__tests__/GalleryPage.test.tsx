@@ -190,8 +190,8 @@ describe('GalleryPage 뷰 토글', () => {
   it('갤러리와 피드 토글 버튼이 표시된다', () => {
     render(<GalleryPage />)
 
-    expect(screen.getByRole('button', { name: /갤러리/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /피드/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^갤러리$/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^피드$/ })).toBeInTheDocument()
   })
 
   it('기본 뷰는 그리드(갤러리) 뷰이다', () => {
@@ -817,7 +817,7 @@ describe('GalleryPage 피드 영상 재생', () => {
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
     // 2개 미디어 아이템 → dot 2개
-    const dots = screen.getAllByLabelText(/사진 \d/)
+    const dots = screen.getAllByRole('button', { name: /사진 \d/ }).filter((el) => el.tagName === 'BUTTON')
     expect(dots).toHaveLength(2)
   })
 })

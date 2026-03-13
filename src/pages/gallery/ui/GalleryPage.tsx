@@ -88,6 +88,77 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
   </div>
 )
 
+// ─── Lazy Image with skeleton + fade-in ──────────────────
+
+const LazyImage = ({
+  src,
+  alt,
+  className,
+  imgClassName,
+  onClick,
+}: {
+  src: string
+  alt: string
+  className?: string
+  imgClassName?: string
+  onClick?: () => void
+}) => {
+  const [loaded, setLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    setLoaded(false)
+    setHasError(false)
+  }, [src])
+
+  useEffect(() => {
+    // 이미 캐시된 이미지는 즉시 표시
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true)
+    }
+  }, [src])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
+  return (
+    <div
+      className={`relative overflow-hidden ${className ?? ''}`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? alt : undefined}
+    >
+      {!loaded && (
+        <div className="absolute inset-0 bg-[#E8E8E8] animate-pulse" />
+      )}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className={`${imgClassName ?? ''} transition-[opacity,transform] duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={(e) => {
+          if (!hasError) {
+            setHasError(true)
+            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
+          }
+          setLoaded(true)
+        }}
+      />
+    </div>
+  )
+}
+
 // ─── Grid View Components ────────────────────────────────
 
 const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClick: (url: string) => void }) => {
@@ -106,15 +177,17 @@ const GalleryGrid = ({ album, onImageClick }: { album: GalleryAlbum; onImageClic
       {columns.map((col, colIdx) => (
         <div key={colIdx} className="flex flex-col gap-3">
           {col.map((url, imgIdx) => (
-            <div key={imgIdx} className="overflow-hidden rounded-xl cursor-pointer" onClick={() => onImageClick(url)}>
-              <img
+            <div
+              key={imgIdx}
+              className="rounded-xl cursor-pointer"
+              style={{ contentVisibility: 'auto', containIntrinsicSize: '0 200px' }}
+            >
+              <LazyImage
                 src={url}
                 alt={`${album.title} 사진 ${colIdx * col.length + imgIdx + 1}`}
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
+                className="rounded-xl"
+                imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                onClick={() => onImageClick(url)}
               />
             </div>
           ))}
@@ -163,17 +236,15 @@ const AllPhotosGrid = ({
         {photos.map((photo, idx) => (
           <div
             key={photo.id}
-            className="mb-3 break-inside-avoid overflow-hidden rounded-xl cursor-pointer"
-            onClick={() => onImageClick(buildCdnUrl(photo.url))}
+            className="mb-3 break-inside-avoid rounded-xl cursor-pointer"
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '0 250px' }}
           >
-            <img
+            <LazyImage
               src={buildCdnUrl(photo.url)}
               alt={`갤러리 사진 ${idx + 1}`}
-              className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-              onError={(e) => {
-                ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-              }}
+              className="rounded-xl"
+              imgClassName="w-full h-auto object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+              onClick={() => onImageClick(buildCdnUrl(photo.url))}
             />
           </div>
         ))}
@@ -602,15 +673,11 @@ const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostImage[]; 
                     />
                   )
                 ) : (
-                  <img
+                  <LazyImage
                     src={url}
                     alt={`사진 ${image.sortOrder}`}
-                    className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
-                    loading="lazy"
+                    imgClassName="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
                     onClick={() => onImageClick(url)}
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                    }}
                   />
                 )}
               </div>
