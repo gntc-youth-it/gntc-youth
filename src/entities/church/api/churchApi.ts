@@ -15,20 +15,11 @@ export interface PrayerTopicResponse {
   sortOrder: number
 }
 
-export interface ThemeVerseResponse {
-  verseId: number
-  bookName: string
-  chapter: number
-  verseNumber: number
-  content: string
-}
-
 export interface ChurchInfoResponse {
   churchId: string
   groupPhotoFileId: number | null
   groupPhotoPath: string | null
   instagramId: string | null
-  themeVerse: ThemeVerseResponse | null
   prayerTopics: PrayerTopicResponse[]
   randomPhotos: string[]
 }

@@ -26,7 +26,6 @@ describe('useChurchInfo', () => {
     const mockResponse = {
       churchId: 'anyang',
       groupPhotoPath: '/uploads/anyang-2025.mp4',
-      themeVerse: null,
       prayerTopics: [
         { id: 1, content: '기도제목 1', sortOrder: 1 },
         { id: 2, content: '기도제목 2', sortOrder: 2 },
@@ -92,7 +91,6 @@ describe('useChurchInfo', () => {
     const mockResponse = {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
-      themeVerse: null,
       prayerTopics: [{ id: 1, content: '수원 기도제목', sortOrder: 1 }],
       randomPhotos: [],
     }
@@ -111,7 +109,6 @@ describe('useChurchInfo', () => {
     const suwonResponse = {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
-      themeVerse: null,
       prayerTopics: [{ id: 1, content: '수원 기도제목', sortOrder: 1 }],
       randomPhotos: [],
     }
@@ -147,14 +144,12 @@ describe('useChurchInfo', () => {
     const mockResponse1 = {
       churchId: 'anyang',
       groupPhotoPath: '/uploads/anyang.mp4',
-      themeVerse: null,
       prayerTopics: [{ id: 1, content: '안양 기도제목', sortOrder: 1 }],
       randomPhotos: ['uploads/a1.jpg'],
     }
     const mockResponse2 = {
       churchId: 'suwon',
       groupPhotoPath: '/uploads/suwon.jpg',
-      themeVerse: null,
       prayerTopics: [{ id: 2, content: '수원 기도제목', sortOrder: 1 }],
       randomPhotos: [],
     }
