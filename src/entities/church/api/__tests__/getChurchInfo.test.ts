@@ -17,7 +17,6 @@ describe('getChurchInfo', () => {
       churchId: 'anyang',
       groupPhotoPath: '/uploads/anyang-2025.mp4',
       instagramId: 'anyang_youth',
-      themeVerse: null,
       prayerTopics: [
         { id: 1, content: '기도제목 1', sortOrder: 1 },
         { id: 2, content: '기도제목 2', sortOrder: 2 },
@@ -37,7 +36,6 @@ describe('getChurchInfo', () => {
       churchId: 'suwon',
       groupPhotoPath: null,
       instagramId: null,
-      themeVerse: null,
       prayerTopics: [],
       randomPhotos: [],
     }

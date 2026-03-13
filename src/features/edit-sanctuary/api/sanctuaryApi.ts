@@ -9,7 +9,6 @@ interface UpdateChurchInfoRequest {
   groupPhotoFileId: number | null
   instagramId: string | null
   prayerTopics: PrayerTopicRequest[]
-  themeVerseId: number | null
 }
 
 export async function updateChurchInfo(

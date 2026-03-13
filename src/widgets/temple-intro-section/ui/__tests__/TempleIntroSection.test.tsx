@@ -81,7 +81,6 @@ const mockChurchInfoResult = {
     groupPhotoFileId: null,
     groupPhotoPath: null,
     instagramId: null,
-    themeVerse: null,
     prayerTopics: [
       { id: 1, content: '기도제목1', sortOrder: 1 },
     ],
