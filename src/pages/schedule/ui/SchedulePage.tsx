@@ -87,8 +87,8 @@ export const SchedulePage = () => {
 
   // 이번 달 전체 일정 목록 (사이드바용)
   const monthEvents = EVENTS.filter((e) => {
-    const [, m] = e.date.split('-').map(Number)
-    return m === currentMonth + 1
+    const [y, m] = e.date.split('-').map(Number)
+    return y === year && m === currentMonth + 1
   }).sort((a, b) => a.date.localeCompare(b.date))
 
   return (
@@ -172,11 +172,11 @@ export const SchedulePage = () => {
                         {day}
                       </span>
                       <div className="mt-1 space-y-0.5">
-                        {dayEvents.map((event, eventIdx) => {
+                        {dayEvents.map((event) => {
                           const colors = COLOR_MAP[event.color] || COLOR_MAP.blue
                           return (
                             <div
-                              key={eventIdx}
+                              key={`${event.date}-${event.title}-${event.color}`}
                               className={`${colors.bg} ${colors.text} text-2xs sm:text-xs px-1.5 py-0.5 rounded truncate`}
                               title={event.title}
                             >
@@ -200,12 +200,12 @@ export const SchedulePage = () => {
                 <p className="text-gray-400 text-sm">이번 달 일정이 없습니다</p>
               ) : (
                 <div className="space-y-3">
-                  {monthEvents.map((event, idx) => {
+                  {monthEvents.map((event) => {
                     const colors = COLOR_MAP[event.color] || COLOR_MAP.blue
                     const day = parseInt(event.date.split('-')[2], 10)
                     const dayOfWeek = new Date(parseInt(event.date.split('-')[0]), parseInt(event.date.split('-')[1]) - 1, day).getDay()
                     return (
-                      <div key={idx} className="flex items-start gap-3">
+                      <div key={`${event.date}-${event.title}-${event.color}`} className="flex items-start gap-3">
                         <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${colors.dot}`} />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
