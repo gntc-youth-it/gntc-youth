@@ -4,11 +4,11 @@ import { Header } from '../../../widgets/header'
 import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { useFeed } from '../model/useFeed'
-import { deletePost } from '../api/galleryApi'
+import { deletePost, fetchEventVideos } from '../api/galleryApi'
 import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
 import { ProfileImage } from '../../../shared/ui'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption, EventVideo } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
@@ -1060,6 +1060,88 @@ const MediaLightbox = ({
   )
 }
 
+// ─── Event Video Section ─────────────────────────────────
+
+const PlayIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+)
+
+const EventVideoSection = ({
+  videos,
+  selectedVideo,
+  onSelect,
+  onClose,
+}: {
+  videos: EventVideo[]
+  selectedVideo: EventVideo | null
+  onSelect: (video: EventVideo) => void
+  onClose: () => void
+}) => {
+  if (videos.length === 0) return null
+
+  return (
+    <div className="bg-white border-b border-[#E0E0E0]">
+      {/* Video badge list */}
+      <div className="px-4 sm:px-8 lg:px-[60px] py-3">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <span className="shrink-0 text-xs font-semibold text-[#999999] mr-1">영상</span>
+            {videos.map((video) => {
+              const isActive = selectedVideo?.id === video.id
+              return (
+                <button
+                  key={video.id}
+                  onClick={() => isActive ? onClose() : onSelect(video)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                    isActive
+                      ? 'bg-[#3B5BDB] text-white'
+                      : 'bg-[#F0F0F0] text-[#555555] hover:bg-[#E0E0E0]'
+                  }`}
+                >
+                  <PlayIcon />
+                  {video.title}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Video player */}
+      {selectedVideo && (
+        <div className="px-4 sm:px-8 lg:px-[60px] pb-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="relative bg-black rounded-xl overflow-hidden">
+              <button
+                onClick={onClose}
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                aria-label="영상 닫기"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={selectedVideo.link}
+                  title={selectedVideo.title}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-sm font-medium text-[#333333]">{selectedVideo.title}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Page ───────────────────────────────────────────
 
 export const GalleryPage = () => {
@@ -1097,10 +1179,23 @@ export const GalleryPage = () => {
   const handleCloseLightbox = useCallback(() => setLightboxUrl(null), [])
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [eventVideos, setEventVideos] = useState<EventVideo[]>([])
+  const [selectedEventVideo, setSelectedEventVideo] = useState<EventVideo | null>(null)
   const navigate = useNavigate()
   const isMaster = user?.role === 'MASTER'
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
   const albums: GalleryAlbum[] = []
+
+  // 행사 영상 조회
+  useEffect(() => {
+    setEventVideos([])
+    setSelectedEventVideo(null)
+    if (selectedSubCategory) {
+      fetchEventVideos(selectedSubCategory)
+        .then(setEventVideos)
+        .catch(() => setEventVideos([]))
+    }
+  }, [selectedSubCategory])
 
   // 피드 뷰로 전환 시 피드 데이터 로드
   useEffect(() => {
@@ -1214,6 +1309,16 @@ export const GalleryPage = () => {
             selectedSubCategory={selectedSubCategory}
             onSelect={selectSubCategory}
             onClose={() => setShowRetreatModal(false)}
+          />
+        )}
+
+        {/* Event Video Section */}
+        {selectedSubCategory && eventVideos.length > 0 && (
+          <EventVideoSection
+            videos={eventVideos}
+            selectedVideo={selectedEventVideo}
+            onSelect={setSelectedEventVideo}
+            onClose={() => setSelectedEventVideo(null)}
           />
         )}
 

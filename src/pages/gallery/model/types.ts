@@ -143,6 +143,16 @@ export interface FeedPostsResponse {
   hasNext: boolean
 }
 
+// --- Event Video Types ---
+
+export interface EventVideo {
+  id: number
+  title: string
+  link: string
+  subCategory: string
+  createdAt: string
+}
+
 export type UploadStatus = 'pending' | 'compressing' | 'uploading' | 'done' | 'error'
 
 export interface UploadingImage {
