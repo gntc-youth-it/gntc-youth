@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
 import { useFeed } from '../../model/useFeed'
-import { deletePost } from '../../api/galleryApi'
+import { deletePost, fetchEventVideos } from '../../api/galleryApi'
 import { buildCdnUrl } from '../../../../shared/lib'
-import type { GalleryPhotoItem, SubCategory, FeedPost } from '../../model/types'
+import type { GalleryPhotoItem, SubCategory, FeedPost, EventVideo } from '../../model/types'
 
 const mockNavigate = jest.fn()
 const mockSearchParams = new URLSearchParams()
@@ -23,9 +23,11 @@ jest.mock('../../../../features/auth', () => ({
 jest.mock('../../api/galleryApi', () => ({
   ...jest.requireActual('../../api/galleryApi'),
   deletePost: jest.fn(),
+  fetchEventVideos: jest.fn(),
 }))
 
 const mockDeletePost = deletePost as jest.MockedFunction<typeof deletePost>
+const mockFetchEventVideos = fetchEventVideos as jest.MockedFunction<typeof fetchEventVideos>
 
 jest.mock('../../../../widgets/header', () => ({
   Header: () => <div data-testid="header">Header</div>,
@@ -148,6 +150,7 @@ beforeEach(() => {
   mockUseGallery.mockReturnValue(defaultGallery)
   mockUseFeed.mockReturnValue(defaultFeed)
   mockDeletePost.mockResolvedValue(undefined)
+  mockFetchEventVideos.mockResolvedValue([])
 
   // IntersectionObserver mock
   const mockIntersectionObserver = jest.fn()
@@ -1122,5 +1125,231 @@ describe('GalleryPage 게시글 삭제', () => {
     await userEvent.click(screen.getByText('수련회 후기입니다'))
 
     expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 행사 영상 섹션', () => {
+  const mockEventVideos: EventVideo[] = [
+    {
+      id: 1,
+      title: '수련회 찬양 모음',
+      link: 'https://www.youtube.com/embed/abc123',
+      subCategory: 'RETREAT_2026_WINTER',
+      createdAt: '2026-03-15T10:30:00',
+    },
+    {
+      id: 2,
+      title: '수련회 설교 영상',
+      link: 'https://www.youtube.com/embed/def456',
+      subCategory: 'RETREAT_2026_WINTER',
+      createdAt: '2026-03-15T09:00:00',
+    },
+  ]
+
+  const retreatGallery = {
+    ...defaultGallery,
+    selectedCategory: 'RETREAT' as const,
+    subCategories: mockSubCategories,
+    selectedSubCategory: 'RETREAT_2026_WINTER',
+  }
+
+  it('서브카테고리 선택 시 fetchEventVideos가 호출된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(mockFetchEventVideos).toHaveBeenCalledWith('RETREAT_2026_WINTER')
+    })
+  })
+
+  it('영상이 있으면 뱃지 목록이 표시된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+    expect(screen.getByText('수련회 설교 영상')).toBeInTheDocument()
+    expect(screen.getByText('영상')).toBeInTheDocument()
+  })
+
+  it('영상이 없으면 뱃지 목록이 표시되지 않는다', async () => {
+    mockFetchEventVideos.mockResolvedValue([])
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(mockFetchEventVideos).toHaveBeenCalled()
+    })
+    expect(screen.queryByText('영상')).not.toBeInTheDocument()
+  })
+
+  it('서브카테고리가 선택되지 않으면 fetchEventVideos가 호출되지 않는다', () => {
+    mockUseGallery.mockReturnValue({ ...retreatGallery, selectedSubCategory: null })
+
+    render(<GalleryPage />)
+
+    expect(mockFetchEventVideos).not.toHaveBeenCalled()
+  })
+
+  it('영상 뱃지 클릭 시 비디오 플레이어가 표시된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('수련회 찬양 모음'))
+
+    const iframe = container.querySelector('iframe')
+    expect(iframe).toBeInTheDocument()
+    expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/abc123')
+    expect(iframe).toHaveAttribute('title', '수련회 찬양 모음')
+  })
+
+  it('다른 영상 뱃지 클릭 시 플레이어가 해당 영상으로 전환된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('수련회 찬양 모음'))
+
+    let iframe = container.querySelector('iframe')
+    expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/abc123')
+
+    await userEvent.click(screen.getByText('수련회 설교 영상'))
+
+    iframe = container.querySelector('iframe')
+    expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/def456')
+    expect(iframe).toHaveAttribute('title', '수련회 설교 영상')
+  })
+
+  it('같은 영상 뱃지를 다시 클릭하면 플레이어가 닫힌다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /수련회 찬양 모음 영상 재생/ })).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음 영상 재생/ }))
+    expect(container.querySelector('iframe')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음 영상 닫기/ }))
+    expect(container.querySelector('iframe')).not.toBeInTheDocument()
+  })
+
+  it('영상 닫기 버튼 클릭 시 플레이어가 닫힌다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('수련회 찬양 모음'))
+    expect(container.querySelector('iframe')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByLabelText('영상 닫기'))
+    expect(container.querySelector('iframe')).not.toBeInTheDocument()
+  })
+
+  it('비디오 플레이어 아래에 영상 제목이 표시된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('수련회 찬양 모음'))
+
+    // 뱃지의 텍스트 + 플레이어 아래 제목 = 2개
+    const titles = screen.getAllByText('수련회 찬양 모음')
+    expect(titles.length).toBe(2)
+  })
+
+  it('API 에러 시 영상 섹션이 표시되지 않는다', async () => {
+    mockFetchEventVideos.mockRejectedValue(new Error('Network error'))
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(mockFetchEventVideos).toHaveBeenCalled()
+    })
+
+    expect(screen.queryByText('영상')).not.toBeInTheDocument()
+  })
+
+  it('iframe에 allowFullScreen 속성이 있다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('수련회 찬양 모음'))
+
+    const iframe = container.querySelector('iframe')
+    expect(iframe).toHaveAttribute('allowfullscreen')
+  })
+
+  it('유효하지 않은 영상 URL이면 iframe 대신 에러 메시지가 표시된다', async () => {
+    const invalidVideos: EventVideo[] = [
+      {
+        id: 99,
+        title: '잘못된 영상',
+        link: 'https://malicious-site.com/evil',
+        subCategory: 'RETREAT_2026_WINTER',
+        createdAt: '2026-03-15T10:30:00',
+      },
+    ]
+    mockFetchEventVideos.mockResolvedValue(invalidVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('잘못된 영상')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('잘못된 영상'))
+
+    expect(container.querySelector('iframe')).not.toBeInTheDocument()
+    expect(screen.getByText('영상을 불러올 수 없습니다.')).toBeInTheDocument()
+  })
+
+  it('영상 뱃지에 접근성 라벨이 포함된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '수련회 찬양 모음 영상 재생' })).toBeInTheDocument()
+    })
   })
 })

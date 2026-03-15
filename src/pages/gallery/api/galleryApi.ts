@@ -10,6 +10,7 @@ import type {
   CreatePostRequest,
   CreatePostResponse,
   Church,
+  EventVideo,
 } from '../model/types'
 
 export const fetchGalleryAlbums = async (): Promise<GalleryResponse> => {
@@ -93,4 +94,13 @@ export const deletePost = async (postId: number): Promise<void> => {
   await apiRequest<void>(`/posts/${postId}`, {
     method: 'DELETE',
   })
+}
+
+export const fetchEventVideos = async (subCategory?: string): Promise<EventVideo[]> => {
+  const searchParams = new URLSearchParams()
+  if (subCategory) {
+    searchParams.set('subCategory', subCategory)
+  }
+  const query = searchParams.toString()
+  return apiRequest<EventVideo[]>(`/videos${query ? `?${query}` : ''}`)
 }

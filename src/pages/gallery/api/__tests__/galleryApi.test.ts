@@ -12,6 +12,7 @@ import {
   createPost,
   fetchChurches,
   deletePost,
+  fetchEventVideos,
 } from '../galleryApi'
 import { apiRequest } from '../../../../shared/api'
 
@@ -389,5 +390,73 @@ describe('fetchChurches', () => {
     mockApiRequest.mockRejectedValue(new Error('Network error'))
 
     await expect(fetchChurches()).rejects.toThrow('Network error')
+  })
+})
+
+describe('fetchEventVideos', () => {
+  it('파라미터 없이 호출하면 /videos로 요청한다', async () => {
+    const mockResponse = [
+      {
+        id: 1,
+        title: '수련회 찬양 모음',
+        link: 'https://www.youtube.com/embed/abc123',
+        subCategory: 'RETREAT_2026_WINTER',
+        createdAt: '2026-03-15T10:30:00',
+      },
+    ]
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    const result = await fetchEventVideos()
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/videos')
+    expect(result).toEqual(mockResponse)
+  })
+
+  it('subCategory를 쿼리 파라미터로 전달한다', async () => {
+    mockApiRequest.mockResolvedValue([])
+
+    await fetchEventVideos('RETREAT_2026_WINTER')
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/videos?subCategory=RETREAT_2026_WINTER')
+  })
+
+  it('특수문자가 포함된 subCategory를 인코딩한다', async () => {
+    mockApiRequest.mockResolvedValue([])
+
+    await fetchEventVideos('TEST VALUE')
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/videos?subCategory=TEST+VALUE')
+  })
+
+  it('여러 영상을 배열로 반환한다', async () => {
+    const mockResponse = [
+      {
+        id: 1,
+        title: '수련회 찬양 모음',
+        link: 'https://www.youtube.com/embed/abc123',
+        subCategory: 'RETREAT_2026_WINTER',
+        createdAt: '2026-03-15T10:30:00',
+      },
+      {
+        id: 2,
+        title: '수련회 설교 영상',
+        link: 'https://www.youtube.com/embed/def456',
+        subCategory: 'RETREAT_2026_WINTER',
+        createdAt: '2026-03-15T09:00:00',
+      },
+    ]
+    mockApiRequest.mockResolvedValue(mockResponse)
+
+    const result = await fetchEventVideos('RETREAT_2026_WINTER')
+
+    expect(result).toHaveLength(2)
+    expect(result[0].title).toBe('수련회 찬양 모음')
+    expect(result[1].title).toBe('수련회 설교 영상')
+  })
+
+  it('API 에러 시 에러를 전파한다', async () => {
+    mockApiRequest.mockRejectedValue(new Error('Network error'))
+
+    await expect(fetchEventVideos()).rejects.toThrow('Network error')
   })
 })
