@@ -1063,10 +1063,21 @@ const MediaLightbox = ({
 // ─── Event Video Section ─────────────────────────────────
 
 const PlayIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
     <polygon points="5 3 19 12 5 21 5 3" />
   </svg>
 )
+
+const isValidVideoEmbedUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' &&
+      parsed.hostname === 'www.youtube.com' &&
+      parsed.pathname.startsWith('/embed/')
+  } catch {
+    return false
+  }
+}
 
 const EventVideoSection = ({
   videos,
@@ -1094,6 +1105,7 @@ const EventVideoSection = ({
                 <button
                   key={video.id}
                   onClick={() => isActive ? onClose() : onSelect(video)}
+                  aria-label={`${video.title} 영상 ${isActive ? '닫기' : '재생'}`}
                   className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                     isActive
                       ? 'bg-[#3B5BDB] text-white'
@@ -1125,13 +1137,19 @@ const EventVideoSection = ({
                 </svg>
               </button>
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  src={selectedVideo.link}
-                  title={selectedVideo.title}
-                  className="absolute inset-0 w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                {isValidVideoEmbedUrl(selectedVideo.link) ? (
+                  <iframe
+                    src={selectedVideo.link}
+                    title={selectedVideo.title}
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#F0F0F0]">
+                    <p className="text-sm text-[#999999]">영상을 불러올 수 없습니다.</p>
+                  </div>
+                )}
               </div>
             </div>
             <p className="mt-2 text-sm font-medium text-[#333333]">{selectedVideo.title}</p>

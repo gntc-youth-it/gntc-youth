@@ -1244,13 +1244,13 @@ describe('GalleryPage 행사 영상 섹션', () => {
     const { container } = render(<GalleryPage />)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /수련회 찬양 모음/ })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /수련회 찬양 모음 영상 재생/ })).toBeInTheDocument()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음/ }))
+    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음 영상 재생/ }))
     expect(container.querySelector('iframe')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음/ }))
+    await userEvent.click(screen.getByRole('button', { name: /수련회 찬양 모음 영상 닫기/ }))
     expect(container.querySelector('iframe')).not.toBeInTheDocument()
   })
 
@@ -1315,5 +1315,41 @@ describe('GalleryPage 행사 영상 섹션', () => {
 
     const iframe = container.querySelector('iframe')
     expect(iframe).toHaveAttribute('allowfullscreen')
+  })
+
+  it('유효하지 않은 영상 URL이면 iframe 대신 에러 메시지가 표시된다', async () => {
+    const invalidVideos: EventVideo[] = [
+      {
+        id: 99,
+        title: '잘못된 영상',
+        link: 'https://malicious-site.com/evil',
+        subCategory: 'RETREAT_2026_WINTER',
+        createdAt: '2026-03-15T10:30:00',
+      },
+    ]
+    mockFetchEventVideos.mockResolvedValue(invalidVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    const { container } = render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('잘못된 영상')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('잘못된 영상'))
+
+    expect(container.querySelector('iframe')).not.toBeInTheDocument()
+    expect(screen.getByText('영상을 불러올 수 없습니다.')).toBeInTheDocument()
+  })
+
+  it('영상 뱃지에 접근성 라벨이 포함된다', async () => {
+    mockFetchEventVideos.mockResolvedValue(mockEventVideos)
+    mockUseGallery.mockReturnValue(retreatGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '수련회 찬양 모음 영상 재생' })).toBeInTheDocument()
+    })
   })
 })

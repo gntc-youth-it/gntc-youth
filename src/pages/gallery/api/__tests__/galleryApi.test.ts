@@ -425,7 +425,7 @@ describe('fetchEventVideos', () => {
 
     await fetchEventVideos('TEST VALUE')
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/videos?subCategory=TEST%20VALUE')
+    expect(mockApiRequest).toHaveBeenCalledWith('/videos?subCategory=TEST+VALUE')
   })
 
   it('여러 영상을 배열로 반환한다', async () => {

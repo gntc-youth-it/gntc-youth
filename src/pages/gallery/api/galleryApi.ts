@@ -97,6 +97,10 @@ export const deletePost = async (postId: number): Promise<void> => {
 }
 
 export const fetchEventVideos = async (subCategory?: string): Promise<EventVideo[]> => {
-  const query = subCategory ? `?subCategory=${encodeURIComponent(subCategory)}` : ''
-  return apiRequest<EventVideo[]>(`/videos${query}`)
+  const searchParams = new URLSearchParams()
+  if (subCategory) {
+    searchParams.set('subCategory', subCategory)
+  }
+  const query = searchParams.toString()
+  return apiRequest<EventVideo[]>(`/videos${query ? `?${query}` : ''}`)
 }
