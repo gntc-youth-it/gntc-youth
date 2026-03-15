@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const KakaoTalkIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -45,9 +47,9 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="#schedule" className="text-gray-400 hover:text-white transition-colors">
+                <Link to="/schedule" className="text-gray-400 hover:text-white transition-colors">
                   일정
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="/gallery" className="text-gray-400 hover:text-white transition-colors">

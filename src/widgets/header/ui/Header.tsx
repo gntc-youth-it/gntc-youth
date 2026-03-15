@@ -164,9 +164,9 @@ export const Header = () => {
                 </a>
               </li>
               <li>
-                <a href="#schedule" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                <Link to="/schedule" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                   일정
-                </a>
+                </Link>
               </li>
               <li>
                 <Link
@@ -347,13 +347,13 @@ export const Header = () => {
             </a>
           </li>
           <li>
-            <a
-              href="#schedule"
+            <Link
+              to="/schedule"
               onClick={handleNavClick}
               className="block text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               일정
-            </a>
+            </Link>
           </li>
           <li>
             <Link
