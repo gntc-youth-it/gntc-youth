@@ -46,7 +46,6 @@ const mockChurchInfo = {
   churchId: 'ANYANG',
   groupPhotoFileId: 7,
   groupPhotoPath: '/photos/anyang.jpg',
-  instagramId: 'anyang_youth',
   prayerTopics: [
     { id: 1, content: '교회의 부흥을 위해', sortOrder: 1 },
     { id: 2, content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -107,58 +106,6 @@ describe('EditSanctuaryModal', () => {
       renderModal({ churchId: '' })
 
       expect(screen.queryByText('성전 정보 수정')).not.toBeInTheDocument()
-    })
-  })
-
-  describe('인스타그램 ID', () => {
-    it('기존 인스타그램 아이디를 표시한다', () => {
-      renderModal()
-
-      expect(screen.getByDisplayValue('anyang_youth')).toBeInTheDocument()
-    })
-
-    it('인스타그램 아이디를 수정할 수 있다', async () => {
-      const user = userEvent.setup()
-      renderModal()
-
-      const input = screen.getByDisplayValue('anyang_youth')
-      await user.clear(input)
-      await user.type(input, 'new_insta_id')
-
-      expect(input).toHaveValue('new_insta_id')
-    })
-
-    it('인스타그램 아이디를 비우면 null로 저장한다', async () => {
-      const user = userEvent.setup()
-      renderModal()
-
-      const input = screen.getByDisplayValue('anyang_youth')
-      await user.clear(input)
-
-      await user.click(screen.getByText('저장하기'))
-
-      await waitFor(() => {
-        expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
-          groupPhotoFileId: 7,
-          instagramId: null,
-          prayerTopics: expect.any(Array),
-        })
-      })
-    })
-
-    it('인스타그램 아이디가 없는 성전 정보를 로드하면 빈 문자열로 초기화된다', () => {
-      mockUseChurchInfo.mockReturnValue({
-        churchInfo: {
-          ...mockChurchInfo,
-          instagramId: null,
-        },
-        isLoading: false,
-        error: null,
-      } as ReturnType<typeof useChurchInfo>)
-
-      renderModal()
-
-      expect(screen.getByPlaceholderText('인스타그램 아이디')).toHaveValue('')
     })
   })
 
@@ -226,7 +173,6 @@ describe('EditSanctuaryModal', () => {
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
           groupPhotoFileId: 7,
-          instagramId: 'anyang_youth',
           prayerTopics: [
             { content: '교회의 부흥을 위해', sortOrder: 1 },
             { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -257,7 +203,6 @@ describe('EditSanctuaryModal', () => {
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
           groupPhotoFileId: null,
-          instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
         })
       })
@@ -334,7 +279,6 @@ describe('EditSanctuaryModal', () => {
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
           groupPhotoFileId: 42,
-          instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
         })
       })
@@ -383,7 +327,6 @@ describe('EditSanctuaryModal', () => {
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
           groupPhotoFileId: 99,
-          instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
         })
       })
@@ -414,7 +357,6 @@ describe('EditSanctuaryModal', () => {
       await waitFor(() => {
         expect(mockUpdateChurchInfo).toHaveBeenCalledWith('ANYANG', {
           groupPhotoFileId: 50,
-          instagramId: 'anyang_youth',
           prayerTopics: expect.any(Array),
         })
       })

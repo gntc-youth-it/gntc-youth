@@ -47,7 +47,6 @@ describe('updateChurchInfo', () => {
 
     await updateChurchInfo('ANYANG', {
       groupPhotoFileId: 1,
-      instagramId: 'anyang_youth',
       prayerTopics: [
         { content: '교회의 부흥을 위해', sortOrder: 1 },
         { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -58,7 +57,6 @@ describe('updateChurchInfo', () => {
       method: 'PUT',
       body: JSON.stringify({
         groupPhotoFileId: 1,
-        instagramId: 'anyang_youth',
         prayerTopics: [
           { content: '교회의 부흥을 위해', sortOrder: 1 },
           { content: '청년들의 신앙 성장을 위해', sortOrder: 2 },
@@ -72,7 +70,6 @@ describe('updateChurchInfo', () => {
 
     await updateChurchInfo('SUWON', {
       groupPhotoFileId: null,
-      instagramId: null,
       prayerTopics: [{ content: '기도제목 1', sortOrder: 1 }],
     })
 
@@ -80,7 +77,6 @@ describe('updateChurchInfo', () => {
       method: 'PUT',
       body: JSON.stringify({
         groupPhotoFileId: null,
-        instagramId: null,
         prayerTopics: [{ content: '기도제목 1', sortOrder: 1 }],
       }),
     })
@@ -92,7 +88,6 @@ describe('updateChurchInfo', () => {
     await expect(
       updateChurchInfo('ANYANG', {
         groupPhotoFileId: null,
-        instagramId: null,
         prayerTopics: [{ content: 'test', sortOrder: 1 }],
       })
     ).rejects.toThrow('서버 오류')
