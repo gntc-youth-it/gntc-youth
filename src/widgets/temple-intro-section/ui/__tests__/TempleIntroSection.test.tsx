@@ -80,7 +80,6 @@ const mockChurchInfoResult = {
     churchId: 'ANYANG',
     groupPhotoFileId: null,
     groupPhotoPath: null,
-    instagramId: null,
     prayerTopics: [
       { id: 1, content: '기도제목1', sortOrder: 1 },
     ],
@@ -286,45 +285,6 @@ describe('TempleIntroSection 수정 버튼 권한', () => {
   })
 })
 
-describe('TempleIntroSection 인스타그램 링크', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    mockUseChurches.mockReturnValue({
-      churches,
-      isLoading: false,
-    } as ReturnType<typeof useChurches>)
-    mockUseAuth.mockReturnValue({
-      ...baseAuthValue,
-      user: { id: 4, name: 'Member', role: 'MEMBER', churchId: 'ANYANG' },
-    })
-  })
-
-  it('instagramId가 있으면 인스타그램 링크가 표시된다', () => {
-    mockUseChurchInfo.mockReturnValue({
-      ...mockChurchInfoResult,
-      churchInfo: {
-        ...mockChurchInfoResult.churchInfo!,
-        instagramId: 'anyang_youth',
-      },
-    } as ReturnType<typeof useChurchInfo>)
-
-    render(<TempleIntroSection />)
-
-    const link = screen.getByText('@anyang_youth')
-    expect(link).toBeInTheDocument()
-    expect(link.closest('a')).toHaveAttribute('href', 'https://instagram.com/anyang_youth/')
-    expect(link.closest('a')).toHaveAttribute('target', '_blank')
-  })
-
-  it('instagramId가 null이면 인스타그램 링크가 표시되지 않는다', () => {
-    mockUseChurchInfo.mockReturnValue(mockChurchInfoResult)
-
-    render(<TempleIntroSection />)
-
-    expect(screen.queryByText(/@/)).not.toBeInTheDocument()
-  })
-})
-
 describe('TempleIntroSection 사진 캐러셀', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -345,7 +305,6 @@ describe('TempleIntroSection 사진 캐러셀', () => {
         churchId: 'ANYANG',
         groupPhotoFileId: null,
         groupPhotoPath: null,
-        instagramId: null,
         prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
         randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg', 'uploads/img3.jpg'],
       },
@@ -382,7 +341,6 @@ describe('TempleIntroSection 사진 캐러셀', () => {
         churchId: 'ANYANG',
         groupPhotoFileId: null,
         groupPhotoPath: null,
-        instagramId: null,
         prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
         randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg'],
       },
@@ -403,7 +361,6 @@ describe('TempleIntroSection 사진 캐러셀', () => {
         churchId: 'ANYANG',
         groupPhotoFileId: null,
         groupPhotoPath: null,
-        instagramId: null,
         prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
         randomPhotos: ['uploads/img1.jpg'],
       },
@@ -425,7 +382,6 @@ describe('TempleIntroSection 사진 캐러셀', () => {
         churchId: 'ANYANG',
         groupPhotoFileId: null,
         groupPhotoPath: null,
-        instagramId: null,
         prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
         randomPhotos: ['uploads/img1.jpg'],
       },
@@ -450,7 +406,6 @@ describe('TempleIntroSection 사진 캐러셀', () => {
         churchId: 'ANYANG',
         groupPhotoFileId: null,
         groupPhotoPath: null,
-        instagramId: null,
         prayerTopics: [{ id: 1, content: '기도제목1', sortOrder: 1 }],
         randomPhotos: ['uploads/img1.jpg', 'uploads/img2.jpg', 'uploads/img3.jpg'],
       },
