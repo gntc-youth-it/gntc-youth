@@ -376,7 +376,7 @@ export const TempleIntroSection = () => {
   const effectiveTab = activeTab || defaultTab
 
   const isMaster = user?.role === 'MASTER'
-  const canEditActiveChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === effectiveTab)
+  const canEditActiveChurch = isMaster || ((user?.role === 'LEADER' || user?.role === 'MANAGER') && user?.churchId === effectiveTab)
 
   const activeChurchName = churches.find((c) => c.code === effectiveTab)?.name ?? ''
 
@@ -428,7 +428,7 @@ export const TempleIntroSection = () => {
           </TabsList>
 
           {churches.map((church) => {
-            const canEditThisChurch = isMaster || (user?.role === 'LEADER' && user?.churchId === church.code)
+            const canEditThisChurch = isMaster || ((user?.role === 'LEADER' || user?.role === 'MANAGER') && user?.churchId === church.code)
             return (
               <TabsContent
                 key={church.code}
