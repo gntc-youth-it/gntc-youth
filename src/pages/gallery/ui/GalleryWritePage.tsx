@@ -162,7 +162,7 @@ export const GalleryWritePage = () => {
     submitError,
   } = useGalleryWrite()
 
-  const canUploadImages = user?.role === 'LEADER' || user?.role === 'MANAGER' || user?.role === 'MASTER'
+  const canUploadImages = !!user?.role && ['LEADER', 'MANAGER', 'MASTER'].includes(user.role)
 
   const handleHashtagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.nativeEvent.isComposing) return

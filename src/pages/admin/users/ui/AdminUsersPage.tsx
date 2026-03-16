@@ -40,6 +40,11 @@ const getRoleBadge = (role: string) => {
 const canChangeRole = (user: { role: string; churchName: string | null }) =>
   user.role !== 'MASTER' && user.churchName !== null
 
+const normalizeAssignableRole = (role: string): 'USER' | 'LEADER' | 'MANAGER' => {
+  if (role === 'LEADER' || role === 'MANAGER') return role
+  return 'USER'
+}
+
 interface RoleChangeTarget {
   user: AdminUserResponse
   newRole: 'USER' | 'LEADER' | 'MANAGER'
@@ -62,7 +67,7 @@ const RoleDisplay = ({
     return (
       <span className={`inline-flex items-center rounded-full text-xs font-semibold ${className} ${roleBadge.className}`}>
         <select
-          value={u.role === 'LEADER' ? 'LEADER' : u.role === 'MANAGER' ? 'MANAGER' : 'USER'}
+          value={normalizeAssignableRole(u.role)}
           onChange={(e) => onRoleSelect(u, e.target.value)}
           disabled={disabled}
           className={`appearance-none bg-transparent border-0 cursor-pointer outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-wait ${roleBadge.className}`}
@@ -119,7 +124,7 @@ export const AdminUsersPage = () => {
   }
 
   const handleRoleSelect = async (targetUser: AdminUserResponse, newRole: string) => {
-    const currentRole = targetUser.role === 'LEADER' ? 'LEADER' : targetUser.role === 'MANAGER' ? 'MANAGER' : 'USER'
+    const currentRole = normalizeAssignableRole(targetUser.role)
     if (newRole === currentRole) return
 
     if (newRole === 'LEADER' && targetUser.churchId) {
