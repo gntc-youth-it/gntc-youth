@@ -21,6 +21,7 @@ const getPageNumbers = (currentPage: number, totalPages: number): (number | '...
 const ROLE_OPTIONS = [
   { value: 'USER', label: '일반' },
   { value: 'LEADER', label: '회장' },
+  { value: 'MANAGER', label: '담당자' },
 ] as const
 
 const getRoleBadge = (role: string) => {
@@ -29,6 +30,8 @@ const getRoleBadge = (role: string) => {
       return { label: '관리자', className: 'bg-purple-100 text-purple-700' }
     case 'LEADER':
       return { label: '회장', className: 'bg-blue-100 text-blue-700' }
+    case 'MANAGER':
+      return { label: '담당자', className: 'bg-green-100 text-green-700' }
     default:
       return { label: '일반', className: 'bg-orange-50 text-orange-600' }
   }
@@ -37,9 +40,14 @@ const getRoleBadge = (role: string) => {
 const canChangeRole = (user: { role: string; churchName: string | null }) =>
   user.role !== 'MASTER' && user.churchName !== null
 
+const normalizeAssignableRole = (role: string): 'USER' | 'LEADER' | 'MANAGER' => {
+  if (role === 'LEADER' || role === 'MANAGER') return role
+  return 'USER'
+}
+
 interface RoleChangeTarget {
   user: AdminUserResponse
-  newRole: 'USER' | 'LEADER'
+  newRole: 'USER' | 'LEADER' | 'MANAGER'
   currentLeaderName: string | null
 }
 
@@ -59,7 +67,7 @@ const RoleDisplay = ({
     return (
       <span className={`inline-flex items-center rounded-full text-xs font-semibold ${className} ${roleBadge.className}`}>
         <select
-          value={u.role === 'LEADER' ? 'LEADER' : 'USER'}
+          value={normalizeAssignableRole(u.role)}
           onChange={(e) => onRoleSelect(u, e.target.value)}
           disabled={disabled}
           className={`appearance-none bg-transparent border-0 cursor-pointer outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-wait ${roleBadge.className}`}
@@ -116,7 +124,7 @@ export const AdminUsersPage = () => {
   }
 
   const handleRoleSelect = async (targetUser: AdminUserResponse, newRole: string) => {
-    const currentRole = targetUser.role === 'LEADER' ? 'LEADER' : 'USER'
+    const currentRole = normalizeAssignableRole(targetUser.role)
     if (newRole === currentRole) return
 
     if (newRole === 'LEADER' && targetUser.churchId) {
@@ -136,7 +144,7 @@ export const AdminUsersPage = () => {
     } else {
       setRoleChangeTarget({
         user: targetUser,
-        newRole: newRole as 'USER' | 'LEADER',
+        newRole: newRole as 'USER' | 'LEADER' | 'MANAGER',
         currentLeaderName: null,
       })
     }
@@ -366,6 +374,12 @@ export const AdminUsersPage = () => {
                     변경하시겠습니까?
                   </p>
                 )
+              ) : roleChangeTarget.newRole === 'MANAGER' ? (
+                <p>
+                  <span className="font-semibold">{roleChangeTarget.user.name}</span>님을{' '}
+                  <span className="font-semibold">{roleChangeTarget.user.churchName}</span> 담당자로
+                  변경하시겠습니까?
+                </p>
               ) : (
                 <p>
                   <span className="font-semibold">{roleChangeTarget.user.name}</span>님을 일반 사용자로

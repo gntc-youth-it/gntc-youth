@@ -1276,7 +1276,7 @@ export const GalleryPage = () => {
                 <p className="text-sm text-[#666666]">
                   은혜와진리교회 청년봉사선교회 · 사진 갤러리</p>
               </div>
-              {isLoggedIn && (
+              {isLoggedIn && !!user?.role && ['LEADER', 'MANAGER', 'MASTER'].includes(user.role) && (
                 <button
                   onClick={() => navigate('/gallery/write')}
                   className="px-5 py-2.5 bg-[#3B5BDB] text-white text-sm font-semibold rounded-lg hover:bg-[#364FC7] transition-colors shrink-0"
