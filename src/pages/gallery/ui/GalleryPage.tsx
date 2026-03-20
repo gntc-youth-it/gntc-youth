@@ -5,8 +5,7 @@ import { useAuth } from '../../../features/auth'
 import { useGallery } from '../model/useGallery'
 import { useFeed } from '../model/useFeed'
 import { deletePost, fetchEventVideos } from '../api/galleryApi'
-import { buildCdnUrl, isVideoUrl, useInfiniteScroll } from '../../../shared/lib'
-import { FALLBACK_IMAGE_URL } from '../../../shared/config'
+import { buildCdnUrl, isVideoUrl, useInfiniteScroll, handleImageError } from '../../../shared/lib'
 import { ProfileImage } from '../../../shared/ui'
 import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption, EventVideo } from '../model/types'
 
@@ -104,12 +103,10 @@ const LazyImage = ({
   onClick?: () => void
 }) => {
   const [loaded, setLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     setLoaded(false)
-    setHasError(false)
   }, [src])
 
   useEffect(() => {
@@ -148,10 +145,7 @@ const LazyImage = ({
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={(e) => {
-          if (!hasError) {
-            setHasError(true)
-            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-          }
+          handleImageError(e)
           setLoaded(true)
         }}
       />
@@ -356,9 +350,7 @@ const RetreatHeroBanner = ({
       src={buildCdnUrl(sub.imageUrl)}
       alt={sub.displayName}
       className="w-full h-full object-cover"
-      onError={(e) => {
-        ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-      }}
+      onError={handleImageError}
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
     <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 lg:px-[60px] pb-8">
@@ -444,9 +436,7 @@ const RetreatSelectorModal = ({
                 src={buildCdnUrl(sub.imageUrl)}
                 alt={sub.displayName}
                 className="w-16 h-20 rounded-lg object-cover flex-shrink-0"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                }}
+                onError={handleImageError}
               />
               <div className="flex flex-col gap-1 min-w-0">
                 <span className={`text-[15px] font-bold leading-tight ${isSelected ? 'text-[#3B5BDB]' : 'text-[#1A1A1A]'}`}>
@@ -1051,9 +1041,7 @@ const MediaLightbox = ({
           alt="확대 사진"
           className="max-w-[95vw] max-h-[95vh] object-contain"
           onClick={(e) => e.stopPropagation()}
-          onError={(e) => {
-            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-          }}
+          onError={handleImageError}
         />
       )}
     </div>
