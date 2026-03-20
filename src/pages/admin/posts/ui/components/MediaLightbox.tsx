@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { isVideoUrl } from '../../../../../shared/lib'
-import { FALLBACK_IMAGE_URL } from '../../../../../shared/config'
+import { isVideoUrl, handleImageError } from '../../../../../shared/lib'
 
 export const MediaLightbox = ({
   imageUrl,
@@ -60,9 +59,7 @@ export const MediaLightbox = ({
           alt="확대 사진"
           className="max-w-[95vw] max-h-[95vh] object-contain"
           onClick={(e) => e.stopPropagation()}
-          onError={(e) => {
-            ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-          }}
+          onError={handleImageError}
         />
       )}
     </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { buildCdnUrl, isVideoUrl } from '../../../../../shared/lib'
-import { FALLBACK_IMAGE_URL } from '../../../../../shared/config'
+import { buildCdnUrl, isVideoUrl, handleImageError } from '../../../../../shared/lib'
 import type { FeedPostImage } from '../../../../gallery/model/types'
 
 // ─── Icons ──────────────────────────────────────────────
@@ -122,9 +121,7 @@ export const FeedImageCarousel = ({ images, onImageClick }: { images: FeedPostIm
                     className="w-full h-[360px] sm:h-[400px] object-cover cursor-pointer"
                     loading="lazy"
                     onClick={() => onImageClick(url)}
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                    }}
+                    onError={handleImageError}
                   />
                 )}
               </div>

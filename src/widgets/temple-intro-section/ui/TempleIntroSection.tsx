@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/ui'
 import { ChurchMedia, PrayerList, useChurches, useChurchInfo } from '../../../entities/church'
 import type { PrayerTopicResponse } from '../../../entities/church'
-import { buildCdnUrl } from '../../../shared/lib'
-import { FALLBACK_IMAGE_URL } from '../../../shared/config'
+import { buildCdnUrl, handleImageError } from '../../../shared/lib'
 import { useAuth } from '../../../features/auth'
 import { EditSanctuaryModal } from '../../../features/edit-sanctuary'
 import { useTempleIntroAnimation } from '../model/useTempleIntroAnimation'
@@ -77,9 +76,7 @@ const ChurchPhotoCarousel = ({
             src={buildCdnUrl(photos[0])}
             alt="성전 사진 1"
             className="w-full h-48 sm:h-64 md:h-72 object-cover"
-            onError={(e) => {
-              ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-            }}
+            onError={handleImageError}
           />
         </div>
       ) : (
@@ -103,9 +100,7 @@ const ChurchPhotoCarousel = ({
                   src={buildCdnUrl(photo)}
                   alt={`성전 사진 ${idx + 1}`}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE_URL
-                  }}
+                  onError={handleImageError}
                 />
               </button>
             )

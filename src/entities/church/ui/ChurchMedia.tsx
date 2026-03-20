@@ -1,5 +1,5 @@
 import { FALLBACK_IMAGE_URL } from '../../../shared/config'
-import { isVideoUrl } from '../../../shared/lib'
+import { isVideoUrl, handleImageError } from '../../../shared/lib'
 
 interface ChurchMediaProps {
   mediaUrl: string
@@ -26,6 +26,7 @@ export const ChurchMedia = ({ mediaUrl, churchName, className, onLoad }: ChurchM
           fallbackImg.src = FALLBACK_IMAGE_URL
           fallbackImg.alt = `${churchName}성전 청년봉사선교회`
           fallbackImg.className = className || ''
+          fallbackImg.onerror = () => handleImageError({ currentTarget: fallbackImg } as React.SyntheticEvent<HTMLImageElement>)
           videoElement.parentNode?.replaceChild(fallbackImg, videoElement)
         }}
       />
@@ -40,10 +41,7 @@ export const ChurchMedia = ({ mediaUrl, churchName, className, onLoad }: ChurchM
       onLoad={onLoad}
       onError={(e) => {
         onLoad?.()
-        const imgElement = e.target as HTMLImageElement
-        if (imgElement.src !== FALLBACK_IMAGE_URL) {
-          imgElement.src = FALLBACK_IMAGE_URL
-        }
+        handleImageError(e)
       }}
     />
   )
