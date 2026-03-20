@@ -26,7 +26,9 @@ export const ChurchMedia = ({ mediaUrl, churchName, className, onLoad }: ChurchM
           fallbackImg.src = FALLBACK_IMAGE_URL
           fallbackImg.alt = `${churchName}성전 청년봉사선교회`
           fallbackImg.className = className || ''
-          fallbackImg.onerror = () => handleImageError({ currentTarget: fallbackImg } as React.SyntheticEvent<HTMLImageElement>)
+          fallbackImg.onerror = (ev) => {
+            if (ev instanceof Event) handleImageError(ev)
+          }
           videoElement.parentNode?.replaceChild(fallbackImg, videoElement)
         }}
       />

@@ -6,8 +6,11 @@ const INLINE_FALLBACK =
 
 const failedSet = new WeakSet<HTMLImageElement>()
 
-export function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
-  const img = e.currentTarget
+export function handleImageError(e: React.SyntheticEvent<HTMLImageElement> | Event) {
+  const img =
+    'currentTarget' in e && e.currentTarget instanceof HTMLImageElement
+      ? e.currentTarget
+      : (e.target as HTMLImageElement)
   if (failedSet.has(img)) {
     // fallback도 실패 → inline SVG로 최종 교체 (더 이상 네트워크 요청 없음)
     img.src = INLINE_FALLBACK
