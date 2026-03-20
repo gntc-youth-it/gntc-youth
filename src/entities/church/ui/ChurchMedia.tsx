@@ -23,12 +23,12 @@ export const ChurchMedia = ({ mediaUrl, churchName, className, onLoad }: ChurchM
           onLoad?.()
           const videoElement = e.target as HTMLVideoElement
           const fallbackImg = document.createElement('img')
-          fallbackImg.src = FALLBACK_IMAGE_URL
           fallbackImg.alt = `${churchName}성전 청년봉사선교회`
           fallbackImg.className = className || ''
           fallbackImg.onerror = (ev) => {
             if (ev instanceof Event) handleImageError(ev)
           }
+          fallbackImg.src = FALLBACK_IMAGE_URL
           videoElement.parentNode?.replaceChild(fallbackImg, videoElement)
         }}
       />
