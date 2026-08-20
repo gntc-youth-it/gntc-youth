@@ -1245,14 +1245,22 @@ export const GalleryPage = () => {
   const selectedSub = subCategories.find((s) => s.name === selectedSubCategory)
   const programs = selectedSub?.children ?? []
 
-  // 행사 영상 조회
+  // 행사 영상 조회 (필터 전환 시 이전 요청의 늦은 응답은 무시)
   useEffect(() => {
+    let cancelled = false
     setEventVideos([])
     setSelectedEventVideo(null)
     if (effectiveSubCategory) {
       fetchEventVideos(effectiveSubCategory)
-        .then(setEventVideos)
-        .catch(() => setEventVideos([]))
+        .then((videos) => {
+          if (!cancelled) setEventVideos(videos)
+        })
+        .catch(() => {
+          if (!cancelled) setEventVideos([])
+        })
+    }
+    return () => {
+      cancelled = true
     }
   }, [effectiveSubCategory])
 

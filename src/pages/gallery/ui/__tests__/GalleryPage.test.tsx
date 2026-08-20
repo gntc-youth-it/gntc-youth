@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
@@ -594,6 +594,54 @@ describe('GalleryPage 수련회 프로그램 탭', () => {
     await userEvent.click(screen.getByRole('button', { name: /피드/ }))
 
     expect(mockLoadFeed).toHaveBeenCalledWith({ subCategory: 'RETREAT_2026_SUMMER_WALK' })
+  })
+
+  it('프로그램 전환 시 이전 요청의 영상 응답은 무시된다', async () => {
+    const staleVideos: EventVideo[] = [
+      {
+        id: 1,
+        title: '수련회 전체 하이라이트',
+        link: 'https://www.youtube.com/embed/all123',
+        subCategory: 'RETREAT_2026_SUMMER',
+        createdAt: '2026-08-16T10:00:00',
+      },
+    ]
+    const sportsVideos: EventVideo[] = [
+      {
+        id: 2,
+        title: '체육대회 하이라이트',
+        link: 'https://www.youtube.com/embed/sports456',
+        subCategory: 'RETREAT_2026_SUMMER_SPORTS',
+        createdAt: '2026-08-16T11:00:00',
+      },
+    ]
+
+    let resolveStale: (videos: EventVideo[]) => void
+    mockFetchEventVideos
+      .mockReturnValueOnce(new Promise((resolve) => { resolveStale = resolve }))
+      .mockResolvedValueOnce(sportsVideos)
+
+    mockUseGallery.mockReturnValue(summerGallery)
+    const { rerender } = render(<GalleryPage />)
+
+    // 전체 → 체육대회 프로그램 전환
+    mockUseGallery.mockReturnValue({
+      ...summerGallery,
+      selectedProgram: 'RETREAT_2026_SUMMER_SPORTS',
+    })
+    rerender(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('체육대회 하이라이트')).toBeInTheDocument()
+    })
+
+    // 이전(전체) 요청이 늦게 도착 → 무시되어야 함
+    await act(async () => {
+      resolveStale!(staleVideos)
+    })
+
+    expect(screen.queryByText('수련회 전체 하이라이트')).not.toBeInTheDocument()
+    expect(screen.getByText('체육대회 하이라이트')).toBeInTheDocument()
   })
 })
 

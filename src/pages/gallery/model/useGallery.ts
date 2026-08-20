@@ -13,6 +13,8 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
   const [error, setError] = useState<string | null>(null)
   const [hasNext, setHasNext] = useState(true)
   const cursorRef = useRef<number | null>(null)
+  // 요청 에포크: 필터 전환 등으로 새 요청이 시작되면 이전 요청의 응답은 무시
+  const photoRequestRef = useRef(0)
 
   // 수련회 서브카테고리 상태
   const [subCategories, setSubCategories] = useState<SubCategory[]>([])
@@ -37,6 +39,7 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
   }, [userChurchId])
 
   const loadPhotos = useCallback(async (reset: boolean, opts?: { subCategory?: string; churchId?: string }) => {
+    const requestId = ++photoRequestRef.current
     if (reset) {
       setIsLoading(true)
       setPhotos([])
@@ -52,15 +55,19 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
         subCategory: opts?.subCategory,
         churchId: opts?.churchId,
       })
+      if (requestId !== photoRequestRef.current) return
       setPhotos((prev) => (reset ? response.images : [...prev, ...response.images]))
       setHasNext(response.hasNext)
       cursorRef.current = response.nextCursor
       setError(null)
     } catch (err) {
+      if (requestId !== photoRequestRef.current) return
       setError('사진을 불러오는데 실패했습니다.')
     } finally {
-      setIsLoading(false)
-      setIsFetchingMore(false)
+      if (requestId === photoRequestRef.current) {
+        setIsLoading(false)
+        setIsFetchingMore(false)
+      }
     }
   }, [])
 
