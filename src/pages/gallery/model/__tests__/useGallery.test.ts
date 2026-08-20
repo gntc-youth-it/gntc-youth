@@ -39,6 +39,11 @@ const mockSubCategories: SubCategory[] = [
     imageUrl: 'assets/2025-summer-poster.webp',
     startDate: '2025-07-10',
     endDate: '2025-07-12',
+    children: [
+      { name: 'RETREAT_2025_SUMMER_SPORTS', displayName: '체육대회' },
+      { name: 'RETREAT_2025_SUMMER_WALK', displayName: '함께걷장' },
+      { name: 'RETREAT_2025_SUMMER_ETC', displayName: '그외 활동' },
+    ],
   },
 ]
 
@@ -409,6 +414,264 @@ describe('useGallery 수련회 서브카테고리', () => {
 
     expect(mockFetchGalleryPhotos).not.toHaveBeenCalled()
     expect(result.current.photos).toHaveLength(0)
+  })
+})
+
+describe('useGallery 하위 프로그램', () => {
+  // RETREAT 카테고리 진입 후 하위 프로그램이 있는 서브카테고리(RETREAT_2025_SUMMER)를 선택한 상태로 만든다
+  const setupSummerRetreat = async (result: { current: ReturnType<typeof useGallery> }) => {
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.selectSubCategory('RETREAT_2025_SUMMER')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+  }
+
+  it('초기 selectedProgram은 null이다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    expect(result.current.selectedProgram).toBeNull()
+  })
+
+  it('selectProgram으로 프로그램 선택 시 프로그램 이름으로 사진을 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedProgram).toBe('RETREAT_2025_SUMMER_SPORTS')
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      subCategory: 'RETREAT_2025_SUMMER_SPORTS',
+    })
+  })
+
+  it('selectProgram(null) 호출 시 상위 수련회 전체로 조회한다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.selectProgram(null)
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedProgram).toBeNull()
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      subCategory: 'RETREAT_2025_SUMMER',
+    })
+  })
+
+  it('프로그램 선택 후 loadMore 시 프로그램 이름이 전달된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_WALK')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+    mockFetchGalleryPhotos.mockResolvedValueOnce({
+      images: [{ id: 39, url: 'uploads/more.jpg' }],
+      nextCursor: null,
+      hasNext: false,
+    })
+
+    act(() => {
+      result.current.loadMore()
+    })
+
+    await waitFor(() => {
+      expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+        size: 20,
+        cursor: 41,
+        subCategory: 'RETREAT_2025_SUMMER_WALK',
+      })
+    })
+  })
+
+  it('프로그램을 연속 전환하면 늦게 도착한 이전 요청 응답은 무시된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    let resolveSports: (value: GalleryPhotosResponse) => void
+    let resolveWalk: (value: GalleryPhotosResponse) => void
+    mockFetchGalleryPhotos
+      .mockReturnValueOnce(new Promise((resolve) => { resolveSports = resolve }))
+      .mockReturnValueOnce(new Promise((resolve) => { resolveWalk = resolve }))
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_WALK')
+    })
+
+    // 나중 요청(함께걷장)이 먼저 도착
+    await act(async () => {
+      resolveWalk!({
+        images: [{ id: 2, url: 'uploads/walk.jpg' }],
+        nextCursor: 2,
+        hasNext: true,
+      })
+    })
+
+    // 이전 요청(체육대회)이 늦게 도착 → 무시되어야 함
+    await act(async () => {
+      resolveSports!({
+        images: [{ id: 1, url: 'uploads/sports.jpg' }],
+        nextCursor: 1,
+        hasNext: false,
+      })
+    })
+
+    expect(result.current.photos).toEqual([{ id: 2, url: 'uploads/walk.jpg' }])
+    expect(result.current.hasNext).toBe(true)
+    expect(result.current.isLoading).toBe(false)
+  })
+
+  it('페이지네이션 진행 중 프로그램을 전환하면 이전 페이지 응답이 추가되지 않는다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    // loadMore 요청은 pending 상태로 유지
+    let resolveMore: (value: GalleryPhotosResponse) => void
+    mockFetchGalleryPhotos.mockReturnValueOnce(
+      new Promise((resolve) => { resolveMore = resolve }),
+    )
+
+    act(() => {
+      result.current.loadMore()
+    })
+
+    // 페이지네이션 응답 전에 프로그램 전환
+    mockFetchGalleryPhotos.mockResolvedValueOnce({
+      images: [{ id: 10, url: 'uploads/sports.jpg' }],
+      nextCursor: null,
+      hasNext: false,
+    })
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    // 이전 탭의 페이지네이션 응답이 늦게 도착 → 무시되어야 함
+    await act(async () => {
+      resolveMore!({
+        images: [{ id: 99, url: 'uploads/stale.jpg' }],
+        nextCursor: 99,
+        hasNext: true,
+      })
+    })
+
+    expect(result.current.photos).toEqual([{ id: 10, url: 'uploads/sports.jpg' }])
+    expect(result.current.hasNext).toBe(false)
+  })
+
+  it('selectSubCategory로 다른 행사 선택 시 프로그램 선택이 초기화된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    mockFetchGalleryPhotos.mockClear()
+
+    act(() => {
+      result.current.selectSubCategory('RETREAT_2026_WINTER')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedProgram).toBeNull()
+    expect(mockFetchGalleryPhotos).toHaveBeenCalledWith({
+      size: 20,
+      cursor: null,
+      subCategory: 'RETREAT_2026_WINTER',
+    })
+  })
+
+  it('카테고리 변경 시 프로그램 선택이 초기화된다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2025_SUMMER_SPORTS')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('ALL')
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.selectedProgram).toBeNull()
   })
 })
 

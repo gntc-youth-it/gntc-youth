@@ -143,6 +143,9 @@ export const GalleryWritePage = () => {
     setSelectedCategory,
     selectedSubCategory,
     setSelectedSubCategory,
+    programOptions,
+    selectedProgram,
+    setSelectedProgram,
     content,
     setContent,
     hashtags,
@@ -313,6 +316,26 @@ export const GalleryWritePage = () => {
                     ))}
                   </select>
                 </div>
+                {programOptions.length > 0 && (
+                  <div>
+                    <label className="block text-sm text-[#666666] mb-1.5">프로그램 (필수)</label>
+                    <select
+                      value={selectedProgram}
+                      onChange={(e) => setSelectedProgram(e.target.value)}
+                      className="w-full h-11 px-4 border border-gray-200 rounded-lg text-sm text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#3B5BDB]/20 focus:border-[#3B5BDB] transition-colors"
+                    >
+                      <option value="">프로그램 선택</option>
+                      {programOptions.map((program) => (
+                        <option key={program.name} value={program.name}>
+                          {program.displayName}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1.5 text-xs text-[#999999]">
+                      이 행사는 프로그램별로 사진을 등록합니다.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -488,7 +511,7 @@ export const GalleryWritePage = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || isCheckingProfile || !selectedSubCategory}
+              disabled={isSubmitting || isCheckingProfile || !selectedSubCategory || (programOptions.length > 0 && !selectedProgram)}
               className="w-full py-3.5 bg-[#3B5BDB] text-white text-base font-semibold rounded-xl hover:bg-[#364FC7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isCheckingProfile ? '확인 중...' : isSubmitting ? '등록 중...' : '게시글 등록'}

@@ -57,6 +57,11 @@ export interface SubCategoryVerse {
   content: string
 }
 
+export interface SubCategoryChild {
+  name: string
+  displayName: string
+}
+
 export interface SubCategory {
   name: string
   displayName: string
@@ -64,6 +69,7 @@ export interface SubCategory {
   startDate: string
   endDate: string
   verse?: SubCategoryVerse
+  children?: SubCategoryChild[]
 }
 
 export interface CreatePostRequest {

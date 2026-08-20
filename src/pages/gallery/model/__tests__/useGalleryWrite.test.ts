@@ -64,6 +64,15 @@ import { useGalleryWrite } from '../useGalleryWrite'
 
 const mockCategories = [{ name: 'RETREAT', displayName: '수련회' }]
 const mockSubCategories = [{ name: 'RETREAT_2026_WINTER', displayName: '2026 겨울 수련회' }]
+const mockSummerPrograms = [
+  { name: 'RETREAT_2026_SUMMER_SPORTS', displayName: '체육대회' },
+  { name: 'RETREAT_2026_SUMMER_WALK', displayName: '함께걷장' },
+  { name: 'RETREAT_2026_SUMMER_ETC', displayName: '그외 활동' },
+]
+const mockSubCategoriesWithPrograms = [
+  { name: 'RETREAT_2026_WINTER', displayName: '2026 겨울 수련회', children: [] },
+  { name: 'RETREAT_2026_SUMMER', displayName: '2026 여름 수련회', children: mockSummerPrograms },
+]
 const mockChurches = [
   { code: 'ANYANG', name: '안양' },
   { code: 'SUWON', name: '수원' },
@@ -504,6 +513,133 @@ describe('useGalleryWrite 게시글 등록', () => {
       })
     )
     expect(mockNavigate).toHaveBeenCalledWith('/gallery')
+  })
+})
+
+describe('useGalleryWrite 하위 프로그램', () => {
+  // 하위 프로그램이 있는 여름 수련회를 선택한 상태로 만든다
+  const setupSummerRetreat = async (result: { current: ReturnType<typeof useGalleryWrite> }) => {
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toEqual(mockSubCategoriesWithPrograms)
+    })
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_SUMMER')
+    })
+  }
+
+  beforeEach(() => {
+    mockFetchSubCategories.mockResolvedValue(mockSubCategoriesWithPrograms)
+  })
+
+  it('children이 있는 세부 카테고리 선택 시 programOptions가 설정된다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    await setupSummerRetreat(result)
+
+    expect(result.current.programOptions).toEqual(mockSummerPrograms)
+  })
+
+  it('children이 없는 세부 카테고리는 programOptions가 빈 배열이다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toEqual(mockSubCategoriesWithPrograms)
+    })
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
+    })
+
+    expect(result.current.programOptions).toEqual([])
+  })
+
+  it('프로그램 미선택 시 등록하면 에러 메시지를 표시한다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    await setupSummerRetreat(result)
+
+    await act(async () => {
+      await result.current.handleSubmit()
+    })
+
+    expect(result.current.submitError).toBe('프로그램을 선택해주세요.')
+    expect(mockCreatePost).not.toHaveBeenCalled()
+  })
+
+  it('선택한 프로그램 이름이 subCategory로 전송된다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.setSelectedProgram('RETREAT_2026_SUMMER_SPORTS')
+    })
+
+    await act(async () => {
+      await result.current.handleSubmit()
+    })
+
+    expect(mockCreatePost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subCategory: 'RETREAT_2026_SUMMER_SPORTS',
+      })
+    )
+    expect(mockNavigate).toHaveBeenCalledWith('/gallery')
+  })
+
+  it('children이 없는 세부 카테고리는 프로그램 없이 등록된다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toEqual(mockSubCategoriesWithPrograms)
+    })
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
+    })
+
+    await act(async () => {
+      await result.current.handleSubmit()
+    })
+
+    expect(mockCreatePost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subCategory: 'RETREAT_2026_WINTER',
+      })
+    )
+  })
+
+  it('세부 카테고리 변경 시 프로그램 선택이 초기화된다', async () => {
+    const { result } = renderHook(() => useGalleryWrite())
+
+    await setupSummerRetreat(result)
+
+    act(() => {
+      result.current.setSelectedProgram('RETREAT_2026_SUMMER_SPORTS')
+    })
+
+    expect(result.current.selectedProgram).toBe('RETREAT_2026_SUMMER_SPORTS')
+
+    act(() => {
+      result.current.setSelectedSubCategory('RETREAT_2026_WINTER')
+    })
+
+    await waitFor(() => {
+      expect(result.current.selectedProgram).toBe('')
+    })
   })
 })
 

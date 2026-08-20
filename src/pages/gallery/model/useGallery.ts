@@ -13,11 +13,16 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
   const [error, setError] = useState<string | null>(null)
   const [hasNext, setHasNext] = useState(true)
   const cursorRef = useRef<number | null>(null)
+  // 요청 에포크: 필터 전환 등으로 새 요청이 시작되면 이전 요청의 응답은 무시
+  const photoRequestRef = useRef(0)
 
   // 수련회 서브카테고리 상태
   const [subCategories, setSubCategories] = useState<SubCategory[]>([])
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
   const [isLoadingSubCategories, setIsLoadingSubCategories] = useState(false)
+
+  // 하위 프로그램 상태 (null = 전체 보기)
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null)
 
   // 성전별 상태
   const [selectedChurchId, setSelectedChurchId] = useState<string>(initialChurchId ?? userChurchId ?? DEFAULT_CHURCH_ID)
@@ -34,6 +39,7 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
   }, [userChurchId])
 
   const loadPhotos = useCallback(async (reset: boolean, opts?: { subCategory?: string; churchId?: string }) => {
+    const requestId = ++photoRequestRef.current
     if (reset) {
       setIsLoading(true)
       setPhotos([])
@@ -49,20 +55,25 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
         subCategory: opts?.subCategory,
         churchId: opts?.churchId,
       })
+      if (requestId !== photoRequestRef.current) return
       setPhotos((prev) => (reset ? response.images : [...prev, ...response.images]))
       setHasNext(response.hasNext)
       cursorRef.current = response.nextCursor
       setError(null)
     } catch (err) {
+      if (requestId !== photoRequestRef.current) return
       setError('사진을 불러오는데 실패했습니다.')
     } finally {
-      setIsLoading(false)
-      setIsFetchingMore(false)
+      if (requestId === photoRequestRef.current) {
+        setIsLoading(false)
+        setIsFetchingMore(false)
+      }
     }
   }, [])
 
   // 카테고리 변경 시 처리
   useEffect(() => {
+    setSelectedProgram(null)
     if (selectedCategory === 'ALL') {
       setSubCategories([])
       setSelectedSubCategory(null)
@@ -110,13 +121,23 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
     }
   }, [selectedCategory, loadPhotos, selectedChurchId])
 
-  // 서브카테고리 선택 변경 시 사진 다시 로드
+  // 서브카테고리 선택 변경 시 사진 다시 로드 (프로그램 선택은 초기화)
   const selectSubCategory = useCallback(
     (subCategoryName: string) => {
       setSelectedSubCategory(subCategoryName)
+      setSelectedProgram(null)
       loadPhotos(true, { subCategory: subCategoryName })
     },
     [loadPhotos],
+  )
+
+  // 하위 프로그램 선택 변경 시 사진 다시 로드 (null = 수련회 전체)
+  const selectProgram = useCallback(
+    (programName: string | null) => {
+      setSelectedProgram(programName)
+      loadPhotos(true, { subCategory: programName ?? selectedSubCategory ?? undefined })
+    },
+    [loadPhotos, selectedSubCategory],
   )
 
   // 성전 선택 변경
@@ -133,10 +154,10 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
       if (selectedCategory === 'CHURCH') {
         loadPhotos(false, { churchId: selectedChurchId })
       } else {
-        loadPhotos(false, { subCategory: selectedSubCategory ?? undefined })
+        loadPhotos(false, { subCategory: selectedProgram ?? selectedSubCategory ?? undefined })
       }
     }
-  }, [isFetchingMore, hasNext, loadPhotos, selectedSubCategory, selectedCategory, selectedChurchId])
+  }, [isFetchingMore, hasNext, loadPhotos, selectedProgram, selectedSubCategory, selectedCategory, selectedChurchId])
 
   return {
     photos,
@@ -152,6 +173,9 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
     selectedSubCategory,
     selectSubCategory,
     isLoadingSubCategories,
+    // 하위 프로그램
+    selectedProgram,
+    selectProgram,
     // 성전별
     selectedChurchId,
     selectChurch,
