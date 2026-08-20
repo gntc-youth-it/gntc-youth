@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../features/auth'
 import { compressImage, compressVideo, isVideoCompressionSupported, uploadToS3 } from '../../../shared/lib'
@@ -55,6 +55,13 @@ export const useGalleryWrite = () => {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedSubCategory, setSelectedSubCategory] = useState('')
+  const [selectedProgram, setSelectedProgram] = useState('')
+
+  // 선택된 세부 카테고리의 하위 프로그램 목록 (없으면 빈 배열)
+  const programOptions = useMemo(
+    () => subCategories.find((sub) => sub.name === selectedSubCategory)?.children ?? [],
+    [subCategories, selectedSubCategory],
+  )
 
   // Form state
   const [content, setContent] = useState('')
@@ -140,6 +147,11 @@ export const useGalleryWrite = () => {
       cancelled = true
     }
   }, [selectedCategory])
+
+  // 세부 카테고리 변경 시 프로그램 선택 초기화
+  useEffect(() => {
+    setSelectedProgram('')
+  }, [selectedSubCategory])
 
   // Cleanup image preview URLs on unmount
   useEffect(() => {
@@ -286,6 +298,12 @@ export const useGalleryWrite = () => {
       return
     }
 
+    // 하위 프로그램이 있는 행사는 프로그램 필수 선택
+    if (programOptions.length > 0 && !selectedProgram) {
+      setSubmitError('프로그램을 선택해주세요.')
+      return
+    }
+
     const hasUploading = mediaItems.some((img) => img.status === 'compressing' || img.status === 'uploading')
     if (hasUploading) {
       setSubmitError('미디어 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
@@ -300,7 +318,7 @@ export const useGalleryWrite = () => {
         .map((img) => img.fileId!)
 
       await createPost({
-        subCategory: selectedSubCategory,
+        subCategory: programOptions.length > 0 ? selectedProgram : selectedSubCategory,
         content: content || undefined,
         hashtags: hashtags.length > 0 ? hashtags : undefined,
         churches: selectedChurches.length > 0 ? selectedChurches : undefined,
@@ -314,7 +332,7 @@ export const useGalleryWrite = () => {
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedSubCategory, mediaItems, content, hashtags, selectedChurches, isAuthorPublic, navigate])
+  }, [selectedSubCategory, selectedProgram, programOptions, mediaItems, content, hashtags, selectedChurches, isAuthorPublic, navigate])
 
   return {
     // Categories
@@ -324,6 +342,9 @@ export const useGalleryWrite = () => {
     setSelectedCategory,
     selectedSubCategory,
     setSelectedSubCategory,
+    programOptions,
+    selectedProgram,
+    setSelectedProgram,
 
     // Form
     content,

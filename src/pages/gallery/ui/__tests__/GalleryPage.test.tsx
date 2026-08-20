@@ -125,6 +125,8 @@ const defaultGallery = {
   selectedSubCategory: null as string | null,
   selectSubCategory: jest.fn(),
   isLoadingSubCategories: false,
+  selectedProgram: null as string | null,
+  selectProgram: jest.fn(),
   selectedChurchId: '',
   selectChurch: jest.fn(),
   churchOptions: [] as { id: string; name: string }[],
@@ -463,6 +465,135 @@ describe('GalleryPage 수련회 행사 선택 모달', () => {
     await userEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     expect(screen.queryByText('수련회 행사 목록')).not.toBeInTheDocument()
+  })
+})
+
+describe('GalleryPage 수련회 프로그램 탭', () => {
+  const summerSub: SubCategory = {
+    name: 'RETREAT_2026_SUMMER',
+    displayName: '2026 여름 수련회 (곧은 길로 행하라)',
+    imageUrl: 'assets/2026-summer-poster.webp',
+    startDate: '2026-08-13',
+    endDate: '2026-08-15',
+    children: [
+      { name: 'RETREAT_2026_SUMMER_SPORTS', displayName: '체육대회' },
+      { name: 'RETREAT_2026_SUMMER_WALK', displayName: '함께걷장' },
+      { name: 'RETREAT_2026_SUMMER_ETC', displayName: '그외 활동' },
+    ],
+  }
+
+  const summerGallery = {
+    ...defaultGallery,
+    selectedCategory: 'RETREAT' as const,
+    subCategories: [summerSub, ...mockSubCategories],
+    selectedSubCategory: 'RETREAT_2026_SUMMER',
+  }
+
+  it('children이 있는 수련회에서 프로그램 탭이 표시된다', () => {
+    mockUseGallery.mockReturnValue(summerGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByRole('tab', { name: '전체' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '체육대회' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '함께걷장' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '그외 활동' })).toBeInTheDocument()
+  })
+
+  it('children이 없는 수련회에서는 프로그램 탭이 표시되지 않는다', () => {
+    mockUseGallery.mockReturnValue({
+      ...summerGallery,
+      selectedSubCategory: 'RETREAT_2026_WINTER',
+    })
+
+    render(<GalleryPage />)
+
+    expect(screen.queryAllByRole('tab')).toHaveLength(0)
+  })
+
+  it('프로그램 미선택 시 전체 탭이 활성화 상태이다', () => {
+    mockUseGallery.mockReturnValue(summerGallery)
+
+    render(<GalleryPage />)
+
+    expect(screen.getByRole('tab', { name: '전체' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: '체육대회' })).toHaveAttribute('aria-selected', 'false')
+  })
+
+  it('프로그램 탭 클릭 시 selectProgram이 프로그램 이름으로 호출된다', async () => {
+    const mockSelectProgram = jest.fn()
+    mockUseGallery.mockReturnValue({ ...summerGallery, selectProgram: mockSelectProgram })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('tab', { name: '체육대회' }))
+
+    expect(mockSelectProgram).toHaveBeenCalledWith('RETREAT_2026_SUMMER_SPORTS')
+  })
+
+  it('전체 탭 클릭 시 selectProgram(null)이 호출된다', async () => {
+    const mockSelectProgram = jest.fn()
+    mockUseGallery.mockReturnValue({
+      ...summerGallery,
+      selectedProgram: 'RETREAT_2026_SUMMER_SPORTS',
+      selectProgram: mockSelectProgram,
+    })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('tab', { name: '전체' }))
+
+    expect(mockSelectProgram).toHaveBeenCalledWith(null)
+  })
+
+  it('프로그램 미선택 시 상위 수련회 이름으로 행사 영상을 조회한다', async () => {
+    mockUseGallery.mockReturnValue(summerGallery)
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(mockFetchEventVideos).toHaveBeenCalledWith('RETREAT_2026_SUMMER')
+    })
+  })
+
+  it('프로그램 선택 시 프로그램 이름으로 행사 영상을 조회한다', async () => {
+    mockUseGallery.mockReturnValue({
+      ...summerGallery,
+      selectedProgram: 'RETREAT_2026_SUMMER_SPORTS',
+    })
+
+    render(<GalleryPage />)
+
+    await waitFor(() => {
+      expect(mockFetchEventVideos).toHaveBeenCalledWith('RETREAT_2026_SUMMER_SPORTS')
+    })
+  })
+
+  it('프로그램 미선택 시 피드가 상위 수련회 이름으로 조회된다', async () => {
+    const mockLoadFeed = jest.fn()
+    mockUseGallery.mockReturnValue(summerGallery)
+    mockUseFeed.mockReturnValue({ ...defaultFeed, loadFeed: mockLoadFeed })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(mockLoadFeed).toHaveBeenCalledWith({ subCategory: 'RETREAT_2026_SUMMER' })
+  })
+
+  it('프로그램 선택 시 피드가 프로그램 이름으로 조회된다', async () => {
+    const mockLoadFeed = jest.fn()
+    mockUseGallery.mockReturnValue({
+      ...summerGallery,
+      selectedProgram: 'RETREAT_2026_SUMMER_WALK',
+    })
+    mockUseFeed.mockReturnValue({ ...defaultFeed, loadFeed: mockLoadFeed })
+
+    render(<GalleryPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /피드/ }))
+
+    expect(mockLoadFeed).toHaveBeenCalledWith({ subCategory: 'RETREAT_2026_SUMMER_WALK' })
   })
 })
 

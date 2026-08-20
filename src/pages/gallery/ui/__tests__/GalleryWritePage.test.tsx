@@ -49,6 +49,7 @@ jest.mock('../../../../features/edit-profile', () => ({
 const mockHandleSubmit = jest.fn()
 const mockSetSelectedCategory = jest.fn()
 const mockSetSelectedSubCategory = jest.fn()
+const mockSetSelectedProgram = jest.fn()
 const mockSetContent = jest.fn()
 const mockAddHashtag = jest.fn()
 const mockRemoveHashtag = jest.fn()
@@ -64,6 +65,9 @@ const defaultWriteHook = {
   setSelectedCategory: mockSetSelectedCategory,
   selectedSubCategory: '',
   setSelectedSubCategory: mockSetSelectedSubCategory,
+  programOptions: [] as { name: string; displayName: string }[],
+  selectedProgram: '',
+  setSelectedProgram: mockSetSelectedProgram,
   content: '',
   setContent: mockSetContent,
   hashtags: [] as string[],
@@ -194,6 +198,71 @@ describe('GalleryWritePage 카테고리 선택', () => {
 
     const selects = screen.getAllByRole('combobox')
     expect(selects[1]).not.toBeDisabled()
+  })
+})
+
+describe('GalleryWritePage 프로그램 선택', () => {
+  const summerPrograms = [
+    { name: 'RETREAT_2026_SUMMER_SPORTS', displayName: '체육대회' },
+    { name: 'RETREAT_2026_SUMMER_WALK', displayName: '함께걷장' },
+    { name: 'RETREAT_2026_SUMMER_ETC', displayName: '그외 활동' },
+  ]
+
+  const summerWriteHook = {
+    ...defaultWriteHook,
+    selectedCategory: 'RETREAT',
+    selectedSubCategory: 'RETREAT_2026_SUMMER',
+    programOptions: summerPrograms,
+  }
+
+  it('programOptions가 있으면 프로그램 셀렉트가 표시된다', () => {
+    mockWriteHookValue = summerWriteHook
+
+    render(<GalleryWritePage />)
+
+    expect(screen.getByText('프로그램 (필수)')).toBeInTheDocument()
+    expect(screen.getByText('프로그램 선택')).toBeInTheDocument()
+    expect(screen.getByText('체육대회')).toBeInTheDocument()
+    expect(screen.getByText('함께걷장')).toBeInTheDocument()
+    expect(screen.getByText('그외 활동')).toBeInTheDocument()
+  })
+
+  it('programOptions가 없으면 프로그램 셀렉트가 표시되지 않는다', () => {
+    mockWriteHookValue = { ...defaultWriteHook, selectedSubCategory: 'RETREAT_2026_WINTER' }
+
+    render(<GalleryWritePage />)
+
+    expect(screen.queryByText('프로그램 (필수)')).not.toBeInTheDocument()
+    expect(screen.queryByText('프로그램 선택')).not.toBeInTheDocument()
+  })
+
+  it('프로그램 선택 시 setSelectedProgram이 호출된다', async () => {
+    mockWriteHookValue = summerWriteHook
+
+    render(<GalleryWritePage />)
+
+    const selects = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(selects[2], 'RETREAT_2026_SUMMER_SPORTS')
+
+    expect(mockSetSelectedProgram).toHaveBeenCalledWith('RETREAT_2026_SUMMER_SPORTS')
+  })
+
+  it('프로그램 미선택 시 등록 버튼이 비활성화된다', () => {
+    mockWriteHookValue = summerWriteHook
+
+    render(<GalleryWritePage />)
+
+    const submitButton = screen.getByRole('button', { name: '게시글 등록' })
+    expect(submitButton).toBeDisabled()
+  })
+
+  it('프로그램 선택 시 등록 버튼이 활성화된다', () => {
+    mockWriteHookValue = { ...summerWriteHook, selectedProgram: 'RETREAT_2026_SUMMER_SPORTS' }
+
+    render(<GalleryWritePage />)
+
+    const submitButton = screen.getByRole('button', { name: '게시글 등록' })
+    expect(submitButton).not.toBeDisabled()
   })
 })
 

@@ -7,7 +7,7 @@ import { useFeed } from '../model/useFeed'
 import { deletePost, fetchEventVideos } from '../api/galleryApi'
 import { buildCdnUrl, isVideoUrl, useInfiniteScroll, handleImageError } from '../../../shared/lib'
 import { ProfileImage } from '../../../shared/ui'
-import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, FeedPost, FeedPostImage, ChurchOption, EventVideo } from '../model/types'
+import type { GalleryCategory, GalleryAlbum, GalleryPhotoItem, ViewMode, SubCategory, SubCategoryChild, FeedPost, FeedPostImage, ChurchOption, EventVideo } from '../model/types'
 
 const CATEGORIES: { key: GalleryCategory; label: string }[] = [
   { key: 'ALL', label: '전체' },
@@ -457,6 +457,52 @@ const RetreatSelectorModal = ({
             </button>
           )
         })}
+      </div>
+    </div>
+  </div>
+)
+
+// ─── Retreat Program Tabs ────────────────────────────────
+
+const ProgramTabs = ({
+  programs,
+  selectedProgram,
+  onSelect,
+}: {
+  programs: SubCategoryChild[]
+  selectedProgram: string | null
+  onSelect: (name: string | null) => void
+}) => (
+  <div className="bg-white border-b border-[#E0E0E0] px-4 sm:px-8 lg:px-[60px] py-3">
+    <div className="max-w-7xl mx-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide" role="tablist" aria-label="프로그램별 보기">
+        <button
+          role="tab"
+          aria-selected={selectedProgram === null}
+          onClick={() => onSelect(null)}
+          className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
+            selectedProgram === null
+              ? 'bg-[#3B5BDB] text-white font-semibold'
+              : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
+          }`}
+        >
+          전체
+        </button>
+        {programs.map((program) => (
+          <button
+            key={program.name}
+            role="tab"
+            aria-selected={selectedProgram === program.name}
+            onClick={() => onSelect(program.name)}
+            className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
+              selectedProgram === program.name
+                ? 'bg-[#3B5BDB] text-white font-semibold'
+                : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
+            }`}
+          >
+            {program.displayName}
+          </button>
+        ))}
       </div>
     </div>
   </div>
@@ -1173,6 +1219,8 @@ export const GalleryPage = () => {
     subCategories,
     selectedSubCategory,
     selectSubCategory,
+    selectedProgram,
+    selectProgram,
     selectedChurchId,
     selectChurch,
     churchOptions,
@@ -1192,16 +1240,21 @@ export const GalleryPage = () => {
   // TODO: albums는 카테고리별 뷰에서 사용 - 추후 API 연동
   const albums: GalleryAlbum[] = []
 
+  // 하위 프로그램이 선택되면 해당 프로그램으로, 아니면 수련회 전체로 조회
+  const effectiveSubCategory = selectedProgram ?? selectedSubCategory
+  const selectedSub = subCategories.find((s) => s.name === selectedSubCategory)
+  const programs = selectedSub?.children ?? []
+
   // 행사 영상 조회
   useEffect(() => {
     setEventVideos([])
     setSelectedEventVideo(null)
-    if (selectedSubCategory) {
-      fetchEventVideos(selectedSubCategory)
+    if (effectiveSubCategory) {
+      fetchEventVideos(effectiveSubCategory)
         .then(setEventVideos)
         .catch(() => setEventVideos([]))
     }
-  }, [selectedSubCategory])
+  }, [effectiveSubCategory])
 
   // 피드 뷰로 전환 시 피드 데이터 로드
   useEffect(() => {
@@ -1209,24 +1262,24 @@ export const GalleryPage = () => {
       const opts: { subCategory?: string; churchId?: string } = {}
       if (selectedCategory === 'CHURCH') {
         opts.churchId = selectedChurchId
-      } else if (selectedSubCategory) {
-        opts.subCategory = selectedSubCategory
+      } else if (effectiveSubCategory) {
+        opts.subCategory = effectiveSubCategory
       }
       feed.loadFeed(opts)
     } else {
       feed.reset()
     }
-  }, [viewMode, selectedSubCategory, selectedCategory, selectedChurchId, feed.loadFeed, feed.reset])
+  }, [viewMode, effectiveSubCategory, selectedCategory, selectedChurchId, feed.loadFeed, feed.reset])
 
   const feedLoadMore = useCallback(() => {
     const opts: { subCategory?: string; churchId?: string } = {}
     if (selectedCategory === 'CHURCH') {
       opts.churchId = selectedChurchId
-    } else if (selectedSubCategory) {
-      opts.subCategory = selectedSubCategory
+    } else if (effectiveSubCategory) {
+      opts.subCategory = effectiveSubCategory
     }
     feed.loadMore(opts)
-  }, [feed.loadMore, selectedSubCategory, selectedCategory, selectedChurchId])
+  }, [feed.loadMore, effectiveSubCategory, selectedCategory, selectedChurchId])
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteTargetId === null) return
@@ -1297,16 +1350,22 @@ export const GalleryPage = () => {
         </div>
 
         {/* Retreat Hero Banner */}
-        {selectedCategory === 'RETREAT' && subCategories.length > 0 && (() => {
-          const selected = subCategories.find((s) => s.name === selectedSubCategory)
-          return selected ? (
-            <RetreatHeroBanner
-              sub={selected}
-              showBrowse={subCategories.length > 1}
-              onBrowse={() => setShowRetreatModal(true)}
-            />
-          ) : null
-        })()}
+        {selectedCategory === 'RETREAT' && selectedSub && (
+          <RetreatHeroBanner
+            sub={selectedSub}
+            showBrowse={subCategories.length > 1}
+            onBrowse={() => setShowRetreatModal(true)}
+          />
+        )}
+
+        {/* Retreat Program Tabs */}
+        {selectedCategory === 'RETREAT' && programs.length > 0 && (
+          <ProgramTabs
+            programs={programs}
+            selectedProgram={selectedProgram}
+            onSelect={selectProgram}
+          />
+        )}
 
         {/* Retreat Selector Modal */}
         {showRetreatModal && (
