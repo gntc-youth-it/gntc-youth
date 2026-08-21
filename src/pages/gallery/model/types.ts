@@ -159,10 +159,17 @@ export interface EventVideo {
   createdAt: string
 }
 
+export interface EventVideoProgram {
+  key: string
+  label: string
+  videos: EventVideo[]
+}
+
 export interface EventVideoGroup {
   key: string
   label: string
   videos: EventVideo[]
+  programs: EventVideoProgram[]
 }
 
 export type UploadStatus = 'pending' | 'compressing' | 'uploading' | 'done' | 'error'
