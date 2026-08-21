@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GalleryPage } from '../GalleryPage'
 import { useGallery } from '../../model/useGallery'
@@ -1359,21 +1359,22 @@ describe('GalleryPage 영상 탭', () => {
   it('행사별 필터 칩이 표시된다', async () => {
     render(<GalleryPage />)
 
-    expect(await screen.findByRole('tab', { name: '전체' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: '2026 겨울 수련회 (새 힘을 바라보라)' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: '2025 여름 수련회' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: '전체' })).toHaveAttribute('aria-selected', 'true')
+    const eventChips = await screen.findByRole('group', { name: '행사별 영상 보기' })
+    expect(within(eventChips).getByRole('button', { name: '전체' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(eventChips).getByRole('button', { name: '2026 겨울 수련회 (새 힘을 바라보라)' })).toHaveAttribute('aria-pressed', 'false')
+    expect(within(eventChips).getByRole('button', { name: '2025 여름 수련회' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('필터 칩 클릭 시 해당 행사 영상만 표시된다', async () => {
     render(<GalleryPage />)
 
-    await userEvent.click(await screen.findByRole('tab', { name: '2025 여름 수련회' }))
+    const eventChips = await screen.findByRole('group', { name: '행사별 영상 보기' })
+    await userEvent.click(within(eventChips).getByRole('button', { name: '2025 여름 수련회' }))
 
     expect(screen.getByText('여름 수련회 하이라이트')).toBeInTheDocument()
     expect(screen.queryByText('수련회 찬양 모음')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('tab', { name: '전체' }))
+    await userEvent.click(within(eventChips).getByRole('button', { name: '전체' }))
 
     expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
     expect(screen.getByText('여름 수련회 하이라이트')).toBeInTheDocument()
@@ -1385,7 +1386,7 @@ describe('GalleryPage 영상 탭', () => {
     render(<GalleryPage />)
 
     await screen.findByText('수련회 찬양 모음')
-    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: '행사별 영상 보기' })).not.toBeInTheDocument()
   })
 
   it('하위 프로그램 영상은 상위 수련회 그룹으로 묶인다', async () => {
@@ -1432,6 +1433,62 @@ describe('GalleryPage 영상 탭', () => {
     render(<GalleryPage />)
 
     expect(await screen.findByRole('heading', { name: 'RETREAT_2026_WINTER' })).toBeInTheDocument()
+  })
+
+  describe('하위 프로그램 칩', () => {
+    const winterWithSing: SubCategory = {
+      ...mockSubCategories[0],
+      children: [{ name: 'RETREAT_2026_WINTER_SING', displayName: '새 힘을 노래하라' }],
+    }
+    const singVideo: EventVideo = {
+      id: 18,
+      title: '청년 자작곡 하이라이트',
+      link: 'https://www.youtube.com/embed/sing1',
+      subCategory: 'RETREAT_2026_WINTER_SING',
+      createdAt: '2026-08-21T10:00:00',
+    }
+
+    beforeEach(() => {
+      mockFetchSubCategories.mockResolvedValue([winterWithSing])
+      mockFetchEventVideos.mockResolvedValue([mockAllVideos[0], mockAllVideos[1], singVideo])
+    })
+
+    it('하위 프로그램 영상이 있는 그룹에는 프로그램 칩이 표시된다', async () => {
+      render(<GalleryPage />)
+
+      const chipGroup = await screen.findByRole('group', { name: /프로그램별 영상 보기/ })
+      expect(within(chipGroup).getByRole('button', { name: '전체' })).toHaveAttribute('aria-pressed', 'true')
+      expect(within(chipGroup).getByRole('button', { name: '새 힘을 노래하라' })).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('프로그램 칩 클릭 시 해당 프로그램 영상만 표시된다', async () => {
+      render(<GalleryPage />)
+
+      const chipGroup = await screen.findByRole('group', { name: /프로그램별 영상 보기/ })
+      await userEvent.click(within(chipGroup).getByRole('button', { name: '새 힘을 노래하라' }))
+
+      expect(within(chipGroup).getByRole('button', { name: '새 힘을 노래하라' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByText('청년 자작곡 하이라이트')).toBeInTheDocument()
+      expect(screen.queryByText('수련회 찬양 모음')).not.toBeInTheDocument()
+      expect(screen.getByText('1개의 영상')).toBeInTheDocument()
+
+      await userEvent.click(within(chipGroup).getByRole('button', { name: '전체' }))
+
+      expect(screen.getByText('수련회 찬양 모음')).toBeInTheDocument()
+      expect(screen.getByText('청년 자작곡 하이라이트')).toBeInTheDocument()
+      expect(screen.getByText('3개의 영상')).toBeInTheDocument()
+    })
+
+    it('하위 프로그램에 영상이 없으면 프로그램 칩이 표시되지 않는다', async () => {
+      mockFetchEventVideos.mockResolvedValue([mockAllVideos[0], mockAllVideos[1]])
+
+      render(<GalleryPage />)
+
+      await screen.findByText('수련회 찬양 모음')
+      expect(
+        screen.queryByRole('group', { name: /프로그램별 영상 보기/ }),
+      ).not.toBeInTheDocument()
+    })
   })
 
   it('영상 카드 클릭 시 플레이어 모달이 열리고 자동재생 iframe이 표시된다', async () => {
