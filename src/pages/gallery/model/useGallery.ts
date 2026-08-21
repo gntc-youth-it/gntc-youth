@@ -74,7 +74,11 @@ export const useGallery = (userChurchId?: string, initialCategory?: GalleryCateg
   // 카테고리 변경 시 처리
   useEffect(() => {
     setSelectedProgram(null)
-    if (selectedCategory === 'ALL') {
+    if (selectedCategory === 'VIDEO') {
+      // 영상 탭은 사진을 조회하지 않음 (useEventVideos에서 별도 조회)
+      setSubCategories([])
+      setSelectedSubCategory(null)
+    } else if (selectedCategory === 'ALL') {
       setSubCategories([])
       setSelectedSubCategory(null)
       loadPhotos(true)
