@@ -1189,12 +1189,11 @@ const VideoGroupSection = ({
     {group.programs.length > 0 && (
       <div
         className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mt-1"
-        role="tablist"
+        role="group"
         aria-label={`${group.label} 프로그램별 영상 보기`}
       >
         <button
-          role="tab"
-          aria-selected={selectedProgramKey === null}
+          aria-pressed={selectedProgramKey === null}
           onClick={() => onSelectProgram(group.key, null)}
           className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
             selectedProgramKey === null
@@ -1207,8 +1206,7 @@ const VideoGroupSection = ({
         {group.programs.map((program) => (
           <button
             key={program.key}
-            role="tab"
-            aria-selected={selectedProgramKey === program.key}
+            aria-pressed={selectedProgramKey === program.key}
             onClick={() => onSelectProgram(group.key, program.key)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
               selectedProgramKey === program.key
@@ -1251,10 +1249,9 @@ const VideoContent = ({
     <div className="max-w-7xl mx-auto flex flex-col gap-8">
       {/* 행사별 필터 칩 */}
       {groups.length > 1 && (
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide" role="tablist" aria-label="행사별 영상 보기">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide" role="group" aria-label="행사별 영상 보기">
           <button
-            role="tab"
-            aria-selected={selectedGroupKey === null}
+            aria-pressed={selectedGroupKey === null}
             onClick={() => onSelectGroup(null)}
             className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
               selectedGroupKey === null
@@ -1267,8 +1264,7 @@ const VideoContent = ({
           {groups.map((group) => (
             <button
               key={group.key}
-              role="tab"
-              aria-selected={selectedGroupKey === group.key}
+              aria-pressed={selectedGroupKey === group.key}
               onClick={() => onSelectGroup(group.key)}
               className={`shrink-0 px-3.5 sm:px-5 py-2 rounded-full text-xs sm:text-sm- font-medium whitespace-nowrap transition-colors ${
                 selectedGroupKey === group.key
