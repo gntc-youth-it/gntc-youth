@@ -196,6 +196,85 @@ describe('useEventVideos', () => {
     expect(mockFetchEventVideos).toHaveBeenCalledTimes(1)
   })
 
+  it('그룹에 영상이 있는 하위 프로그램 목록이 children 순서로 포함된다', async () => {
+    // 함께걷장 영상이 체육대회보다 먼저 등록되어도 children 순서를 따라야 함
+    mockFetchEventVideos.mockResolvedValue([
+      {
+        id: 5,
+        title: '함께걷장 스케치',
+        link: 'https://www.youtube.com/embed/walk1',
+        subCategory: 'RETREAT_2026_SUMMER_WALK',
+        createdAt: '2026-08-17T10:00:00',
+      },
+      ...mockVideos,
+    ])
+
+    const { result } = renderHook(() => useEventVideos(true))
+
+    await waitFor(() => {
+      expect(result.current.groups).toHaveLength(2)
+    })
+
+    const summerGroup = result.current.groups.find((g) => g.key === 'RETREAT_2026_SUMMER')!
+    expect(summerGroup.programs.map((p) => p.key)).toEqual([
+      'RETREAT_2026_SUMMER_SPORTS',
+      'RETREAT_2026_SUMMER_WALK',
+    ])
+    expect(summerGroup.programs[0].label).toBe('체육대회')
+    expect(summerGroup.programs[0].videos.map((v) => v.id)).toEqual([2])
+    expect(summerGroup.programs[1].videos.map((v) => v.id)).toEqual([5])
+
+    // children이 없거나 하위 프로그램 영상이 없는 그룹은 programs가 빈 배열
+    const winterGroup = result.current.groups.find((g) => g.key === 'RETREAT_2026_WINTER')!
+    expect(winterGroup.programs).toEqual([])
+  })
+
+  it('selectProgram으로 해당 그룹의 영상만 프로그램 필터링된다', async () => {
+    const { result } = renderHook(() => useEventVideos(true))
+
+    await waitFor(() => {
+      expect(result.current.groups).toHaveLength(2)
+    })
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2026_SUMMER', 'RETREAT_2026_SUMMER_SPORTS')
+    })
+
+    expect(result.current.selectedProgramByGroup['RETREAT_2026_SUMMER']).toBe(
+      'RETREAT_2026_SUMMER_SPORTS',
+    )
+    const summerGroup = result.current.filteredGroups.find((g) => g.key === 'RETREAT_2026_SUMMER')!
+    expect(summerGroup.videos.map((v) => v.id)).toEqual([2])
+
+    // 다른 그룹은 영향받지 않음
+    const winterGroup = result.current.filteredGroups.find((g) => g.key === 'RETREAT_2026_WINTER')!
+    expect(winterGroup.videos.map((v) => v.id)).toEqual([1])
+
+    act(() => {
+      result.current.selectProgram('RETREAT_2026_SUMMER', null)
+    })
+
+    expect(
+      result.current.filteredGroups.find((g) => g.key === 'RETREAT_2026_SUMMER')!.videos,
+    ).toHaveLength(2)
+  })
+
+  it('행사 필터와 프로그램 필터를 조합할 수 있다', async () => {
+    const { result } = renderHook(() => useEventVideos(true))
+
+    await waitFor(() => {
+      expect(result.current.groups).toHaveLength(2)
+    })
+
+    act(() => {
+      result.current.selectGroup('RETREAT_2026_SUMMER')
+      result.current.selectProgram('RETREAT_2026_SUMMER', 'RETREAT_2026_SUMMER_SPORTS')
+    })
+
+    expect(result.current.filteredGroups).toHaveLength(1)
+    expect(result.current.filteredGroups[0].videos.map((v) => v.id)).toEqual([2])
+  })
+
   it('selectGroup으로 특정 행사만 필터링할 수 있다', async () => {
     const { result } = renderHook(() => useEventVideos(true))
 

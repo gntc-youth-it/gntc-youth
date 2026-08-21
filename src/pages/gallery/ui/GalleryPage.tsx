@@ -1165,7 +1165,17 @@ const VideoCard = ({ video, onPlay }: { video: EventVideo; onPlay: (video: Event
   )
 }
 
-const VideoGroupSection = ({ group, onPlay }: { group: EventVideoGroup; onPlay: (video: EventVideo) => void }) => (
+const VideoGroupSection = ({
+  group,
+  selectedProgramKey,
+  onSelectProgram,
+  onPlay,
+}: {
+  group: EventVideoGroup
+  selectedProgramKey: string | null
+  onSelectProgram: (groupKey: string, programKey: string | null) => void
+  onPlay: (video: EventVideo) => void
+}) => (
   <section className="flex flex-col gap-5">
     <div className="flex items-end justify-between">
       <div className="flex flex-col gap-1">
@@ -1174,6 +1184,44 @@ const VideoGroupSection = ({ group, onPlay }: { group: EventVideoGroup; onPlay: 
       </div>
       <span className="text-sm text-[#999999]">{group.videos.length}개의 영상</span>
     </div>
+
+    {/* 하위 프로그램 칩 (영상이 있는 프로그램만 노출) */}
+    {group.programs.length > 0 && (
+      <div
+        className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mt-1"
+        role="tablist"
+        aria-label={`${group.label} 프로그램별 영상 보기`}
+      >
+        <button
+          role="tab"
+          aria-selected={selectedProgramKey === null}
+          onClick={() => onSelectProgram(group.key, null)}
+          className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+            selectedProgramKey === null
+              ? 'bg-[#3B5BDB] text-white font-semibold'
+              : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
+          }`}
+        >
+          전체
+        </button>
+        {group.programs.map((program) => (
+          <button
+            key={program.key}
+            role="tab"
+            aria-selected={selectedProgramKey === program.key}
+            onClick={() => onSelectProgram(group.key, program.key)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              selectedProgramKey === program.key
+                ? 'bg-[#3B5BDB] text-white font-semibold'
+                : 'bg-[#F0F0F0] text-[#666666] hover:bg-gray-200'
+            }`}
+          >
+            {program.label}
+          </button>
+        ))}
+      </div>
+    )}
+
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
       {group.videos.map((video) => (
         <VideoCard key={video.id} video={video} onPlay={onPlay} />
@@ -1187,12 +1235,16 @@ const VideoContent = ({
   filteredGroups,
   selectedGroupKey,
   onSelectGroup,
+  selectedProgramByGroup,
+  onSelectProgram,
   onPlay,
 }: {
   groups: EventVideoGroup[]
   filteredGroups: EventVideoGroup[]
   selectedGroupKey: string | null
   onSelectGroup: (key: string | null) => void
+  selectedProgramByGroup: Record<string, string | null>
+  onSelectProgram: (groupKey: string, programKey: string | null) => void
   onPlay: (video: EventVideo) => void
 }) => (
   <div className="px-4 sm:px-8 lg:px-[60px] py-10">
@@ -1232,7 +1284,12 @@ const VideoContent = ({
 
       {filteredGroups.map((group, idx) => (
         <div key={group.key}>
-          <VideoGroupSection group={group} onPlay={onPlay} />
+          <VideoGroupSection
+            group={group}
+            selectedProgramKey={selectedProgramByGroup[group.key] ?? null}
+            onSelectProgram={onSelectProgram}
+            onPlay={onPlay}
+          />
           {idx < filteredGroups.length - 1 && <div className="h-px bg-[#E0E0E0] mt-8" />}
         </div>
       ))}
@@ -1535,6 +1592,8 @@ export const GalleryPage = () => {
                 filteredGroups={eventVideos.filteredGroups}
                 selectedGroupKey={eventVideos.selectedGroupKey}
                 onSelectGroup={eventVideos.selectGroup}
+                selectedProgramByGroup={eventVideos.selectedProgramByGroup}
+                onSelectProgram={eventVideos.selectProgram}
                 onPlay={setPlayingVideo}
               />
             ) : viewMode === 'grid' ? (
