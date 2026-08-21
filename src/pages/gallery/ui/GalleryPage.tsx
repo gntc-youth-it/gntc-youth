@@ -353,8 +353,8 @@ const RetreatHeroBanner = ({
       onError={handleImageError}
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-    <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 lg:px-[60px] pb-8">
-      <div className="max-w-7xl mx-auto flex items-end justify-between">
+    <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 lg:px-[60px] pb-6 sm:pb-8">
+      <div className="max-w-7xl mx-auto flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <span className="text-xs font-semibold text-white/70 tracking-[2px] uppercase">RETREAT</span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
@@ -370,7 +370,7 @@ const RetreatHeroBanner = ({
         {showBrowse && (
           <button
             onClick={onBrowse}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
+            className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium whitespace-nowrap hover:bg-white/30 transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" />
@@ -527,7 +527,7 @@ const ChurchBanner = ({
       </div>
       <button
         onClick={onBrowse}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium hover:bg-white/30 transition-colors"
+        className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm- font-medium whitespace-nowrap hover:bg-white/30 transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="7" />
