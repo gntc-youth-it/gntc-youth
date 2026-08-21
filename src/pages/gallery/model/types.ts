@@ -1,4 +1,4 @@
-export type GalleryCategory = 'ALL' | 'RETREAT' | 'CHURCH' | 'WORSHIP' | 'GATHERING'
+export type GalleryCategory = 'ALL' | 'RETREAT' | 'CHURCH' | 'WORSHIP' | 'GATHERING' | 'VIDEO'
 
 export interface ChurchOption {
   id: string
@@ -157,6 +157,12 @@ export interface EventVideo {
   link: string
   subCategory: string
   createdAt: string
+}
+
+export interface EventVideoGroup {
+  key: string
+  label: string
+  videos: EventVideo[]
 }
 
 export type UploadStatus = 'pending' | 'compressing' | 'uploading' | 'done' | 'error'

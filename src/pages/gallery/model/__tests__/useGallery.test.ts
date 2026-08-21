@@ -373,6 +373,34 @@ describe('useGallery 수련회 서브카테고리', () => {
     expect(result.current.selectedSubCategory).toBeNull()
   })
 
+  it('VIDEO 카테고리 선택 시 사진과 서브카테고리를 조회하지 않는다', async () => {
+    const { result } = renderHook(() => useGallery())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.setSelectedCategory('RETREAT')
+    })
+
+    await waitFor(() => {
+      expect(result.current.subCategories).toHaveLength(2)
+    })
+    mockFetchGalleryPhotos.mockClear()
+    mockFetchSubCategories.mockClear()
+
+    act(() => {
+      result.current.setSelectedCategory('VIDEO')
+    })
+
+    expect(result.current.selectedCategory).toBe('VIDEO')
+    expect(result.current.subCategories).toHaveLength(0)
+    expect(result.current.selectedSubCategory).toBeNull()
+    expect(mockFetchGalleryPhotos).not.toHaveBeenCalled()
+    expect(mockFetchSubCategories).not.toHaveBeenCalled()
+  })
+
   it('서브카테고리 조회 실패 시 에러 메시지가 설정된다', async () => {
     mockFetchSubCategories.mockRejectedValueOnce(new Error('Network error'))
 
