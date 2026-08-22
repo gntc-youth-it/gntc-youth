@@ -70,7 +70,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
   <div className="flex items-center bg-[#F0F0F0] rounded-lg p-1 gap-1 shrink-0">
     <button
       onClick={() => onChange('grid')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'grid' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -79,7 +79,7 @@ const ViewToggle = ({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mod
     </button>
     <button
       onClick={() => onChange('feed')}
-      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-2xs sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200 ${
         viewMode === 'feed' ? 'bg-[#3B5BDB] text-white font-semibold' : 'text-[#666666] hover:bg-gray-200'
       }`}
     >
@@ -1487,8 +1487,8 @@ export const GalleryPage = () => {
             </div>
 
             {/* Nav bar: categories + view toggle */}
-            <div className="flex items-center justify-between mt-6 gap-3 sm:gap-4">
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:min-w-0">
                 {CATEGORIES.map(({ key, label }) => (
                   <button
                     key={key}
@@ -1503,7 +1503,11 @@ export const GalleryPage = () => {
                   </button>
                 ))}
               </div>
-              {!isVideoTab && <ViewToggle viewMode={viewMode} onChange={setViewMode} />}
+              {!isVideoTab && (
+                <div className="flex shrink-0 justify-end">
+                  <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+                </div>
+              )}
             </div>
           </div>
         </div>
