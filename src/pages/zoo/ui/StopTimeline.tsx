@@ -8,10 +8,8 @@ interface StopTimelineProps {
   visited: StopId[]
   nextStopId: StopId | null
   onToggleVisited: (id: StopId) => void
-  // 없으면 기록 지우기 버튼을 숨긴다
-  onReset?: () => void
-  // 조 화면에서 조원은 도착 표시를 볼 수만 있다
-  canCheck?: boolean
+  // 조장(또는 운영자)만 도착을 표시하고, 조원은 볼 수만 있다
+  canCheck: boolean
   isSaving?: boolean
 }
 
@@ -48,16 +46,11 @@ export const StopTimeline = ({
   visited,
   nextStopId,
   onToggleVisited,
-  onReset,
-  canCheck = true,
+  canCheck,
   isSaving = false,
 }: StopTimelineProps) => {
   const theme = COURSE_THEME[course]
   const exitLeg = legs[legs.length - 1]
-
-  const handleReset = () => {
-    if (onReset && window.confirm('도착 기록을 모두 지울까요?')) onReset()
-  }
 
   // 노드 아래로 이어지는 선은 다음 장소로 가는 길. 이미 도착한 곳으로 가는 길은 흐리게
   const connector = (dimmed: boolean) => (
@@ -171,16 +164,6 @@ export const StopTimeline = ({
           </div>
         </li>
       </ol>
-
-      {onReset && visited.length > 0 && (
-        <button
-          type="button"
-          onClick={handleReset}
-          className="mt-8 text-[13px] text-[#6B7684] underline underline-offset-4 hover:text-[#333D4B]"
-        >
-          도착 기록 지우기
-        </button>
-      )}
     </section>
   )
 }

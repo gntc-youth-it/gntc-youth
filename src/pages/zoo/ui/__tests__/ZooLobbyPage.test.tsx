@@ -90,21 +90,33 @@ describe('ZooLobbyPage', () => {
 
     expect(sessionStorage.getItem('redirectAfterLogin')).toBe('/zoo')
     expect(mockNavigate).toHaveBeenCalledWith('/login')
-    expect(screen.getByRole('link', { name: '로그인 없이 코스만 보기' })).toHaveAttribute('href', '/zoo/course')
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(mockFetchZooTeams).not.toHaveBeenCalled()
   })
 
-  it('조 목록을 모집 중인 조부터 보여준다', async () => {
+  it('조 목록을 모집 중인 조부터 보여주고, 다른 조의 출발한 조는 진행 상황만 보여준다', async () => {
     render(<ZooLobbyPage />)
 
     const list = await screen.findByRole('list')
-    const rows = within(list).getAllByRole('link')
+    const rows = within(list).getAllByRole('listitem')
     expect(rows[0]).toHaveTextContent('기린조')
     expect(rows[0]).toHaveTextContent('모집 중')
-    expect(rows[0]).toHaveAttribute('href', '/zoo/teams/1')
+    expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/zoo/teams/1')
     expect(rows[1]).toHaveTextContent('호랑이팀')
     expect(rows[1]).toHaveTextContent('출발 2/7')
+    expect(within(rows[1]).queryByRole('link')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '조 만들기' })).toBeEnabled()
+  })
+
+  it('운영자는 출발한 조도 열어 볼 수 있다', async () => {
+    mockUseAuth.mockReturnValue({ user: { id: 9, name: '운영자', role: 'MASTER' }, isLoggedIn: true })
+    render(<ZooLobbyPage />)
+
+    const list = await screen.findByRole('list')
+    expect(within(list).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      '/zoo/teams/1',
+      '/zoo/teams/2',
+    ])
   })
 
   it('이미 조에 들어가 있으면 내 조 화면으로 보낸다', async () => {

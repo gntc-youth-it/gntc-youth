@@ -7,7 +7,7 @@ import { AdminUsersPage } from '../pages/admin/users'
 import { AdminPostsPage } from '../pages/admin/posts'
 import { GalleryPage, GalleryWritePage } from '../pages/gallery'
 import { SchedulePage } from '../pages/schedule'
-import { ZooCoursePage, ZooLobbyPage, ZooTeamPage } from '../pages/zoo'
+import { ZooLobbyPage, ZooTeamPage } from '../pages/zoo'
 import './styles/index.css'
 
 export const App = () => {
@@ -20,7 +20,6 @@ export const App = () => {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/zoo" element={<ZooLobbyPage />} />
-          <Route path="/zoo/course" element={<ZooCoursePage />} />
           <Route path="/zoo/teams/:teamId" element={<ZooTeamPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
