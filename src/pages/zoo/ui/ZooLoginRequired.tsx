@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PARK_GREEN } from './courseTheme'
 
 interface ZooLoginRequiredProps {
@@ -32,12 +32,6 @@ export const ZooLoginRequired = ({ title, description }: ZooLoginRequiredProps) 
         </svg>
         카카오로 로그인하기
       </button>
-      <Link
-        to="/zoo/course"
-        className="mt-5 inline-block text-[13px] text-[#6B7684] underline underline-offset-4 hover:text-[#333D4B]"
-      >
-        로그인 없이 코스만 보기
-      </Link>
     </section>
   )
 }

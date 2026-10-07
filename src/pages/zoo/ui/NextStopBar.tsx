@@ -9,8 +9,8 @@ interface NextStopBarProps {
   visitedCount: number
   totalStops: number
   onArrive: () => void
-  // 조 화면에서는 조장만 도착을 누르고, 조원은 바뀌는 것만 본다
-  canArrive?: boolean
+  // 조장(또는 운영자)만 도착을 누르고, 조원은 바뀌는 것만 본다
+  canArrive: boolean
   isSaving?: boolean
   readOnlyHint?: string
   errorMessage?: string
@@ -25,7 +25,7 @@ export const NextStopBar = ({
   visitedCount,
   totalStops,
   onArrive,
-  canArrive = true,
+  canArrive,
   isSaving = false,
   readOnlyHint,
   errorMessage,
