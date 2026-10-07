@@ -155,9 +155,11 @@ const PhotoVoteBoard = ({ viewerId }: { viewerId: number }) => {
 const PhotoVoteContent = ({ currentUser }: { currentUser: UserInfo }) => {
   const isMaster = currentUser.role === 'MASTER'
   const [tab, setTab] = useState<PhotoVoteTab>('vote')
+  const isResultsTab = isMaster && tab === 'results'
 
   return (
-    <ZooLayout>
+    // 투표 화면에는 아래에 '내 투표' 바가 떠 있어서 마지막 줄 사진이 가려지지 않게 여백을 둔다
+    <ZooLayout hasBottomBar={!isResultsTab}>
       <BackToZoo />
       <h1 className="mt-5 font-sign text-[34px] leading-tight sm:text-[40px]" style={{ color: PARK_GREEN }}>
         사진 투표
@@ -167,7 +169,7 @@ const PhotoVoteContent = ({ currentUser }: { currentUser: UserInfo }) => {
       </p>
 
       {isMaster && <TabSwitch tab={tab} onChange={setTab} />}
-      {isMaster && tab === 'results' ? <PhotoVoteResults /> : <PhotoVoteBoard viewerId={currentUser.id} />}
+      {isResultsTab ? <PhotoVoteResults /> : <PhotoVoteBoard viewerId={currentUser.id} />}
     </ZooLayout>
   )
 }
