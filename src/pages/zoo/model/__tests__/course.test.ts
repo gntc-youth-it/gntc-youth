@@ -1,6 +1,7 @@
 import {
   COURSE_STOP_IDS,
   GATE_POINT,
+  GATHERING_NOTICE,
   getCourseLegs,
   getCourseStops,
 } from '../course'
@@ -51,6 +52,16 @@ describe('getCourseLegs', () => {
     const bPoints = getCourseLegs('B').flatMap((leg) => leg.points)
 
     expect(bPoints).toEqual([...aPoints].reverse())
+  })
+
+  it.each(['A', 'B'] as const)('%s코스를 다 돌면 오후 4:30까지 정문으로 모여 단체사진을 찍으라고 안내한다', (course) => {
+    const legs = getCourseLegs(course)
+    const lastLeg = legs[legs.length - 1]
+
+    expect(lastLeg.to).toBe('gate')
+    expect(lastLeg.directions[0]).toBe(GATHERING_NOTICE)
+    expect(GATHERING_NOTICE).toBe('오후 4:30까지 동물원 정문으로 모여주세요. 단체사진을 찍어요.')
+    expect(lastLeg.directions.join(' ')).not.toContain('나가요')
   })
 
   it('코스마다 그 방향에 맞는 길 안내를 준다', () => {

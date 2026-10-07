@@ -8,6 +8,7 @@ import {
   leaveZooTeam,
   startZooTeam,
 } from '../../api/zooTeamApi'
+import { COURSE_STOP_IDS } from '../../model/course'
 import type { ZooTeamDetail } from '../../model/team'
 
 const mockNavigate = jest.fn()
@@ -182,6 +183,21 @@ describe('ZooTeamPage', () => {
         '/zoo/teams/4/stops/AFRICA_1'
       )
       expect(screen.getByRole('link', { name: '호주관 미션 하기' })).toHaveAttribute('href', '/zoo/teams/4/stops/AUSTRALIA')
+    })
+
+    it('7곳을 다 돌면 오후 4:30까지 정문으로 모이라고 안내한다', async () => {
+      loginAs(2)
+      mockFetchZooTeam.mockResolvedValue({
+        ...startedTeam,
+        arrivals: COURSE_STOP_IDS.A.map((stopId) => ({ stopId, arrivedAt: '2026-10-10T15:00:00' })),
+      })
+      render(<ZooTeamPage />)
+
+      const bar = await screen.findByRole('complementary', { name: '다음 목적지 안내' })
+      expect(within(bar).getByText('7곳 모두 돌았어요')).toBeInTheDocument()
+      expect(within(bar).getByText('정문으로 모여주세요')).toBeInTheDocument()
+      expect(within(bar).getByText('오후 4:30까지 동물원 정문으로 모여주세요. 단체사진을 찍어요.')).toBeInTheDocument()
+      expect(screen.getByText('정문에 모여요')).toBeInTheDocument()
     })
 
     it('조원은 문제와 낸 내용을 보기만 한다', async () => {

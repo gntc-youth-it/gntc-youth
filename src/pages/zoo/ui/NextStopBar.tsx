@@ -75,7 +75,7 @@ export const NextStopBar = ({
 
           <div className="min-w-0 flex-1">
             <p className="text-[12px] text-white/70">{nextStop ? '다음 목적지' : `${totalStops}곳 모두 돌았어요`}</p>
-            <p className="truncate font-sign text-[23px] leading-tight">{nextStop ? nextStop.name : '정문으로 돌아가요'}</p>
+            <p className="truncate font-sign text-[23px] leading-tight">{nextStop ? nextStop.name : '정문으로 모여주세요'}</p>
             {directions[0] && <p className="mt-0.5 line-clamp-2 break-keep text-[13px] leading-snug text-white/85">{directions[0]}</p>}
             {nextStop && readOnlyHint && <p className="mt-1.5 break-keep text-[12px] text-white/60">{readOnlyHint}</p>}
           </div>
