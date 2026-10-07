@@ -19,12 +19,10 @@ interface TeamCourseViewProps {
   isMaster: boolean
   pendingAction: ZooTeamAction | null
   actionError: ZooActionError | null
-  onMarkArrival: (stopId: StopId) => void
-  onCancelArrival: (stopId: StopId) => void
   onTransferLeader: (member: ZooTeamMember) => void
 }
 
-// 출발한 조의 화면. 모두 같은 화면을 보고, 도착 처리는 조장(또는 운영자)만 한다
+// 출발한 조의 화면. 모두 같은 화면을 보고, 미션(답과 사진)은 조장(또는 운영자)이 내면 그 장소가 도착 처리된다
 export const TeamCourseView = ({
   team,
   currentUserId,
@@ -32,13 +30,11 @@ export const TeamCourseView = ({
   isMaster,
   pendingAction,
   actionError,
-  onMarkArrival,
-  onCancelArrival,
   onTransferLeader,
 }: TeamCourseViewProps) => {
   const [isMemberListOpen, setIsMemberListOpen] = useState(false)
   const canManage = isLeader || isMaster
-  const isSaving = pendingAction === 'arrival'
+  const getMissionHref = (stopId: StopId) => `/zoo/teams/${team.id}/stops/${stopId}`
 
   const stops = getCourseStops(team.course)
   const legs = getCourseLegs(team.course)
@@ -46,11 +42,6 @@ export const TeamCourseView = ({
   const nextStop = findNextStop(team.course, visited)
   const nextIndex = nextStop ? stops.indexOf(nextStop) : stops.length
   const visitedCount = stops.filter((stop) => visited.includes(stop.id)).length
-
-  const handleToggle = (stopId: StopId) => {
-    if (visited.includes(stopId)) onCancelArrival(stopId)
-    else onMarkArrival(stopId)
-  }
 
   return (
     <>
@@ -102,7 +93,7 @@ export const TeamCourseView = ({
 
         {isMaster && !isLeader && (
           <p className="mt-4 break-keep rounded-xl bg-[#F2F4F6] px-3.5 py-2.5 text-[13px] text-[#4E5968]">
-            운영자 권한으로 조장 대신 도착을 처리하거나 조장을 바꿀 수 있어요.
+            운영자 권한으로 조장 대신 미션을 내거나 조장을 바꿀 수 있어요.
           </p>
         )}
 
@@ -119,9 +110,8 @@ export const TeamCourseView = ({
           legs={legs}
           visited={visited}
           nextStopId={nextStop?.id ?? null}
-          onToggleVisited={handleToggle}
-          canCheck={canManage}
-          isSaving={isSaving}
+          getMissionHref={getMissionHref}
+          canSubmit={canManage}
         />
       </ZooLayout>
 
@@ -132,10 +122,16 @@ export const TeamCourseView = ({
         directions={legs[nextIndex]?.directions ?? []}
         visitedCount={visitedCount}
         totalStops={stops.length}
-        onArrive={() => nextStop && onMarkArrival(nextStop.id)}
-        canArrive={canManage}
-        isSaving={isSaving}
-        readOnlyHint="조장이 도착을 누르면 모두의 화면이 함께 바뀌어요."
+        action={
+          nextStop
+            ? {
+                label: canManage ? '미션 하기' : '문제 보기',
+                href: getMissionHref(nextStop.id),
+                emphasis: canManage ? 'primary' : 'secondary',
+              }
+            : undefined
+        }
+        readOnlyHint={canManage ? undefined : '조장이 답과 사진을 내면 모두의 화면이 함께 바뀌어요.'}
         errorMessage={actionError?.message}
       />
     </>

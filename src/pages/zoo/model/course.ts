@@ -238,3 +238,6 @@ export const getCourseStops = (course: CourseId): ZooStop[] => COURSE_STOP_IDS[c
 // 코스 순서상 아직 도착하지 않은 첫 장소. 모두 돌았으면 null
 export const findNextStop = (course: CourseId, visited: readonly StopId[]): ZooStop | null =>
   getCourseStops(course).find((stop) => !visited.includes(stop.id)) ?? null
+
+export const isStopId = (value: unknown): value is StopId =>
+  typeof value === 'string' && Object.prototype.hasOwnProperty.call(ZOO_STOPS, value)

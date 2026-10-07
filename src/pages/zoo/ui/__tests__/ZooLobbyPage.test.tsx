@@ -11,8 +11,8 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useSearchParams: () => [mockSearchParams, jest.fn()],
   useLocation: () => ({ pathname: '/zoo', search: '' }),
-  Link: ({ children, to, className }: { children: React.ReactNode; to: string; className?: string }) => (
-    <a href={to} className={className}>
+  Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string } & Record<string, unknown>) => (
+    <a href={to} {...rest}>
       {children}
     </a>
   ),

@@ -1,13 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { HttpError } from '../../../../shared/api'
-import { fetchZooTeam, markZooArrival, joinZooTeam, leaveZooTeam, startZooTeam } from '../../api/zooTeamApi'
+import { fetchZooTeam, submitZooMission, joinZooTeam, leaveZooTeam, startZooTeam } from '../../api/zooTeamApi'
 import { useZooTeam } from '../useZooTeam'
 import type { ZooTeamDetail } from '../team'
 
 jest.mock('../../api/zooTeamApi')
 
 const mockFetchZooTeam = fetchZooTeam as jest.MockedFunction<typeof fetchZooTeam>
-const mockMarkZooArrival = markZooArrival as jest.MockedFunction<typeof markZooArrival>
+const mockSubmitZooMission = submitZooMission as jest.MockedFunction<typeof submitZooMission>
 const mockJoinZooTeam = joinZooTeam as jest.MockedFunction<typeof joinZooTeam>
 const mockLeaveZooTeam = leaveZooTeam as jest.MockedFunction<typeof leaveZooTeam>
 const mockStartZooTeam = startZooTeam as jest.MockedFunction<typeof startZooTeam>
@@ -24,6 +24,8 @@ const makeTeam = (overrides: Partial<ZooTeamDetail> = {}): ZooTeamDetail => ({
   startedAt: '2026-10-10T09:30:00',
   ...overrides,
 })
+
+const MISSION = { answers: [{ questionId: 'q1', answer: '캥거루' }], photoFileId: 7 }
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -58,7 +60,7 @@ describe('useZooTeam', () => {
     await waitFor(() => expect(result.current.loadState).toBe('error'))
   })
 
-  it('도착을 기록하면 응답으로 화면을 바로 바꾼다', async () => {
+  it('미션을 내면 응답으로 화면을 바로 바꾼다', async () => {
     mockFetchZooTeam.mockResolvedValue(makeTeam())
     const updated = makeTeam({
       arrivals: [
@@ -66,17 +68,17 @@ describe('useZooTeam', () => {
         { stopId: 'AUSTRALIA', arrivedAt: '2026-10-10T10:20:00' },
       ],
     })
-    mockMarkZooArrival.mockResolvedValue(updated)
+    mockSubmitZooMission.mockResolvedValue(updated)
     const { result } = renderHook(() => useZooTeam(4))
     await waitFor(() => expect(result.current.loadState).toBe('ready'))
 
     let succeeded = false
     await act(async () => {
-      succeeded = await result.current.markArrival('AUSTRALIA')
+      succeeded = await result.current.submitMission('AUSTRALIA', MISSION)
     })
 
     expect(succeeded).toBe(true)
-    expect(mockMarkZooArrival).toHaveBeenCalledWith(4, 'AUSTRALIA')
+    expect(mockSubmitZooMission).toHaveBeenCalledWith(4, 'AUSTRALIA', MISSION)
     expect(result.current.team?.arrivals).toHaveLength(2)
     expect(result.current.pendingAction).toBeNull()
   })
@@ -98,7 +100,7 @@ describe('useZooTeam', () => {
       void result.current.reload()
     })
 
-    mockMarkZooArrival.mockResolvedValue(
+    mockSubmitZooMission.mockResolvedValue(
       makeTeam({
         arrivals: [
           { stopId: 'AFRICA_1', arrivedAt: '2026-10-10T10:00:00' },
@@ -107,7 +109,7 @@ describe('useZooTeam', () => {
       })
     )
     await act(async () => {
-      await result.current.markArrival('AUSTRALIA')
+      await result.current.submitMission('AUSTRALIA', MISSION)
     })
     await act(async () => {
       resolveStale(initial)

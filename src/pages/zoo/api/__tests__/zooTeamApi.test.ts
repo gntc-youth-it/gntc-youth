@@ -1,6 +1,5 @@
 import { apiRequest } from '../../../../shared/api'
 import {
-  cancelZooArrival,
   changeZooTeamCourse,
   createZooTeam,
   deleteZooTeam,
@@ -9,8 +8,8 @@ import {
   fetchZooTeams,
   joinZooTeam,
   leaveZooTeam,
-  markZooArrival,
   startZooTeam,
+  submitZooMission,
   transferZooTeamLeader,
 } from '../zooTeamApi'
 
@@ -71,11 +70,14 @@ describe('zooTeamApi', () => {
     })
   })
 
-  it('장소 도착을 기록하고 취소한다', async () => {
-    await markZooArrival(4, 'AUSTRALIA')
-    await cancelZooArrival(4, 'AUSTRALIA')
+  it('장소 미션의 답과 사진을 낸다', async () => {
+    const data = { answers: [{ questionId: 'q1', answer: '7개' }], photoFileId: 31 }
 
-    expect(mockApiRequest).toHaveBeenNthCalledWith(1, '/zoo/teams/4/arrivals/AUSTRALIA', { method: 'PUT' })
-    expect(mockApiRequest).toHaveBeenNthCalledWith(2, '/zoo/teams/4/arrivals/AUSTRALIA', { method: 'DELETE' })
+    await submitZooMission(4, 'AFRICA_1', data)
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/zoo/teams/4/missions/AFRICA_1', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
   })
 })

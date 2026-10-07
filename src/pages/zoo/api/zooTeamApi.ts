@@ -3,6 +3,7 @@ import type { CourseId, StopId } from '../model/course'
 import type {
   CreateZooTeamRequest,
   MyZooTeamResponse,
+  SubmitZooMissionRequest,
   ZooTeamDetail,
   ZooTeamListResponse,
 } from '../model/team'
@@ -49,12 +50,16 @@ export const startZooTeam = async (teamId: number): Promise<ZooTeamDetail> => {
   return apiRequest<ZooTeamDetail>(`/zoo/teams/${teamId}/start`, { method: 'POST' })
 }
 
-export const markZooArrival = async (teamId: number, stopId: StopId): Promise<ZooTeamDetail> => {
-  return apiRequest<ZooTeamDetail>(`/zoo/teams/${teamId}/arrivals/${stopId}`, { method: 'PUT' })
-}
-
-export const cancelZooArrival = async (teamId: number, stopId: StopId): Promise<ZooTeamDetail> => {
-  return apiRequest<ZooTeamDetail>(`/zoo/teams/${teamId}/arrivals/${stopId}`, { method: 'DELETE' })
+// 답과 사진을 내면 그 장소가 도착 처리된다. 이미 낸 장소에 다시 보내면 수정
+export const submitZooMission = async (
+  teamId: number,
+  stopId: StopId,
+  data: SubmitZooMissionRequest
+): Promise<ZooTeamDetail> => {
+  return apiRequest<ZooTeamDetail>(`/zoo/teams/${teamId}/missions/${stopId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
 }
 
 export const transferZooTeamLeader = async (teamId: number, userId: number): Promise<ZooTeamDetail> => {

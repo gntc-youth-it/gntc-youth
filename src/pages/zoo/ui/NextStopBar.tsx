@@ -1,5 +1,13 @@
+import { Link } from 'react-router-dom'
 import type { CourseId, ZooStop } from '../model/course'
 import { COURSE_THEME, PARK_GREEN } from './courseTheme'
+
+interface NextStopAction {
+  label: string
+  href: string
+  // 조장은 미션을 하러 가는 주 버튼, 조원은 문제만 보는 보조 버튼
+  emphasis: 'primary' | 'secondary'
+}
 
 interface NextStopBarProps {
   course: CourseId
@@ -8,10 +16,7 @@ interface NextStopBarProps {
   directions: string[]
   visitedCount: number
   totalStops: number
-  onArrive: () => void
-  // 조장(또는 운영자)만 도착을 누르고, 조원은 바뀌는 것만 본다
-  canArrive: boolean
-  isSaving?: boolean
+  action?: NextStopAction
   readOnlyHint?: string
   errorMessage?: string
 }
@@ -24,9 +29,7 @@ export const NextStopBar = ({
   directions,
   visitedCount,
   totalStops,
-  onArrive,
-  canArrive,
-  isSaving = false,
+  action,
   readOnlyHint,
   errorMessage,
 }: NextStopBarProps) => {
@@ -74,21 +77,19 @@ export const NextStopBar = ({
             <p className="text-[12px] text-white/70">{nextStop ? '다음 목적지' : `${totalStops}곳 모두 돌았어요`}</p>
             <p className="truncate font-sign text-[23px] leading-tight">{nextStop ? nextStop.name : '정문으로 돌아가요'}</p>
             {directions[0] && <p className="mt-0.5 line-clamp-2 break-keep text-[13px] leading-snug text-white/85">{directions[0]}</p>}
-            {nextStop && !canArrive && readOnlyHint && (
-              <p className="mt-1.5 break-keep text-[12px] text-white/60">{readOnlyHint}</p>
-            )}
+            {nextStop && readOnlyHint && <p className="mt-1.5 break-keep text-[12px] text-white/60">{readOnlyHint}</p>}
           </div>
 
-          {nextStop && canArrive && (
-            <button
-              type="button"
-              onClick={onArrive}
-              disabled={isSaving}
-              className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[14px] font-semibold transition-transform active:scale-95 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1F4D36]"
-              style={{ color: PARK_GREEN }}
+          {nextStop && action && (
+            <Link
+              to={action.href}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1F4D36] ${
+                action.emphasis === 'primary' ? 'bg-white' : 'border border-white/50 text-white'
+              }`}
+              style={action.emphasis === 'primary' ? { color: PARK_GREEN } : undefined}
             >
-              {isSaving ? '저장 중...' : '도착했어요'}
-            </button>
+              {action.label}
+            </Link>
           )}
         </div>
       </div>
