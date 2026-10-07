@@ -150,7 +150,7 @@ export const StopTimeline = ({
             <GateNode />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="pt-0.5 text-[15px] font-semibold text-[#191F28]">정문으로 나가요</p>
+            <p className="pt-0.5 text-[15px] font-semibold text-[#191F28]">정문에 모여요</p>
             <Directions steps={exitLeg.directions} />
           </div>
         </li>
