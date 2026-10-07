@@ -108,6 +108,12 @@ describe('ZooLobbyPage', () => {
     expect(screen.getByRole('button', { name: '조 만들기' })).toBeEnabled()
   })
 
+  it('사진 투표로 가는 입구가 있다', async () => {
+    render(<ZooLobbyPage />)
+
+    expect(await screen.findByRole('link', { name: /사진 투표/ })).toHaveAttribute('href', '/zoo/photos')
+  })
+
   it('운영자는 출발한 조도 열어 볼 수 있다', async () => {
     mockUseAuth.mockReturnValue({ user: { id: 9, name: '운영자', role: 'MASTER' }, isLoggedIn: true })
     render(<ZooLobbyPage />)

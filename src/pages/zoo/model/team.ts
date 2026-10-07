@@ -79,4 +79,6 @@ export const TEAM_NAME_MAX_LENGTH = 20
 // 백엔드 ExceptionCode 중 화면에서 따로 처리하는 것
 export const ZOO_ERROR_CODE = {
   ALREADY_IN_TEAM: 5002,
+  PHOTO_NOT_FOUND: 5009,
+  OWN_TEAM_PHOTO: 5010,
 } as const

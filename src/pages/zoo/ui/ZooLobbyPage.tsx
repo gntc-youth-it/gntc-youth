@@ -6,6 +6,7 @@ import { useCurrentUser } from '../model/useCurrentUser'
 import { useZooLobby } from '../model/useZooLobby'
 import { CourseDot, TeamStatusPill } from './CourseBadge'
 import { CreateTeamDialog } from './CreateTeamDialog'
+import { PhotoVoteEntryCard } from './PhotoVoteEntry'
 import { ZooLayout } from './ZooLayout'
 import { ZooLoginRequired } from './ZooLoginRequired'
 import { PARK_GREEN } from './courseTheme'
@@ -112,6 +113,7 @@ export const ZooLobbyPage = () => {
           조 만들기
         </button>
       )}
+      <PhotoVoteEntryCard />
 
       <section aria-labelledby="zoo-team-list" className="mt-10">
         <div className="flex items-baseline justify-between">
