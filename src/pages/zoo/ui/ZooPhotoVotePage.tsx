@@ -4,8 +4,9 @@ import type { UserInfo } from '../../../features/auth'
 import { ZOO_STOPS } from '../model/course'
 import type { StopId } from '../model/course'
 import { getStopMission } from '../model/missions'
-import { groupByStop, orderForViewer } from '../model/photo'
+import { PHOTO_VOTE_OPENS_LABEL, groupByStop, orderForViewer } from '../model/photo'
 import { useCurrentUser } from '../model/useCurrentUser'
+import { usePhotoVoteOpen } from '../model/usePhotoVoteOpen'
 import { useZooPhotos } from '../model/useZooPhotos'
 import type { ZooActionError } from '../model/useZooTeam'
 import { HeartIcon } from './HeartIcon'
@@ -152,21 +153,50 @@ const PhotoVoteBoard = ({ viewerId }: { viewerId: number }) => {
   )
 }
 
+const PhotoVoteTitle = () => (
+  <h1 className="mt-5 font-sign text-[34px] leading-tight sm:text-[40px]" style={{ color: PARK_GREEN }}>
+    사진 투표
+  </h1>
+)
+
+// 열리기 전에 링크로 들어온 참가자에게는 언제 열리는지만 알려준다. 열리는 순간 새로고침 없이 투표 화면으로 바뀐다
+const PhotoVoteClosed = () => (
+  <ZooLayout>
+    <BackToZoo />
+    <PhotoVoteTitle />
+    <div className="mt-6 rounded-2xl bg-[#F5F8F2] px-5 py-7 text-center">
+      <p className="font-sign text-[25px] leading-tight" style={{ color: PARK_GREEN }}>
+        {PHOTO_VOTE_OPENS_LABEL}에 열려요
+      </p>
+      <p className="mt-2 break-keep text-[14px] leading-relaxed text-[#4E5968]">
+        모든 조가 미션을 마치고 정문에 모이면 그때부터 조별 미션 사진을 보고 투표할 수 있어요.
+      </p>
+    </div>
+  </ZooLayout>
+)
+
 const PhotoVoteContent = ({ currentUser }: { currentUser: UserInfo }) => {
   const isMaster = currentUser.role === 'MASTER'
+  const isOpen = usePhotoVoteOpen()
   const [tab, setTab] = useState<PhotoVoteTab>('vote')
   const isResultsTab = isMaster && tab === 'results'
+
+  // 운영자는 열리기 전에도 미리 들어와 확인할 수 있다
+  if (!isOpen && !isMaster) return <PhotoVoteClosed />
 
   return (
     // 투표 화면에는 아래에 '내 투표' 바가 떠 있어서 마지막 줄 사진이 가려지지 않게 여백을 둔다
     <ZooLayout hasBottomBar={!isResultsTab}>
       <BackToZoo />
-      <h1 className="mt-5 font-sign text-[34px] leading-tight sm:text-[40px]" style={{ color: PARK_GREEN }}>
-        사진 투표
-      </h1>
+      <PhotoVoteTitle />
       <p className="mt-2 break-keep text-[15px] leading-relaxed text-[#4E5968]">
         마음에 드는 사진에 하트를 눌러 투표해요. 여러 장에 투표할 수 있고, 몇 표를 받았는지는 운영진만 봐요. 우리 조 사진에는 투표할 수 없어요.
       </p>
+      {!isOpen && (
+        <p className="mt-4 break-keep rounded-xl bg-[#FFF4E5] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#8A4B00]">
+          운영자만 미리 보고 있어요. 참가자에게는 {PHOTO_VOTE_OPENS_LABEL}에 열려요. 미리 눌러 본 투표도 결과에 그대로 남으니, 확인한 뒤에는 다시 눌러 취소해 주세요.
+        </p>
+      )}
 
       {isMaster && <TabSwitch tab={tab} onChange={setTab} />}
       {isResultsTab ? <PhotoVoteResults /> : <PhotoVoteBoard viewerId={currentUser.id} />}

@@ -49,7 +49,7 @@ export const TeamCourseView = ({
       <ZooLayout hasBottomBar>
         <div className="flex items-center justify-between gap-3">
           <BackToTeams />
-          <PhotoVoteEntryPill />
+          <PhotoVoteEntryPill isMaster={isMaster} />
         </div>
 
         <div className="mt-5 flex items-center gap-2">
