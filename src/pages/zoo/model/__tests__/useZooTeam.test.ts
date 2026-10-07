@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { HttpError } from '../../../../shared/api'
-import { fetchZooTeam, markZooArrival, joinZooTeam, startZooTeam } from '../../api/zooTeamApi'
+import { fetchZooTeam, markZooArrival, joinZooTeam, leaveZooTeam, startZooTeam } from '../../api/zooTeamApi'
 import { useZooTeam } from '../useZooTeam'
 import type { ZooTeamDetail } from '../team'
 
@@ -9,6 +9,7 @@ jest.mock('../../api/zooTeamApi')
 const mockFetchZooTeam = fetchZooTeam as jest.MockedFunction<typeof fetchZooTeam>
 const mockMarkZooArrival = markZooArrival as jest.MockedFunction<typeof markZooArrival>
 const mockJoinZooTeam = joinZooTeam as jest.MockedFunction<typeof joinZooTeam>
+const mockLeaveZooTeam = leaveZooTeam as jest.MockedFunction<typeof leaveZooTeam>
 const mockStartZooTeam = startZooTeam as jest.MockedFunction<typeof startZooTeam>
 
 const makeTeam = (overrides: Partial<ZooTeamDetail> = {}): ZooTeamDetail => ({
@@ -113,6 +114,37 @@ describe('useZooTeam', () => {
     })
 
     expect(result.current.team?.arrivals).toHaveLength(2)
+  })
+
+  it('응답 본문이 없는 작업 뒤에는 그 전에 출발한 조회 결과를 반영하지 않는다', async () => {
+    const initial = makeTeam({ status: 'RECRUITING', arrivals: [] })
+    mockFetchZooTeam.mockResolvedValueOnce(initial)
+    mockLeaveZooTeam.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useZooTeam(4))
+    await waitFor(() => expect(result.current.loadState).toBe('ready'))
+
+    let resolveStale: (team: ZooTeamDetail) => void = () => undefined
+    mockFetchZooTeam.mockImplementationOnce(
+      () =>
+        new Promise<ZooTeamDetail>((resolve) => {
+          resolveStale = resolve
+        })
+    )
+    act(() => {
+      void result.current.reload()
+    })
+
+    let succeeded = false
+    await act(async () => {
+      succeeded = await result.current.leave()
+    })
+    await act(async () => {
+      resolveStale(makeTeam({ status: 'RECRUITING', arrivals: [], name: '나가기 전 이름' }))
+    })
+
+    expect(succeeded).toBe(true)
+    expect(mockLeaveZooTeam).toHaveBeenCalledWith(4)
+    expect(result.current.team?.name).toBe('사자팀')
   })
 
   it('요청이 실패하면 서버 메시지를 보여주고 다시 불러온다', async () => {

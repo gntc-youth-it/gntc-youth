@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useZooCourse, COURSE_STORAGE_KEY, VISITED_STORAGE_KEY } from '../useZooCourse'
+import { useZooCourse, COURSE_STORAGE_KEY, getVisitedStorageKey } from '../useZooCourse'
 
 let mockSearchParams = new URLSearchParams()
 const mockSetSearchParams = jest.fn()
@@ -70,7 +70,24 @@ describe('useZooCourse', () => {
     act(() => result.current.markArrived())
 
     expect(result.current.nextStop?.name).toBe('호주관')
-    expect(JSON.parse(localStorage.getItem(VISITED_STORAGE_KEY) ?? '[]')).toEqual(['AFRICA_1'])
+    expect(JSON.parse(localStorage.getItem(getVisitedStorageKey('A')) ?? '[]')).toEqual(['AFRICA_1'])
+  })
+
+  it('코스마다 도착 기록을 따로 두어 다른 코스를 열어 봐도 섞이지 않는다', () => {
+    mockSearchParams = new URLSearchParams('course=a')
+    const { result } = renderHook(() => useZooCourse())
+
+    act(() => result.current.markArrived())
+    act(() => result.current.selectCourse('B'))
+
+    expect(result.current.visited).toEqual([])
+    expect(result.current.nextStop?.name).toBe('제2아프리카관')
+    expect(JSON.parse(localStorage.getItem(getVisitedStorageKey('B')) ?? '[]')).toEqual([])
+
+    act(() => result.current.selectCourse('A'))
+
+    expect(result.current.visited).toEqual(['AFRICA_1'])
+    expect(result.current.nextStop?.name).toBe('호주관')
   })
 
   it('건너뛴 장소가 있으면 그곳을 다음 장소로 안내한다', () => {
@@ -106,7 +123,7 @@ describe('useZooCourse', () => {
   })
 
   it('기록을 지우면 첫 장소부터 다시 안내한다', () => {
-    localStorage.setItem(VISITED_STORAGE_KEY, JSON.stringify(['AFRICA_1', 'AUSTRALIA']))
+    localStorage.setItem(getVisitedStorageKey('A'), JSON.stringify(['AFRICA_1', 'AUSTRALIA']))
     mockSearchParams = new URLSearchParams('course=a')
     const { result } = renderHook(() => useZooCourse())
 
@@ -115,10 +132,12 @@ describe('useZooCourse', () => {
     act(() => result.current.resetVisited())
 
     expect(result.current.nextStop?.name).toBe('제1아프리카관')
+    expect(JSON.parse(localStorage.getItem(getVisitedStorageKey('A')) ?? '[]')).toEqual([])
   })
 
   it('저장된 기록 중 알 수 없는 값은 무시한다', () => {
-    localStorage.setItem(VISITED_STORAGE_KEY, JSON.stringify(['AFRICA_1', 'unknown', 3]))
+    localStorage.setItem(getVisitedStorageKey('A'), JSON.stringify(['AFRICA_1', 'unknown', 3]))
+    mockSearchParams = new URLSearchParams('course=a')
 
     const { result } = renderHook(() => useZooCourse())
 
@@ -126,7 +145,8 @@ describe('useZooCourse', () => {
   })
 
   it('저장된 기록이 깨져 있으면 빈 기록으로 시작한다', () => {
-    localStorage.setItem(VISITED_STORAGE_KEY, '{broken')
+    localStorage.setItem(getVisitedStorageKey('A'), '{broken')
+    mockSearchParams = new URLSearchParams('course=a')
 
     const { result } = renderHook(() => useZooCourse())
 

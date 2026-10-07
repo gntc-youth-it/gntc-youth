@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ZooCoursePage } from '../ZooCoursePage'
-import { VISITED_STORAGE_KEY } from '../../model/useZooCourse'
+import { getVisitedStorageKey } from '../../model/useZooCourse'
 
 let mockSearchParams = new URLSearchParams()
 const mockSetSearchParams = jest.fn()
@@ -77,7 +77,7 @@ describe('ZooCoursePage', () => {
 
   it('목록에서 도착 표시를 취소하면 그 장소를 다시 안내한다', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(VISITED_STORAGE_KEY, JSON.stringify(['AFRICA_1']))
+    localStorage.setItem(getVisitedStorageKey('A'), JSON.stringify(['AFRICA_1']))
     mockSearchParams = new URLSearchParams('course=a')
     render(<ZooCoursePage />)
 
@@ -90,7 +90,7 @@ describe('ZooCoursePage', () => {
 
   it('모두 돌면 정문으로 돌아가는 길을 안내한다', () => {
     localStorage.setItem(
-      VISITED_STORAGE_KEY,
+      getVisitedStorageKey('A'),
       JSON.stringify(['AFRICA_1', 'AUSTRALIA', 'BIG_ANIMAL', 'BEAR', 'PREDATOR', 'AFRICA_3', 'AFRICA_2'])
     )
     mockSearchParams = new URLSearchParams('course=a')
@@ -106,7 +106,7 @@ describe('ZooCoursePage', () => {
   it('도착 기록 지우기를 확인하면 첫 장소부터 다시 안내한다', async () => {
     const user = userEvent.setup()
     const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true)
-    localStorage.setItem(VISITED_STORAGE_KEY, JSON.stringify(['AFRICA_2', 'AFRICA_3']))
+    localStorage.setItem(getVisitedStorageKey('B'), JSON.stringify(['AFRICA_2', 'AFRICA_3']))
     mockSearchParams = new URLSearchParams('course=b')
     render(<ZooCoursePage />)
 

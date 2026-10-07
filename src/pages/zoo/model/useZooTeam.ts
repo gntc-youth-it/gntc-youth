@@ -81,6 +81,8 @@ export const useZooTeam = (teamId: number) => {
       try {
         const data = await request()
         if (data) applyTeam(seq, data)
+        // 나가기·삭제처럼 응답 본문이 없어도, 그 전에 출발한 조회 결과는 더 이상 반영하지 않는다
+        else appliedSeq.current = Math.max(appliedSeq.current, seq)
         return true
       } catch (error) {
         setActionError(toActionError(error))
