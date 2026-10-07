@@ -18,12 +18,10 @@ const ChevronRightIcon = () => (
   </svg>
 )
 
-const TeamRow = ({ team }: { team: ZooTeamSummary }) => (
-  <li>
-    <Link
-      to={`/zoo/teams/${team.id}`}
-      className="flex items-center gap-3.5 py-4 transition-colors hover:bg-[#F9FAFB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1F4D36]"
-    >
+// 출발한 조는 그 조의 조원(과 운영자)만 들어갈 수 있어서, 나머지에게는 진행 상황만 보여준다
+const TeamRow = ({ team, canOpen }: { team: ZooTeamSummary; canOpen: boolean }) => {
+  const summary = (
+    <>
       <CourseDot course={team.course} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-sign text-[22px] leading-tight text-[#191F28]">{team.name}</p>
@@ -33,10 +31,25 @@ const TeamRow = ({ team }: { team: ZooTeamSummary }) => (
         </p>
       </div>
       <TeamStatusPill status={team.status} arrivedCount={team.arrivedCount} totalStops={TOTAL_STOPS} />
-      <ChevronRightIcon />
-    </Link>
-  </li>
-)
+    </>
+  )
+
+  return (
+    <li>
+      {canOpen ? (
+        <Link
+          to={`/zoo/teams/${team.id}`}
+          className="flex items-center gap-3.5 py-4 transition-colors hover:bg-[#F9FAFB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1F4D36]"
+        >
+          {summary}
+          <ChevronRightIcon />
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3.5 py-4 pr-[18px] opacity-60">{summary}</div>
+      )}
+    </li>
+  )
+}
 
 export const ZooLobbyPage = () => {
   const navigate = useNavigate()
@@ -63,6 +76,7 @@ export const ZooLobbyPage = () => {
   }
 
   const recruitingCount = teams.filter((team) => team.status === 'RECRUITING').length
+  const isMaster = currentUser.role === 'MASTER'
 
   return (
     <ZooLayout>
@@ -131,18 +145,15 @@ export const ZooLobbyPage = () => {
         {teams.length > 0 && (
           <ul className="mt-3 divide-y divide-[#F2F4F6] border-y border-[#F2F4F6]">
             {teams.map((team) => (
-              <TeamRow key={team.id} team={team} />
+              <TeamRow
+                key={team.id}
+                team={team}
+                canOpen={team.status === 'RECRUITING' || team.id === myTeam?.id || isMaster}
+              />
             ))}
           </ul>
         )}
       </section>
-
-      <Link
-        to="/zoo/course"
-        className="mt-8 inline-block text-[13px] text-[#6B7684] underline underline-offset-4 hover:text-[#333D4B]"
-      >
-        코스만 먼저 보기
-      </Link>
 
       <CreateTeamDialog
         open={isCreateOpen}

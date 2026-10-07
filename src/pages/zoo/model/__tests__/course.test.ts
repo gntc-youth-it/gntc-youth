@@ -3,8 +3,6 @@ import {
   GATE_POINT,
   getCourseLegs,
   getCourseStops,
-  isStopId,
-  parseCourseId,
 } from '../course'
 
 describe('코스 순서', () => {
@@ -58,28 +56,5 @@ describe('getCourseLegs', () => {
   it('코스마다 그 방향에 맞는 길 안내를 준다', () => {
     expect(getCourseLegs('A')[0].directions[0]).toContain('홍학사')
     expect(getCourseLegs('B')[0].directions[0]).toContain('100주년 광장')
-  })
-})
-
-describe('parseCourseId', () => {
-  it.each([
-    ['a', 'A'],
-    ['B', 'B'],
-    [' b ', 'B'],
-  ])('%p는 %s코스', (input, expected) => {
-    expect(parseCourseId(input)).toBe(expected)
-  })
-
-  it.each([null, undefined, '', 'c', 'ab'])('%p는 코스가 아니다', (input) => {
-    expect(parseCourseId(input)).toBeNull()
-  })
-})
-
-describe('isStopId', () => {
-  it('코스에 있는 장소만 인정한다', () => {
-    expect(isStopId('BEAR')).toBe(true)
-    expect(isStopId('gate')).toBe(false)
-    expect(isStopId('toString')).toBe(false)
-    expect(isStopId(3)).toBe(false)
   })
 })

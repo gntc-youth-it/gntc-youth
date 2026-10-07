@@ -1,9 +1,11 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { UserInfo } from '../../../features/auth'
+import { COURSE_STOP_IDS } from '../model/course'
 import type { CourseId } from '../model/course'
-import type { ZooTeamMember } from '../model/team'
+import type { ZooTeamDetail, ZooTeamMember } from '../model/team'
 import { useCurrentUser } from '../model/useCurrentUser'
 import { useZooTeam } from '../model/useZooTeam'
+import { CourseBadge, TeamStatusPill } from './CourseBadge'
 import { TeamCourseView } from './TeamCourseView'
 import { TeamWaitingRoom } from './TeamWaitingRoom'
 import { ZooLayout } from './ZooLayout'
@@ -17,6 +19,29 @@ const TeamMissing = () => (
     </h1>
     <p className="mt-2 break-keep text-[15px] leading-relaxed text-[#4E5968]">
       조장이 조를 삭제했거나 잘못된 링크예요. 조 목록에서 다시 찾아보세요.
+    </p>
+    <Link
+      to="/zoo"
+      className="mt-6 inline-flex rounded-2xl px-5 py-3.5 text-[15px] font-semibold text-white"
+      style={{ backgroundColor: PARK_GREEN }}
+    >
+      조 목록으로
+    </Link>
+  </ZooLayout>
+)
+
+// 코스 화면은 조원만 본다. 출발한 조를 조원이 아닌 사람이 열면 들어갈 수 없다고만 알려준다
+const TeamStartedWithoutMe = ({ team }: { team: ZooTeamDetail }) => (
+  <ZooLayout>
+    <div className="flex items-center gap-2">
+      <CourseBadge course={team.course} />
+      <TeamStatusPill status={team.status} arrivedCount={team.arrivals.length} totalStops={COURSE_STOP_IDS[team.course].length} />
+    </div>
+    <h1 className="mt-3 break-all font-sign text-[38px] leading-tight" style={{ color: PARK_GREEN }}>
+      {team.name}
+    </h1>
+    <p className="mt-2 break-keep text-[15px] leading-relaxed text-[#4E5968]">
+      이미 출발한 조라 새로 들어갈 수 없어요. 코스 화면은 이 조의 조원만 볼 수 있어요.
     </p>
     <Link
       to="/zoo"
@@ -73,6 +98,8 @@ const TeamContent = ({ teamId, currentUser }: { teamId: number; currentUser: Use
   const isMember = team.members.some((member) => member.userId === currentUser.id)
   const isLeader = team.leaderUserId === currentUser.id
   const isMaster = currentUser.role === 'MASTER'
+
+  if (team.status === 'STARTED' && !isMember && !isMaster) return <TeamStartedWithoutMe team={team} />
 
   const handleStart = async () => {
     if (!window.confirm('마감하면 더 이상 조원이 들어올 수 없어요. 지금 출발할까요?')) return

@@ -203,6 +203,17 @@ describe('ZooTeamPage', () => {
       expect(screen.getByText('도착 완료')).toBeInTheDocument()
     })
 
+    it('조원이 아니면 출발한 조의 코스 화면을 볼 수 없다', async () => {
+      loginAs(3)
+      mockFetchZooTeam.mockResolvedValue(startedTeam)
+      render(<ZooTeamPage />)
+
+      expect(await screen.findByText('이미 출발한 조라 새로 들어갈 수 없어요. 코스 화면은 이 조의 조원만 볼 수 있어요.')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: '조 목록으로' })).toHaveAttribute('href', '/zoo')
+      expect(screen.queryByRole('complementary', { name: '다음 목적지 안내' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('img', { name: /코스 지도/ })).not.toBeInTheDocument()
+    })
+
     it('운영자는 조장이 아니어도 대신 도착을 기록할 수 있다', async () => {
       loginAs(9, 'MASTER')
       mockFetchZooTeam.mockResolvedValue(startedTeam)
