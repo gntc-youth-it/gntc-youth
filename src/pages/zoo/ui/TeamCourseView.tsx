@@ -6,6 +6,7 @@ import type { ZooActionError, ZooTeamAction } from '../model/useZooTeam'
 import { CourseBadge, TeamStatusPill } from './CourseBadge'
 import { CourseMap } from './CourseMap'
 import { NextStopBar } from './NextStopBar'
+import { PhotoVoteEntryPill } from './PhotoVoteEntry'
 import { StopTimeline } from './StopTimeline'
 import { TeamMemberList } from './TeamMemberList'
 import { BackToTeams } from './TeamWaitingRoom'
@@ -46,7 +47,10 @@ export const TeamCourseView = ({
   return (
     <>
       <ZooLayout hasBottomBar>
-        <BackToTeams />
+        <div className="flex items-center justify-between gap-3">
+          <BackToTeams />
+          <PhotoVoteEntryPill />
+        </div>
 
         <div className="mt-5 flex items-center gap-2">
           <CourseBadge course={team.course} />

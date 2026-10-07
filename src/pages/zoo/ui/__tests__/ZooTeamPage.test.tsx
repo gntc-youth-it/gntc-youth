@@ -185,6 +185,13 @@ describe('ZooTeamPage', () => {
       expect(screen.getByRole('link', { name: '호주관 미션 하기' })).toHaveAttribute('href', '/zoo/teams/4/stops/AUSTRALIA')
     })
 
+    it('조 화면에서 사진 투표로 갈 수 있다', async () => {
+      mockFetchZooTeam.mockResolvedValue(startedTeam)
+      render(<ZooTeamPage />)
+
+      expect(await screen.findByRole('link', { name: '사진 투표' })).toHaveAttribute('href', '/zoo/photos')
+    })
+
     it('7곳을 다 돌면 오후 4:30까지 정문으로 모이라고 안내한다', async () => {
       loginAs(2)
       mockFetchZooTeam.mockResolvedValue({
