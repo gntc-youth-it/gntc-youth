@@ -1,25 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HttpError } from '../../../shared/api'
 import {
-  cancelZooArrival,
   changeZooTeamCourse,
   deleteZooTeam,
   fetchZooTeam,
   joinZooTeam,
   leaveZooTeam,
-  markZooArrival,
   startZooTeam,
+  submitZooMission,
   transferZooTeamLeader,
 } from '../api/zooTeamApi'
 import type { CourseId, StopId } from './course'
-import type { ZooTeamDetail } from './team'
+import type { SubmitZooMissionRequest, ZooTeamDetail } from './team'
 import { usePolling } from './usePolling'
 
 export const TEAM_POLL_INTERVAL_MS = 5000
 
 export type ZooTeamLoadState = 'loading' | 'ready' | 'notFound' | 'error'
 
-export type ZooTeamAction = 'join' | 'leave' | 'delete' | 'course' | 'start' | 'arrival' | 'leader'
+export type ZooTeamAction = 'join' | 'leave' | 'delete' | 'course' | 'start' | 'mission' | 'leader'
 
 export interface ZooActionError {
   message: string
@@ -108,8 +107,8 @@ export const useZooTeam = (teamId: number) => {
     remove: () => runAction('delete', () => deleteZooTeam(teamId)),
     changeCourse: (course: CourseId) => runAction('course', () => changeZooTeamCourse(teamId, course)),
     start: () => runAction('start', () => startZooTeam(teamId)),
-    markArrival: (stopId: StopId) => runAction('arrival', () => markZooArrival(teamId, stopId)),
-    cancelArrival: (stopId: StopId) => runAction('arrival', () => cancelZooArrival(teamId, stopId)),
+    submitMission: (stopId: StopId, data: SubmitZooMissionRequest) =>
+      runAction('mission', () => submitZooMission(teamId, stopId, data)),
     transferLeader: (userId: number) => runAction('leader', () => transferZooTeamLeader(teamId, userId)),
   }
 }

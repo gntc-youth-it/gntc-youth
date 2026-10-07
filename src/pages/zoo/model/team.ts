@@ -16,6 +16,21 @@ export interface ZooTeamArrival {
   arrivedAt: string
 }
 
+export interface ZooMissionAnswer {
+  questionId: string
+  answer: string
+}
+
+// 장소별 미션 제출 내용. 제출하면 그 장소가 도착 처리된다
+export interface ZooTeamMission {
+  stopId: StopId
+  answers: ZooMissionAnswer[]
+  photoFileId: number
+  photoPath: string
+  submittedAt: string
+  updatedAt: string
+}
+
 export interface ZooTeamSummary {
   id: number
   name: string
@@ -35,6 +50,8 @@ export interface ZooTeamDetail {
   leaderUserId: number
   members: ZooTeamMember[]
   arrivals: ZooTeamArrival[]
+  // 조원과 운영자에게만 채워져 온다. 미션 API 배포 전 서버는 이 필드를 보내지 않는다
+  missions?: ZooTeamMission[]
   createdAt: string
   startedAt: string | null
 }
@@ -50,6 +67,11 @@ export interface MyZooTeamResponse {
 export interface CreateZooTeamRequest {
   name: string
   course: CourseId
+}
+
+export interface SubmitZooMissionRequest {
+  answers: ZooMissionAnswer[]
+  photoFileId: number
 }
 
 export const TEAM_NAME_MAX_LENGTH = 20

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { CourseId, CourseLeg, StopId, ZooStop } from '../model/course'
 import { COURSE_THEME, PARK_GREEN } from './courseTheme'
 
@@ -7,10 +8,9 @@ interface StopTimelineProps {
   legs: CourseLeg[]
   visited: StopId[]
   nextStopId: StopId | null
-  onToggleVisited: (id: StopId) => void
-  // 조장(또는 운영자)만 도착을 표시하고, 조원은 볼 수만 있다
-  canCheck: boolean
-  isSaving?: boolean
+  getMissionHref: (id: StopId) => string
+  // 조장(또는 운영자)은 미션을 내고 고칠 수 있고, 조원은 문제와 낸 내용을 볼 수만 있다
+  canSubmit: boolean
 }
 
 const CheckIcon = ({ color, size = 16 }: { color: string; size?: number }) => (
@@ -45,9 +45,8 @@ export const StopTimeline = ({
   legs,
   visited,
   nextStopId,
-  onToggleVisited,
-  canCheck,
-  isSaving = false,
+  getMissionHref,
+  canSubmit,
 }: StopTimelineProps) => {
   const theme = COURSE_THEME[course]
   const exitLeg = legs[legs.length - 1]
@@ -80,6 +79,13 @@ export const StopTimeline = ({
           const isVisited = visited.includes(stop.id)
           const isNext = stop.id === nextStopId
           const followingStop = stops[index + 1]
+          const actionLabel = isVisited
+            ? canSubmit
+              ? '제출 내용 고치기'
+              : '제출 내용 보기'
+            : canSubmit
+              ? '미션 하기'
+              : '문제 보기'
 
           return (
             <li key={stop.id} className="relative flex gap-4 pb-7">
@@ -119,34 +125,19 @@ export const StopTimeline = ({
                     </div>
                     <p className="mt-1 text-[13px] text-[#6B7684]">{stop.animals.join(', ')}</p>
                   </div>
-                  {canCheck ? (
-                    <button
-                      type="button"
-                      aria-pressed={isVisited}
-                      aria-label={`${stop.name} 도착`}
-                      disabled={isSaving}
-                      onClick={() => onToggleVisited(stop.id)}
-                      className="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D36] focus-visible:ring-offset-2"
-                      style={
-                        isVisited
-                          ? { backgroundColor: theme.tint, borderColor: theme.tint, color: '#191F28' }
-                          : { backgroundColor: '#FFFFFF', borderColor: '#D1D6DB', color: '#4E5968' }
-                      }
-                    >
-                      {isVisited && <CheckIcon color={theme.color} size={14} />}
-                      {isVisited ? '도착 완료' : '도착했어요'}
-                    </button>
-                  ) : (
-                    isVisited && (
-                      <span
-                        className="flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-semibold text-[#191F28]"
-                        style={{ backgroundColor: theme.tint }}
-                      >
-                        <CheckIcon color={theme.color} size={14} />
-                        도착 완료
-                      </span>
-                    )
-                  )}
+                  <Link
+                    to={getMissionHref(stop.id)}
+                    aria-label={`${stop.name} ${actionLabel}`}
+                    className="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D36] focus-visible:ring-offset-2"
+                    style={
+                      isVisited
+                        ? { backgroundColor: theme.tint, borderColor: theme.tint, color: '#191F28' }
+                        : { backgroundColor: '#FFFFFF', borderColor: '#D1D6DB', color: '#4E5968' }
+                    }
+                  >
+                    {isVisited && <CheckIcon color={theme.color} size={14} />}
+                    {isVisited ? '제출 완료' : actionLabel}
+                  </Link>
                 </div>
                 <Directions steps={legs[index].directions} muted={isVisited} />
               </div>
