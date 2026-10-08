@@ -7,6 +7,7 @@ import { useZooLobby } from '../model/useZooLobby'
 import { CourseDot, TeamStatusPill } from './CourseBadge'
 import { CreateTeamDialog } from './CreateTeamDialog'
 import { PhotoVoteEntryCard } from './PhotoVoteEntry'
+import { ZooEntryCard } from './ZooEntryCard'
 import { ZooLayout } from './ZooLayout'
 import { ZooLoginRequired } from './ZooLoginRequired'
 import { PARK_GREEN } from './courseTheme'
@@ -16,6 +17,16 @@ const TOTAL_STOPS = COURSE_STOP_IDS.A.length
 const ChevronRightIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B0B8C1" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="9 6 15 12 9 18" />
+  </svg>
+)
+
+const ClipboardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={PARK_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="5" y="4" width="14" height="17" rx="2" />
+    <path d="M9 4V3h6v1" />
+    <line x1="9" y1="10" x2="15" y2="10" />
+    <line x1="9" y1="14" x2="15" y2="14" />
+    <line x1="9" y1="18" x2="12" y2="18" />
   </svg>
 )
 
@@ -114,6 +125,15 @@ export const ZooLobbyPage = () => {
         </button>
       )}
       <PhotoVoteEntryCard isMaster={isMaster} />
+      {isMaster && (
+        <ZooEntryCard
+          to="/zoo/answers"
+          icon={<ClipboardIcon />}
+          iconBackground="#E3F1E8"
+          title="미션 답 보기"
+          description="운영자만 보여요. 조별로 낸 답과 사진을 모아 보고 엑셀로 내려받아요."
+        />
+      )}
 
       <section aria-labelledby="zoo-team-list" className="mt-10">
         <div className="flex items-baseline justify-between">

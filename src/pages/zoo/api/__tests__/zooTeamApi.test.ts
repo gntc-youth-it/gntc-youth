@@ -4,6 +4,7 @@ import {
   createZooTeam,
   deleteZooTeam,
   fetchMyZooTeam,
+  fetchZooMissionResults,
   fetchZooTeam,
   fetchZooTeams,
   joinZooTeam,
@@ -79,5 +80,11 @@ describe('zooTeamApi', () => {
       method: 'PUT',
       body: JSON.stringify(data),
     })
+  })
+
+  it('운영자용으로 모든 조의 제출 내용을 조회한다', async () => {
+    await fetchZooMissionResults()
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/zoo/missions')
   })
 })

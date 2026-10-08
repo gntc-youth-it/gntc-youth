@@ -4,6 +4,7 @@ import type {
   CreateZooTeamRequest,
   MyZooTeamResponse,
   SubmitZooMissionRequest,
+  ZooMissionResultsResponse,
   ZooTeamDetail,
   ZooTeamListResponse,
 } from '../model/team'
@@ -67,4 +68,9 @@ export const transferZooTeamLeader = async (teamId: number, userId: number): Pro
     method: 'POST',
     body: JSON.stringify({ userId }),
   })
+}
+
+// 모든 조의 제출 내용. 운영자(MASTER)만 볼 수 있다
+export const fetchZooMissionResults = async (): Promise<ZooMissionResultsResponse> => {
+  return apiRequest<ZooMissionResultsResponse>('/zoo/missions')
 }

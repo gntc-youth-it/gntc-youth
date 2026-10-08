@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { UserInfo } from '../../../features/auth'
 import { ZOO_STOPS } from '../model/course'
 import type { StopId } from '../model/course'
@@ -9,10 +8,12 @@ import { useCurrentUser } from '../model/useCurrentUser'
 import { usePhotoVoteOpen } from '../model/usePhotoVoteOpen'
 import { useZooPhotos } from '../model/useZooPhotos'
 import type { ZooActionError } from '../model/useZooTeam'
+import { BackToZoo } from './BackToZoo'
 import { HeartIcon } from './HeartIcon'
 import { PhotoViewer } from './PhotoViewer'
 import { PhotoVoteCard } from './PhotoVoteCard'
 import { PhotoVoteResults } from './PhotoVoteResults'
+import { SegmentedControl } from './SegmentedControl'
 import { StopFilter } from './StopFilter'
 import type { StopFilterValue } from './StopFilter'
 import { ZooLayout } from './ZooLayout'
@@ -21,38 +22,11 @@ import { PARK_GREEN } from './courseTheme'
 
 type PhotoVoteTab = 'vote' | 'results'
 
-const BackToZoo = () => (
-  <Link to="/zoo" className="inline-flex items-center gap-1 text-[14px] text-[#6B7684] hover:text-[#333D4B]">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="15 6 9 12 15 18" />
-    </svg>
-    동물원 나들이
-  </Link>
-)
-
 // 운영자에게만 보이는 투표하기 / 결과 보기 전환
-const TabSwitch = ({ tab, onChange }: { tab: PhotoVoteTab; onChange: (tab: PhotoVoteTab) => void }) => (
-  <div role="group" aria-label="화면 고르기" className="mt-5 flex rounded-xl bg-[#F2F4F6] p-1">
-    {(
-      [
-        ['vote', '투표하기'],
-        ['results', '결과 보기'],
-      ] as const
-    ).map(([value, label]) => (
-      <button
-        key={value}
-        type="button"
-        aria-pressed={tab === value}
-        onClick={() => onChange(value)}
-        className={`flex-1 rounded-lg py-2.5 text-[14px] font-semibold transition-colors ${
-          tab === value ? 'bg-white text-[#191F28] shadow-sm' : 'text-[#6B7684]'
-        }`}
-      >
-        {label}
-      </button>
-    ))}
-  </div>
-)
+const TAB_OPTIONS = [
+  { value: 'vote', label: '투표하기' },
+  { value: 'results', label: '결과 보기' },
+] as const
 
 // 화면 아래에 떠서 내가 몇 장 골랐는지 보여주고, 투표가 실패하면 그 위에 알려준다.
 // 바깥 여백은 터치가 아래 사진으로 지나가고, 알약 위를 누르면 가려진 하트가 눌리지 않게 막는다
@@ -198,7 +172,7 @@ const PhotoVoteContent = ({ currentUser }: { currentUser: UserInfo }) => {
         </p>
       )}
 
-      {isMaster && <TabSwitch tab={tab} onChange={setTab} />}
+      {isMaster && <SegmentedControl value={tab} options={TAB_OPTIONS} onChange={setTab} />}
       {isResultsTab ? <PhotoVoteResults /> : <PhotoVoteBoard viewerId={currentUser.id} />}
     </ZooLayout>
   )

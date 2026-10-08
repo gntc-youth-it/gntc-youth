@@ -139,6 +139,17 @@ describe('ZooLobbyPage', () => {
     expect(entry).toHaveTextContent('운영자만 미리 볼 수 있어요. 참가자에게는 10월 10일(토) 오후 4:30에 열려요.')
   })
 
+  it('운영자에게만 미션 답 보기 입구를 보여준다', async () => {
+    const { unmount } = render(<ZooLobbyPage />)
+    await screen.findByRole('list')
+    expect(screen.queryByRole('link', { name: /미션 답 보기/ })).not.toBeInTheDocument()
+    unmount()
+
+    mockUseAuth.mockReturnValue({ user: { id: 9, name: '운영자', role: 'MASTER' }, isLoggedIn: true })
+    render(<ZooLobbyPage />)
+    expect(await screen.findByRole('link', { name: /미션 답 보기/ })).toHaveAttribute('href', '/zoo/answers')
+  })
+
   it('운영자는 출발한 조도 열어 볼 수 있다', async () => {
     mockUseAuth.mockReturnValue({ user: { id: 9, name: '운영자', role: 'MASTER' }, isLoggedIn: true })
     render(<ZooLobbyPage />)
