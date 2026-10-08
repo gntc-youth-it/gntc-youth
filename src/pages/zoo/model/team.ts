@@ -64,6 +64,21 @@ export interface MyZooTeamResponse {
   team: ZooTeamDetail | null
 }
 
+// 운영자가 모아 보는 한 조의 제출 내용 (GET /zoo/missions)
+export interface ZooMissionTeamResult {
+  id: number
+  name: string
+  course: CourseId
+  status: ZooTeamStatus
+  leaderName: string
+  members: string[]
+  missions: ZooTeamMission[]
+}
+
+export interface ZooMissionResultsResponse {
+  teams: ZooMissionTeamResult[]
+}
+
 export interface CreateZooTeamRequest {
   name: string
   course: CourseId

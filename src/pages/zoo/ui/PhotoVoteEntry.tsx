@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { PHOTO_VOTE_OPENS_LABEL } from '../model/photo'
 import { usePhotoVoteOpen } from '../model/usePhotoVoteOpen'
 import { HeartIcon } from './HeartIcon'
+import { ZooEntryCard } from './ZooEntryCard'
 
 const PHOTO_VOTE_PATH = '/zoo/photos'
 
@@ -16,25 +17,17 @@ export const PhotoVoteEntryCard = ({ isMaster }: PhotoVoteEntryProps) => {
   if (!isOpen && !isMaster) return null
 
   return (
-    <Link
+    <ZooEntryCard
       to={PHOTO_VOTE_PATH}
-      className="mt-3 flex items-center gap-3 rounded-2xl border border-[#E5E8EB] px-4 py-3.5 transition-colors hover:bg-[#F9FAFB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D36] focus-visible:ring-offset-2"
-    >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF0F1]">
-        <HeartIcon filled size={20} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-semibold text-[#191F28]">사진 투표</span>
-        <span className="block break-keep text-[13px] text-[#6B7684]">
-          {isOpen
-            ? '조별 미션 사진을 보고 마음에 드는 사진에 투표해요.'
-            : `운영자만 미리 볼 수 있어요. 참가자에게는 ${PHOTO_VOTE_OPENS_LABEL}에 열려요.`}
-        </span>
-      </span>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B0B8C1" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polyline points="9 6 15 12 9 18" />
-      </svg>
-    </Link>
+      icon={<HeartIcon filled size={20} />}
+      iconBackground="#FFF0F1"
+      title="사진 투표"
+      description={
+        isOpen
+          ? '조별 미션 사진을 보고 마음에 드는 사진에 투표해요.'
+          : `운영자만 미리 볼 수 있어요. 참가자에게는 ${PHOTO_VOTE_OPENS_LABEL}에 열려요.`
+      }
+    />
   )
 }
 
