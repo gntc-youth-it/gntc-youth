@@ -150,6 +150,18 @@ describe('ZooAnswersPage', () => {
     expect(within(lionTeam).getAllByText('아직 안 냈어요')).toHaveLength(5)
   })
 
+  it('새로고침이 실패하면 보던 답은 그대로 두고 언제 불러온 내용인지 알려준다', async () => {
+    const user = userEvent.setup()
+    render(<ZooAnswersPage />)
+    await screen.findByRole('region', { name: '제1아프리카관' })
+
+    mockFetchZooMissionResults.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await user.click(screen.getByRole('button', { name: '새로고침' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/새로 불러오지 못했어요\. \d{2}:\d{2}:\d{2}에 불러온 내용이에요\./)
+    expect(screen.getByRole('region', { name: '제1아프리카관' })).toBeInTheDocument()
+  })
+
   it('엑셀로 내려받으면 모든 조의 답을 담은 CSV 파일을 만든다', async () => {
     const user = userEvent.setup()
     render(<ZooAnswersPage />)

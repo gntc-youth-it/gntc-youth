@@ -88,7 +88,7 @@ const ProgressList = ({ startedTeams, recruitingTeams }: { startedTeams: ZooMiss
 )
 
 const AnswersContent = () => {
-  const { teams, loadState, loadedAt, reload } = useMissionAnswers()
+  const { teams, loadState, loadedAt, refreshFailed, reload } = useMissionAnswers()
   const [view, setView] = useState<AnswersView>('question')
 
   if (loadState === 'forbidden') return <AdminOnly />
@@ -142,7 +142,14 @@ const AnswersContent = () => {
             >
               새로고침
             </button>
-            {loadedAt && <span className="text-[13px] text-[#8B95A1]">{formatLoadedAt(loadedAt)}에 불러왔어요</span>}
+            {loadedAt &&
+              (refreshFailed ? (
+                <span role="alert" className="break-keep text-[13px] text-[#C92A2A]">
+                  새로 불러오지 못했어요. {formatLoadedAt(loadedAt)}에 불러온 내용이에요.
+                </span>
+              ) : (
+                <span className="text-[13px] text-[#8B95A1]">{formatLoadedAt(loadedAt)}에 불러왔어요</span>
+              ))}
           </div>
 
           {teams.length === 0 ? (
