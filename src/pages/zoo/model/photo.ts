@@ -40,6 +40,13 @@ export interface StopGroup<T> {
   items: T[]
 }
 
+// 사진 투표를 여는 시각(한국 시간). 모든 조가 코스를 마치고 정문에 모이는 오후 4:30에 맞췄다.
+// 바꿀 때는 아래 안내 문구도 같이 고친다
+export const PHOTO_VOTE_OPENS_AT = new Date('2026-10-10T16:30:00+09:00')
+export const PHOTO_VOTE_OPENS_LABEL = '10월 10일(토) 오후 4:30'
+
+export const isPhotoVoteOpen = (now: number = Date.now()): boolean => now >= PHOTO_VOTE_OPENS_AT.getTime()
+
 // 32비트 해시(FNV-1a에 murmur3 마무리 섞기). 비슷한 입력도 고르게 흩어진다
 const hash = (text: string): number => {
   let value = 0x811c9dc5

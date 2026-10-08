@@ -36,6 +36,12 @@ jest.mock('../../../../widgets/header', () => ({
 
 jest.mock('../../api/zooTeamApi')
 
+// 사진 투표가 열렸는지는 테스트마다 정한다
+let mockIsVoteOpen = true
+jest.mock('../../model/usePhotoVoteOpen', () => ({
+  usePhotoVoteOpen: () => mockIsVoteOpen,
+}))
+
 const mockFetchZooTeam = fetchZooTeam as jest.MockedFunction<typeof fetchZooTeam>
 const mockJoinZooTeam = joinZooTeam as jest.MockedFunction<typeof joinZooTeam>
 const mockLeaveZooTeam = leaveZooTeam as jest.MockedFunction<typeof leaveZooTeam>
@@ -66,6 +72,7 @@ let confirmSpy: jest.SpyInstance
 
 beforeEach(() => {
   jest.clearAllMocks()
+  mockIsVoteOpen = true
   confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true)
   loginAs(1)
 })
@@ -189,6 +196,20 @@ describe('ZooTeamPage', () => {
       mockFetchZooTeam.mockResolvedValue(startedTeam)
       render(<ZooTeamPage />)
 
+      expect(await screen.findByRole('link', { name: '사진 투표' })).toHaveAttribute('href', '/zoo/photos')
+    })
+
+    it('사진 투표가 열리기 전에는 조 화면에 입구가 없고, 운영자에게만 보인다', async () => {
+      mockIsVoteOpen = false
+      mockFetchZooTeam.mockResolvedValue(startedTeam)
+      const { unmount } = render(<ZooTeamPage />)
+
+      await screen.findByRole('complementary', { name: '다음 목적지 안내' })
+      expect(screen.queryByRole('link', { name: '사진 투표' })).not.toBeInTheDocument()
+      unmount()
+
+      loginAs(9, 'MASTER')
+      render(<ZooTeamPage />)
       expect(await screen.findByRole('link', { name: '사진 투표' })).toHaveAttribute('href', '/zoo/photos')
     })
 

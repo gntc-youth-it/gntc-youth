@@ -30,6 +30,12 @@ jest.mock('../../../../widgets/header', () => ({
 
 jest.mock('../../api/zooTeamApi')
 
+// 사진 투표가 열렸는지는 테스트마다 정한다
+let mockIsVoteOpen = true
+jest.mock('../../model/usePhotoVoteOpen', () => ({
+  usePhotoVoteOpen: () => mockIsVoteOpen,
+}))
+
 const mockFetchMyZooTeam = fetchMyZooTeam as jest.MockedFunction<typeof fetchMyZooTeam>
 const mockFetchZooTeams = fetchZooTeams as jest.MockedFunction<typeof fetchZooTeams>
 const mockCreateZooTeam = createZooTeam as jest.MockedFunction<typeof createZooTeam>
@@ -75,6 +81,7 @@ beforeEach(() => {
   jest.clearAllMocks()
   sessionStorage.clear()
   mockSearchParams = new URLSearchParams()
+  mockIsVoteOpen = true
   mockUseAuth.mockReturnValue(loggedIn)
   mockFetchMyZooTeam.mockResolvedValue({ team: null })
   mockFetchZooTeams.mockResolvedValue({ teams })
@@ -112,6 +119,24 @@ describe('ZooLobbyPage', () => {
     render(<ZooLobbyPage />)
 
     expect(await screen.findByRole('link', { name: /사진 투표/ })).toHaveAttribute('href', '/zoo/photos')
+  })
+
+  it('사진 투표가 열리기 전에는 참가자에게 입구를 보여주지 않는다', async () => {
+    mockIsVoteOpen = false
+    render(<ZooLobbyPage />)
+
+    await screen.findByRole('list')
+    expect(screen.queryByRole('link', { name: /사진 투표/ })).not.toBeInTheDocument()
+  })
+
+  it('운영자는 사진 투표가 열리기 전에도 미리 들어가 볼 수 있다', async () => {
+    mockIsVoteOpen = false
+    mockUseAuth.mockReturnValue({ user: { id: 9, name: '운영자', role: 'MASTER' }, isLoggedIn: true })
+    render(<ZooLobbyPage />)
+
+    const entry = await screen.findByRole('link', { name: /사진 투표/ })
+    expect(entry).toHaveAttribute('href', '/zoo/photos')
+    expect(entry).toHaveTextContent('운영자만 미리 볼 수 있어요. 참가자에게는 10월 10일(토) 오후 4:30에 열려요.')
   })
 
   it('운영자는 출발한 조도 열어 볼 수 있다', async () => {

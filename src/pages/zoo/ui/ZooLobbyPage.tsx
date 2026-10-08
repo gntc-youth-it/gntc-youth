@@ -113,7 +113,7 @@ export const ZooLobbyPage = () => {
           조 만들기
         </button>
       )}
-      <PhotoVoteEntryCard />
+      <PhotoVoteEntryCard isMaster={isMaster} />
 
       <section aria-labelledby="zoo-team-list" className="mt-10">
         <div className="flex items-baseline justify-between">

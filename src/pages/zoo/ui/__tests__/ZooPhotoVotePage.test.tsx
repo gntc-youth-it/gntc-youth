@@ -28,6 +28,12 @@ jest.mock('../../../../widgets/header', () => ({
 
 jest.mock('../../api/zooPhotoApi')
 
+// 사진 투표가 열렸는지는 테스트마다 정한다
+let mockIsVoteOpen = true
+jest.mock('../../model/usePhotoVoteOpen', () => ({
+  usePhotoVoteOpen: () => mockIsVoteOpen,
+}))
+
 const mockFetchZooPhotos = fetchZooPhotos as jest.MockedFunction<typeof fetchZooPhotos>
 const mockFetchZooPhotoResults = fetchZooPhotoResults as jest.MockedFunction<typeof fetchZooPhotoResults>
 const mockVoteZooPhoto = voteZooPhoto as jest.MockedFunction<typeof voteZooPhoto>
@@ -63,6 +69,7 @@ const getMyVoteBar = () => screen.getByRole('complementary', { name: '내 투표
 
 beforeEach(() => {
   jest.clearAllMocks()
+  mockIsVoteOpen = true
   loginAs(VIEWER_ID)
   mockFetchZooPhotos.mockResolvedValue({ photos: PHOTOS })
   mockVoteZooPhoto.mockResolvedValue(undefined)
@@ -76,6 +83,25 @@ describe('ZooPhotoVotePage', () => {
     expect(screen.getByRole('heading', { name: '사진 투표' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '카카오로 로그인하기' })).toBeInTheDocument()
     expect(mockFetchZooPhotos).not.toHaveBeenCalled()
+  })
+
+  it('열리기 전에는 참가자에게 언제 열리는지만 알려주고 사진을 불러오지 않는다', () => {
+    mockIsVoteOpen = false
+    render(<ZooPhotoVotePage />)
+
+    expect(screen.getByText('10월 10일(토) 오후 4:30에 열려요')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: '제1아프리카관' })).not.toBeInTheDocument()
+    expect(mockFetchZooPhotos).not.toHaveBeenCalled()
+  })
+
+  it('운영자는 열리기 전에도 미리 보고 결과까지 확인할 수 있다', async () => {
+    mockIsVoteOpen = false
+    loginAs(1, 'MASTER')
+    render(<ZooPhotoVotePage />)
+
+    expect(screen.getByText(/운영자만 미리 보고 있어요/)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '제1아프리카관' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '결과 보기' })).toBeInTheDocument()
   })
 
   it('장소별로 사진 미션과 사진을 보여주고, 우리 조 사진에는 하트 대신 우리 조라고 표시한다', async () => {

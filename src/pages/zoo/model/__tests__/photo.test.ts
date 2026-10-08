@@ -1,4 +1,4 @@
-import { groupByStop, orderForViewer, rankResults } from '../photo'
+import { PHOTO_VOTE_OPENS_LABEL, groupByStop, isPhotoVoteOpen, orderForViewer, rankResults } from '../photo'
 import type { ZooPhotoResult } from '../photo'
 
 const ids = (items: { id: number }[]) => items.map((item) => item.id)
@@ -65,5 +65,14 @@ describe('rankResults', () => {
       [1, 3],
       [4, 4],
     ])
+  })
+})
+
+describe('isPhotoVoteOpen', () => {
+  it('10월 10일(토) 오후 4:30(한국 시간)부터 열린다', () => {
+    expect(isPhotoVoteOpen(new Date('2026-10-10T16:29:59+09:00').getTime())).toBe(false)
+    expect(isPhotoVoteOpen(new Date('2026-10-10T16:30:00+09:00').getTime())).toBe(true)
+    expect(isPhotoVoteOpen(new Date('2026-10-11T09:00:00+09:00').getTime())).toBe(true)
+    expect(PHOTO_VOTE_OPENS_LABEL).toBe('10월 10일(토) 오후 4:30')
   })
 })
