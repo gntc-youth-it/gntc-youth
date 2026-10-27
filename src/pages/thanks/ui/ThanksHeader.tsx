@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
 import { formatMissionDate } from '../model/slots'
+import type { ThanksAuthor } from '../model/types'
+import { Avatar } from './Avatar'
 
 interface ThanksHeaderProps {
   date: string
   isToday: boolean
   personCount: number
   isLoading: boolean
+  me: ThanksAuthor
+  onOpenProfile: () => void
   onPrevDate: () => void
   onNextDate: () => void
 }
@@ -20,7 +24,16 @@ const Chevron = ({ direction }: { direction: 'left' | 'right' }) => (
 )
 
 // 셋로그 방 화면처럼 왼쪽 뒤로가기, 가운데 이름 알약. 그 아래에서 날짜를 넘긴다
-export const ThanksHeader = ({ date, isToday, personCount, isLoading, onPrevDate, onNextDate }: ThanksHeaderProps) => (
+export const ThanksHeader = ({
+  date,
+  isToday,
+  personCount,
+  isLoading,
+  me,
+  onOpenProfile,
+  onPrevDate,
+  onNextDate,
+}: ThanksHeaderProps) => (
   <header className="pt-3">
     <div className="flex items-center justify-between">
       <Link to="/" aria-label="홈으로" className={CIRCLE_BUTTON}>
@@ -29,8 +42,14 @@ export const ThanksHeader = ({ date, isToday, personCount, isLoading, onPrevDate
       <h1 className="rounded-full bg-white px-5 py-2.5 text-[15px] font-bold text-[#191F28] shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
         범사에 감사로그
       </h1>
-      {/* 프로필 사진·이름 설정 버튼 자리. 프로필 모달을 만들 때 채운다 */}
-      <div className="h-10 w-10" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={onOpenProfile}
+        aria-label="내 프로필"
+        className="rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#191F28] focus-visible:ring-offset-2"
+      >
+        <Avatar author={me} size={40} className="ring-2 ring-white" />
+      </button>
     </div>
 
     <div className="mt-5 flex items-center justify-center gap-1">

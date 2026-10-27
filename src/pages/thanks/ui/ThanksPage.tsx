@@ -1,12 +1,16 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../../features/auth'
+import type { UserInfo } from '../../../features/auth'
+import { dismissProfilePrompt, wasProfilePromptDismissed } from '../model/profilePrompt'
 import { getCurrentSlot, getMissionDate, isValidMissionDate, shiftMissionDate } from '../model/slots'
-import type { ThanksEntry } from '../model/types'
+import type { ThanksAuthor, ThanksEntry } from '../model/types'
 import { useCurrentUser } from '../model/useCurrentUser'
 import { useNow } from '../model/useNow'
 import { useThanksLogs } from '../model/useThanksLogs'
 import { EntryViewer } from './EntryViewer'
 import { LogGroup } from './LogGroup'
+import { ProfileSheet } from './ProfileSheet'
 import { ThanksHeader } from './ThanksHeader'
 import { ThanksLoginRequired } from './ThanksLoginRequired'
 import { WriteBar } from './WriteBar'
@@ -19,10 +23,11 @@ interface OverlayState {
 export const ThanksPage = () => {
   const user = useCurrentUser()
   if (!user) return <ThanksLoginRequired />
-  return <ThanksBoard />
+  return <ThanksBoard user={user} />
 }
 
-const ThanksBoard = () => {
+const ThanksBoard = ({ user }: { user: UserInfo }) => {
+  const { refreshUser } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -35,7 +40,7 @@ const ThanksBoard = () => {
   const isToday = date === today
   const currentSlot = getCurrentSlot(now)
 
-  const { logs, error, addEntry, deleteEntry } = useThanksLogs(date, { poll: isToday })
+  const { logs, error, reload, addEntry, deleteEntry } = useThanksLogs(date, { poll: isToday })
   const myLog = isToday ? logs?.find((log) => log.entries.some((entry) => entry.isMine)) : undefined
   const hasPostedCurrentSlot = myLog?.entries.some((entry) => entry.slot === currentSlot) ?? false
 
@@ -44,6 +49,33 @@ const ThanksBoard = () => {
     ? logs?.flatMap((log) => log.entries).find((entry) => entry.id === openedEntryId) ?? null
     : null
   const isWriting = searchParams.get('write') === '1'
+
+  const me: ThanksAuthor = { userId: user.id, name: user.name, profileImageUrl: user.profileImagePath || null }
+  const [profileSheet, setProfileSheet] = useState<'prompt' | 'edit' | null>(null)
+
+  // 프로필 사진이 없으면 들어왔을 때 사진과 이름을 정해 달라고 한다. 하루 한 번만
+  const profilePromptChecked = useRef(false)
+  useEffect(() => {
+    if (profilePromptChecked.current) return
+    profilePromptChecked.current = true
+    if (!user.profileImagePath && !wasProfilePromptDismissed(today)) setProfileSheet('prompt')
+  }, [user.profileImagePath, today])
+
+  const closeProfileSheet = useCallback(() => {
+    if (profileSheet === 'prompt') dismissProfilePrompt(today)
+    setProfileSheet(null)
+  }, [profileSheet, today])
+
+  // 저장하면 토큰을 새로 받아 내 사진·이름을 바꾸고, 목록의 내 카드도 새로 불러온다
+  const handleProfileSaved = async () => {
+    setProfileSheet(null)
+    try {
+      await refreshUser()
+    } catch {
+      // 저장은 됐다. 헤더 사진은 다음에 토큰을 새로 받을 때 바뀐다
+    }
+    void reload()
+  }
 
   const changeDate = (next: string) => {
     const params = new URLSearchParams(searchParams)
@@ -86,6 +118,8 @@ const ThanksBoard = () => {
           isToday={isToday}
           personCount={logs?.length ?? 0}
           isLoading={logs === null}
+          me={me}
+          onOpenProfile={() => setProfileSheet('edit')}
           onPrevDate={() => changeDate(shiftMissionDate(date, -1))}
           onNextDate={() => changeDate(shiftMissionDate(date, 1))}
         />
@@ -132,6 +166,10 @@ const ThanksBoard = () => {
       )}
 
       {isWriting && <WriteSheet now={now} onClose={closeOverlay} onPosted={handlePosted} />}
+
+      {profileSheet && (
+        <ProfileSheet mode={profileSheet} user={user} onLater={closeProfileSheet} onSaved={handleProfileSaved} />
+      )}
     </div>
   )
 }
