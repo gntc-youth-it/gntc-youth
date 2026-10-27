@@ -1,1 +1,1 @@
-export { getMyProfile, saveProfile, getChurches } from './profileApi'
+export { getMyProfile, saveProfile, patchProfile, getChurches } from './profileApi'
