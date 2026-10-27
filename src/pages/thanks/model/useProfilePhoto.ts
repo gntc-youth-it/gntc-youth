@@ -32,6 +32,8 @@ export const useProfilePhoto = () => {
   )
 
   const select = useCallback(async (file: File) => {
+    // 잘못 고른 파일이면 이미 고른 사진(올리는 중이어도)은 그대로 두고 안내만 한다.
+    // 그 파일은 화면에 보인 적이 없으니, 미리보기에 남은 사진이 그대로 저장되는 것이 맞다
     if (!file.type.startsWith('image/')) {
       setState((prev) => ({ ...prev, error: '사진 파일만 고를 수 있어요.' }))
       return

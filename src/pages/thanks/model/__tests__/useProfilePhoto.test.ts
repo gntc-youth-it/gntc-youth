@@ -59,6 +59,33 @@ describe('useProfilePhoto', () => {
     expect(mockCompressImage).not.toHaveBeenCalled()
   })
 
+  it('올리는 중에 잘못된 파일을 고르면 안내만 하고, 미리보기에 남은 사진은 마저 올린다', async () => {
+    let finishUpload: () => void = () => undefined
+    mockUploadToS3.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishUpload = resolve
+        })
+    )
+    const { result } = renderHook(() => useProfilePhoto())
+
+    let selecting: Promise<void> = Promise.resolve()
+    act(() => {
+      selecting = result.current.select(photo)
+    })
+    await act(async () => {
+      await result.current.select(new File(['v'], 'clip.mp4', { type: 'video/mp4' }))
+    })
+    expect(result.current).toMatchObject({ status: 'uploading', previewUrl: 'blob:me', error: '사진 파일만 고를 수 있어요.' })
+
+    await act(async () => {
+      finishUpload()
+      await selecting
+    })
+
+    expect(result.current).toMatchObject({ status: 'done', fileId: 9, previewUrl: 'blob:me' })
+  })
+
   it('올리지 못하면 다시 골라 달라고 한다', async () => {
     mockUploadToS3.mockRejectedValueOnce(new Error('네트워크 오류로 업로드에 실패했습니다.'))
     const { result } = renderHook(() => useProfilePhoto())
