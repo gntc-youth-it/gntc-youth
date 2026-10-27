@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '../features/auth'
 import { HomePage } from '../pages/home'
 import { LoginPage } from '../pages/login'
@@ -7,7 +7,6 @@ import { AdminUsersPage } from '../pages/admin/users'
 import { AdminPostsPage } from '../pages/admin/posts'
 import { GalleryPage, GalleryWritePage } from '../pages/gallery'
 import { SchedulePage } from '../pages/schedule'
-import { ZooLobbyPage, ZooMissionPage, ZooPhotoVotePage, ZooTeamPage } from '../pages/zoo'
 import './styles/index.css'
 
 export const App = () => {
@@ -19,10 +18,8 @@ export const App = () => {
           <Route path="/gallery/write" element={<GalleryWritePage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/zoo" element={<ZooLobbyPage />} />
-          <Route path="/zoo/teams/:teamId" element={<ZooTeamPage />} />
-          <Route path="/zoo/teams/:teamId/stops/:stopId" element={<ZooMissionPage />} />
-          <Route path="/zoo/photos" element={<ZooPhotoVotePage />} />
+          {/* 동물원 나들이(2026-10-10)가 끝나 페이지를 지웠다. 카톡 등에 남은 예전 링크는 홈으로 보낸다 */}
+          <Route path="/zoo/*" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
