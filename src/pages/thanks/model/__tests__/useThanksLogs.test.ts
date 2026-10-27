@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { HttpError } from '../../../../shared/api'
 import { deleteThanksEntry, fetchThanksEntries } from '../../api/thanksApi'
-import type { ThanksEntry } from '../types'
+import type { ThanksEntriesResponse, ThanksEntry } from '../types'
 import { useThanksLogs } from '../useThanksLogs'
 
 jest.mock('../../api/thanksApi', () => ({
@@ -25,6 +25,15 @@ const entry = (id: number, userId: number, createdAt: string): ThanksEntry => ({
   isMine: userId === 1,
   createdAt,
 })
+
+// 응답이 언제 올지 테스트가 정한다
+const deferred = () => {
+  let resolve: (value: ThanksEntriesResponse) => void = () => undefined
+  const promise = new Promise<ThanksEntriesResponse>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -83,6 +92,49 @@ describe('useThanksLogs', () => {
 
     await expect(result.current.deleteEntry(1)).rejects.toThrow('내가 올린 감사만 지울 수 있어요.')
     expect(result.current.logs?.flatMap((log) => log.entries)).toHaveLength(2)
+  })
+
+  it('올리기 전에 보낸 새로고침 응답이 늦게 와도 방금 올린 기록을 지우지 않는다', async () => {
+    const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
+    await waitFor(() => expect(result.current.logs).not.toBeNull())
+
+    const stale = deferred()
+    mockFetchThanksEntries.mockReturnValueOnce(stale.promise)
+    let reloading: Promise<void> = Promise.resolve()
+    act(() => {
+      reloading = result.current.reload()
+    })
+    act(() => result.current.addEntry({ ...entry(3, 1, '2026-11-09T04:00:00'), slot: 'AFTERNOON' }))
+
+    await act(async () => {
+      stale.resolve({ date: '2026-11-09', entries: [entry(1, 1, '2026-11-08T22:00:00'), entry(2, 2, '2026-11-08T23:00:00')] })
+      await reloading
+    })
+
+    expect(result.current.logs?.flatMap((log) => log.entries).map((item) => item.id)).toContain(3)
+  })
+
+  it('지우기 전에 보낸 새로고침 응답이 늦게 와도 지운 기록을 되살리지 않는다', async () => {
+    mockDeleteThanksEntry.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
+    await waitFor(() => expect(result.current.logs).not.toBeNull())
+
+    const stale = deferred()
+    mockFetchThanksEntries.mockReturnValueOnce(stale.promise)
+    let reloading: Promise<void> = Promise.resolve()
+    act(() => {
+      reloading = result.current.reload()
+    })
+    await act(async () => {
+      await result.current.deleteEntry(1)
+    })
+
+    await act(async () => {
+      stale.resolve({ date: '2026-11-09', entries: [entry(1, 1, '2026-11-08T22:00:00'), entry(2, 2, '2026-11-08T23:00:00')] })
+      await reloading
+    })
+
+    expect(result.current.logs?.flatMap((log) => log.entries).map((item) => item.id)).toEqual([2])
   })
 
   it('방금 올린 기록을 바로 맨 위에 넣는다', async () => {

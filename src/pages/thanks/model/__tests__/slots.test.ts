@@ -6,6 +6,7 @@ import {
   getCurrentSlot,
   getMissionDate,
   getSlotRange,
+  isValidMissionDate,
   parseServerTime,
   shiftMissionDate,
 } from '../slots'
@@ -64,6 +65,16 @@ describe('formatSlotDeadline', () => {
     expect(formatSlotDeadline('2026-11-09', 'MORNING')).toBe('11:59')
     expect(formatSlotDeadline('2026-11-09', 'AFTERNOON')).toBe('17:59')
     expect(formatSlotDeadline('2026-11-09', 'EVENING')).toBe('23:59')
+  })
+})
+
+describe('isValidMissionDate', () => {
+  it.each(['2026-11-09', '2026-02-28', '2028-02-29'])('%s는 쓸 수 있는 날짜다', (value) => {
+    expect(isValidMissionDate(value)).toBe(true)
+  })
+
+  it.each(['', 'foo', '2026-11-9', '2026-02-30', '2026-13-01', '2026-11-09T00:00'])('"%s"는 날짜가 아니다', (value) => {
+    expect(isValidMissionDate(value)).toBe(false)
   })
 })
 

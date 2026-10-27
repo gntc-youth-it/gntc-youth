@@ -46,6 +46,13 @@ export const getSlotRange = (missionDate: string, slot: Slot): { start: Date; en
   return { start: new Date(midnight + startHour * HOUR_MS), end: new Date(midnight + endHour * HOUR_MS) }
 }
 
+// 'YYYY-MM-DD' 모양이면서 실제로 있는 날짜인지. 2026-02-30 같은 날짜도 거른다
+export const isValidMissionDate = (value: string): boolean => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const date = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+}
+
 export const shiftMissionDate = (missionDate: string, days: number): string => {
   const date = new Date(`${missionDate}T00:00:00Z`)
   date.setUTCDate(date.getUTCDate() + days)

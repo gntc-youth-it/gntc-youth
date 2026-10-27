@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { getCurrentSlot, getMissionDate, shiftMissionDate } from '../model/slots'
+import { getCurrentSlot, getMissionDate, isValidMissionDate, shiftMissionDate } from '../model/slots'
 import type { ThanksEntry } from '../model/types'
 import { useCurrentUser } from '../model/useCurrentUser'
 import { useNow } from '../model/useNow'
@@ -29,7 +29,9 @@ const ThanksBoard = () => {
 
   const now = useNow()
   const today = getMissionDate(now)
-  const date = searchParams.get('date') ?? today
+  // 손으로 고친 주소나 잘못된 링크(?date=foo, 빈 값, 미래 날짜)는 오늘로 본다
+  const requestedDate = searchParams.get('date')
+  const date = requestedDate && isValidMissionDate(requestedDate) && requestedDate <= today ? requestedDate : today
   const isToday = date === today
   const currentSlot = getCurrentSlot(now)
 

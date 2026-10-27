@@ -15,15 +15,20 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
   // 날짜를 넘긴 뒤에 늦게 도착한 앞 날짜 응답은 버린다
   const currentDate = useRef(date)
   currentDate.current = date
+  // 새로고침은 화면 복귀 때와 30초마다 겹쳐 돌 수 있다. 더 새로운 요청이 있거나
+  // 그사이 올리기·지우기로 목록을 직접 고쳤으면, 먼저 보낸 요청의 응답은 버린다
+  const requestSeq = useRef(0)
 
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current
+    const isStale = () => currentDate.current !== date || seq !== requestSeq.current
     try {
       const { entries } = await fetchThanksEntries(date)
-      if (currentDate.current !== date) return
+      if (isStale()) return
       setLogs(groupLogs(entries))
       setError(null)
     } catch {
-      if (currentDate.current !== date) return
+      if (isStale()) return
       setError('감사로그를 불러오지 못했어요. 잠시 후 다시 열어 주세요.')
     }
   }, [date])
@@ -39,6 +44,7 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
   // 방금 올린 기록은 다음 새로고침을 기다리지 않고 바로 보여 준다
   const addEntry = useCallback((entry: ThanksEntry) => {
     if (entry.missionDate !== currentDate.current) return
+    requestSeq.current += 1
     setLogs((prev) => upsertEntry(prev ?? [], entry))
   }, [])
 
@@ -49,6 +55,7 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
       // 다른 기기에서 이미 지웠으면 목록에서만 빼면 된다
       if (!(error instanceof HttpError && error.code === THANKS_ERROR_CODE.ENTRY_NOT_FOUND)) throw error
     }
+    requestSeq.current += 1
     setLogs((prev) => (prev ? removeEntry(prev, entryId) : prev))
   }, [])
 

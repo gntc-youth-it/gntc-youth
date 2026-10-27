@@ -6,11 +6,12 @@ import type { ThanksEntry } from '../../model/types'
 import { ThanksPage } from '../ThanksPage'
 
 const mockNavigate = jest.fn()
+let mockSearch = ''
 
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: '/thanks', search: '', state: null }),
-  useSearchParams: () => [new URLSearchParams(''), jest.fn()],
+  useLocation: () => ({ pathname: '/thanks', search: mockSearch ? `?${mockSearch}` : '', state: null }),
+  useSearchParams: () => [new URLSearchParams(mockSearch), jest.fn()],
   Link: ({ to, children, ...rest }: { to: string; children: ReactNode }) => (
     <a href={to} {...rest}>
       {children}
@@ -52,6 +53,7 @@ beforeEach(() => {
   jest.clearAllMocks()
   sessionStorage.clear()
   mockUser = null
+  mockSearch = ''
   jest.useFakeTimers()
   jest.setSystemTime(new Date('2026-11-09T13:20:00+09:00'))
 })
@@ -89,6 +91,33 @@ describe('ThanksPage', () => {
     const names = screen.getAllByRole('region').map((section) => section.getAttribute('aria-label'))
     expect(names).toEqual(['이서준의 감사로그', '김하늘의 감사로그'])
   })
+
+  it('주소의 날짜로 지난 날을 본다', async () => {
+    mockUser = { id: 1, name: '정은혜' }
+    mockSearch = 'date=2026-11-08'
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-08', entries: [entry(1, 2, '김하늘', '2026-11-07T22:15:00')] })
+
+    render(<ThanksPage />)
+
+    expect(await screen.findByText('이날 1명이 감사했어요')).toBeInTheDocument()
+    expect(mockFetchThanksEntries).toHaveBeenCalledWith('2026-11-08')
+    expect(screen.getByText('11월 8일 (일)')).toBeInTheDocument()
+  })
+
+  it.each(['date=foo', 'date=', 'date=2026-02-30', 'date=2026-12-25'])(
+    '잘못되었거나 미래인 날짜(%s)는 오늘로 본다',
+    async (search) => {
+      mockUser = { id: 1, name: '정은혜' }
+      mockSearch = search
+      mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
+
+      render(<ThanksPage />)
+
+      expect(await screen.findByText('아직 아무도 감사를 남기지 않았어요')).toBeInTheDocument()
+      expect(mockFetchThanksEntries).toHaveBeenCalledWith('2026-11-09')
+      expect(screen.getByText('11월 9일 (월)')).toBeInTheDocument()
+    }
+  )
 
   it('지금 칸에 아직 안 올렸으면 기록 버튼을 보여 준다', async () => {
     mockUser = { id: 1, name: '정은혜' }
