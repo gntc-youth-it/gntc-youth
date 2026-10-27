@@ -14,9 +14,14 @@ export const deleteThanksEntry = async (entryId: number): Promise<void> => {
   await apiRequest<void>(`/thanks/entries/${entryId}`, { method: 'DELETE' })
 }
 
-// 사진을 S3에 바로 올리고 파일 번호를 받는다. 갤러리 글쓰기와 같은 방식
-export const uploadEntryPhoto = async (blob: Blob, onProgress: (progress: number) => void): Promise<number> => {
-  const extension = blob.type.split('/')[1] || 'webp'
+const EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'video/quicktime': 'mov',
+}
+
+// 사진·영상을 S3에 바로 올리고 파일 번호를 받는다. 갤러리 글쓰기와 같은 방식
+export const uploadEntryMedia = async (blob: Blob, onProgress: (progress: number) => void): Promise<number> => {
+  const extension = EXTENSIONS[blob.type] ?? (blob.type.split('/')[1] || 'bin')
   const { fileId, presignedUrl } = await getFilePresignedUrl(`thanks.${extension}`, blob.type, blob.size)
   await uploadToS3(presignedUrl, blob, blob.type, { onProgress })
   return fileId

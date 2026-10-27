@@ -93,6 +93,15 @@ describe('compressVideo module', () => {
       )
     })
 
+    it('최대 길이를 주면 앞에서부터 그 초까지만 남긴다', async () => {
+      const file = createMockVideoFile()
+
+      await compressVideo(file, { maxDurationSec: 5 })
+
+      const args = mockInstance.exec.mock.calls[0][0] as string[]
+      expect(args.slice(0, 4)).toEqual(['-i', 'input.mp4', '-t', '5'])
+    })
+
     it('onProgress 콜백을 등록하고 해제한다', async () => {
       const onProgress = jest.fn()
       const file = createMockVideoFile()

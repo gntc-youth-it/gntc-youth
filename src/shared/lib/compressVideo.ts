@@ -1,6 +1,8 @@
 export interface VideoCompressionOptions {
   crf?: number
   maxWidth?: number
+  // 주면 앞에서부터 그 초까지만 남긴다
+  maxDurationSec?: number
   onProgress?: (progress: number) => void
 }
 
@@ -40,7 +42,7 @@ export function isVideoCompressionSupported(): boolean {
 }
 
 export async function compressVideo(
-  file: File,
+  file: Blob,
   options?: VideoCompressionOptions
 ): Promise<CompressedVideoResult> {
   if (!isVideoCompressionSupported()) {
@@ -67,6 +69,7 @@ export async function compressVideo(
 
     const args = [
       '-i', 'input.mp4',
+      ...(options?.maxDurationSec ? ['-t', String(options.maxDurationSec)] : []),
       '-vf', `scale='min(${maxWidth},iw)':-2`,
       '-c:v', 'libx264',
       '-crf', String(crf),

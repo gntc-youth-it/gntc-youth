@@ -76,4 +76,6 @@ export const THANKS_ERROR_CODE = {
 } as const
 
 export const CONTENT_MAX_LENGTH = 80
+// 영상은 이 초만큼만 찍고, 앨범 영상은 앞에서부터 이만큼만 남긴다
+export const VIDEO_MAX_SECONDS = 5
 export const COMMENT_MAX_LENGTH = 100
