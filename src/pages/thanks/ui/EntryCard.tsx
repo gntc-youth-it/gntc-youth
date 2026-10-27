@@ -7,8 +7,18 @@ import { EntryMedia } from './EntryMedia'
 
 const TEXT_SHADOW = '[text-shadow:0_1px_6px_rgba(0,0,0,0.45)]'
 
+// 영상 카드 표시. 소리는 크게 보기에서 눌러야 들린다
+const SpeakerOffIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+    <path d="M23 9l-6 6M17 9l6 6" />
+  </svg>
+)
+
 interface EntryCardFaceProps {
   media: Pick<ThanksMedia, 'url' | 'type'> | null
+  // 영상 소리. 목록 카드는 늘 꺼 두고, 눌러야 들린다
+  muted?: boolean
   slotLabel: string
   time: string
   content: string
@@ -18,9 +28,9 @@ interface EntryCardFaceProps {
 }
 
 // 셋로그 카드 앞면: 사진·영상을 꽉 채우고 가운데에 시각과 감사제목. 목록 카드와 기록하기 미리보기가 같이 쓴다
-export const EntryCardFace = ({ media, slotLabel, time, content, placeholder, children }: EntryCardFaceProps) => (
+export const EntryCardFace = ({ media, muted = true, slotLabel, time, content, placeholder, children }: EntryCardFaceProps) => (
   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[22px] bg-[#D9D4CC] shadow-[0_12px_28px_-12px_rgba(0,0,0,0.35)] ring-[3px] ring-white">
-    {media && <EntryMedia media={media} className="absolute inset-0" />}
+    {media && <EntryMedia media={media} muted={muted} className="absolute inset-0" />}
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.32),rgba(0,0,0,0.06)_72%)]" />
 
     <span className={`absolute left-4 top-3 text-[13px] font-bold text-white ${TEXT_SHADOW}`}>{slotLabel}</span>
@@ -71,6 +81,15 @@ export const EntryCard = ({ entry, onOpen }: EntryCardProps) => {
               </span>
             ))}
           </div>
+        )}
+
+        {entry.media.type === 'VIDEO' && (
+          <span
+            className="absolute bottom-[18px] right-3 grid h-7 w-7 place-items-center rounded-full bg-black/45 text-white"
+            aria-hidden="true"
+          >
+            <SpeakerOffIcon />
+          </span>
         )}
 
         {entry.latestComment && (

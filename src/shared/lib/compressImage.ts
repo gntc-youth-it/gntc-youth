@@ -66,7 +66,7 @@ function canvasToBlob(
 }
 
 export async function compressImage(
-  file: File,
+  file: Blob,
   options?: ImageCompressionOptions
 ): Promise<CompressedImageResult> {
   const maxWidth = options?.maxWidth ?? DEFAULT_MAX_WIDTH

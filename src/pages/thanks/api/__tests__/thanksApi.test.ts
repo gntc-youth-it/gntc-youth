@@ -1,6 +1,6 @@
 import { apiRequest, getFilePresignedUrl } from '../../../../shared/api'
 import { uploadToS3 } from '../../../../shared/lib'
-import { createThanksEntry, deleteThanksEntry, fetchThanksEntries, uploadEntryPhoto } from '../thanksApi'
+import { createThanksEntry, deleteThanksEntry, fetchThanksEntries, uploadEntryMedia } from '../thanksApi'
 
 jest.mock('../../../../shared/api', () => ({
   ...jest.requireActual('../../../../shared/api'),
@@ -50,10 +50,23 @@ describe('thanksApi', () => {
     const onProgress = jest.fn()
     mockGetFilePresignedUrl.mockResolvedValue({ fileId: 31, presignedUrl: 'https://s3.example.com/uploads/a.webp' })
 
-    const fileId = await uploadEntryPhoto(blob, onProgress)
+    const fileId = await uploadEntryMedia(blob, onProgress)
 
     expect(mockGetFilePresignedUrl).toHaveBeenCalledWith('thanks.webp', 'image/webp', blob.size)
     expect(mockUploadToS3).toHaveBeenCalledWith('https://s3.example.com/uploads/a.webp', blob, 'image/webp', { onProgress })
     expect(fileId).toBe(31)
+  })
+
+  it.each([
+    ['video/mp4', 'thanks.mp4'],
+    ['video/quicktime', 'thanks.mov'],
+    ['image/jpeg', 'thanks.jpg'],
+  ])('%s 파일은 %s 이름으로 올린다', async (type, filename) => {
+    const blob = new Blob(['media'], { type })
+    mockGetFilePresignedUrl.mockResolvedValue({ fileId: 32, presignedUrl: 'https://s3.example.com/uploads/b' })
+
+    await uploadEntryMedia(blob, jest.fn())
+
+    expect(mockGetFilePresignedUrl).toHaveBeenCalledWith(filename, type, blob.size)
   })
 })

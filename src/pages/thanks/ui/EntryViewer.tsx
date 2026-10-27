@@ -110,13 +110,17 @@ export const EntryViewer = ({
 
         <div className="relative mt-4 overflow-hidden rounded-[22px] bg-black">
           <EntryMedia media={entry.media} fit="contain" muted={isMuted} className="max-h-[62vh]" />
+          {/* 영상은 소리 없이 시작하고, 영상이나 버튼을 눌러야 소리가 난다 */}
           {entry.media.type === 'VIDEO' && (
             <button
               type="button"
               onClick={() => setIsMuted((muted) => !muted)}
-              className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1.5 text-[12px] font-semibold"
+              aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
+              className="absolute inset-0 flex items-end justify-end p-3"
             >
-              {isMuted ? '소리 켜기' : '소리 끄기'}
+              <span className="rounded-full bg-black/60 px-3 py-1.5 text-[12px] font-semibold">
+                {isMuted ? '🔇 눌러서 소리 듣기' : '🔊 소리 끄기'}
+              </span>
             </button>
           )}
         </div>

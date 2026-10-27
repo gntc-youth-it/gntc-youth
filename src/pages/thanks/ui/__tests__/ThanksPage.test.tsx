@@ -30,7 +30,7 @@ jest.mock('../../api/thanksApi', () => ({
   fetchThanksEntries: jest.fn(),
   createThanksEntry: jest.fn(),
   deleteThanksEntry: jest.fn(),
-  uploadEntryPhoto: jest.fn(),
+  uploadEntryMedia: jest.fn(),
 }))
 
 const mockFetchThanksEntries = fetchThanksEntries as jest.MockedFunction<typeof fetchThanksEntries>
