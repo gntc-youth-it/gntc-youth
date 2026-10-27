@@ -191,6 +191,33 @@ describe('apiRequest', () => {
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
 
+    it('갱신 후 재요청이 204면 본문을 읽지 않고 undefined를 반환한다', async () => {
+      mockGetAccessToken.mockReturnValue('old-token')
+      const retryJson = jest.fn()
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: () => Promise.resolve({}),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ access_token: 'new-token' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 204,
+          json: retryJson,
+        })
+
+      const result = await apiRequest('/api/test', { method: 'DELETE' })
+
+      expect(result).toBeUndefined()
+      expect(retryJson).not.toHaveBeenCalled()
+      expect(mockFetch).toHaveBeenCalledTimes(3)
+    })
+
     it('토큰 갱신 실패 시 토큰을 제거하고 에러를 던진다', async () => {
       mockGetAccessToken.mockReturnValue('expired-token')
 

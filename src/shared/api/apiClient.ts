@@ -104,6 +104,11 @@ export const apiRequest = async <T>(
       throw new HttpError(retryResponse.status, message, errorData.code)
     }
 
+    // 토큰을 갱신하고 다시 보낸 요청도 204(삭제 등)면 읽을 본문이 없다
+    if (retryResponse.status === 204) {
+      return undefined as T
+    }
+
     return retryResponse.json()
   }
 
