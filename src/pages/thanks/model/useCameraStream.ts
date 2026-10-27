@@ -9,10 +9,11 @@ export const isCameraSupported = (): boolean =>
   typeof navigator.mediaDevices?.getUserMedia === 'function' &&
   window.isSecureContext !== false
 
+// 세로로 든 폰에서는 화면 가운데 가로 띠(16:10)만 잘라 쓰므로, 잘라도 선명하게 1080p를 먼저 청한다
 const VIDEO_CONSTRAINTS = (facing: CameraFacing): MediaTrackConstraints => ({
   facingMode: { ideal: facing },
-  width: { ideal: 1280 },
-  height: { ideal: 720 },
+  width: { ideal: 1920 },
+  height: { ideal: 1080 },
 })
 
 // 소리도 녹음하려고 마이크를 같이 요청한다. 마이크를 못 쓰면(없거나 막힘) 영상만이라도 켠다

@@ -1,7 +1,9 @@
 // 화면 안 카메라에서 사진 한 장을 찍거나, 정해진 초만큼 영상을 녹화한다
 
-// 사진·영상 모두 긴 쪽을 이 크기까지 줄인다. 카드에 꽉 차는 크기라 이보다 크면 데이터만 쓴다
-const MAX_SIDE = 1280
+// 카드와 카메라 미리보기 틀의 비율(16:10). 찍은 사진·영상도 미리보기에 보이던 이 영역만 남긴다
+export const CARD_ASPECT = 16 / 10
+// 잘라 낸 사진·영상의 가로를 이 크기까지 줄인다. 카드에 꽉 차는 크기라 이보다 크면 데이터만 쓴다
+const MAX_WIDTH = 1280
 
 // 아이폰은 mp4로만 녹화된다. 안드로이드 크롬도 mp4가 되면 mp4로 찍어야 아이폰에서 재생된다
 const RECORDER_MIME_TYPES = [
@@ -20,19 +22,36 @@ export const pickRecorderMimeType = (): string | undefined => {
   return RECORDER_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
 }
 
-const fitSize = (width: number, height: number) => {
-  const scale = Math.min(1, MAX_SIDE / Math.max(width, height, 1))
-  return { width: Math.round(width * scale), height: Math.round(height * scale) }
+export interface CropArea {
+  // 카메라 화면에서 잘라 낼 영역
+  sx: number
+  sy: number
+  sw: number
+  sh: number
+  // 잘라 낸 결과의 크기
+  width: number
+  height: number
 }
 
-// 앞카메라는 미리보기처럼 좌우를 뒤집어 그린다. 보이던 그대로 저장되게
-const drawFrame = (ctx: CanvasRenderingContext2D, video: HTMLVideoElement, width: number, height: number, mirrored: boolean) => {
+// 미리보기는 16:10 틀에 object-cover로 가운데를 꽉 채운다. 그때 보이는 영역과 같은 곳을 잘라 낸다
+export const getCropArea = (videoWidth: number, videoHeight: number): CropArea => {
+  const isWider = videoWidth / videoHeight > CARD_ASPECT
+  const sw = isWider ? videoHeight * CARD_ASPECT : videoWidth
+  const sh = isWider ? videoHeight : videoWidth / CARD_ASPECT
+  // 원본보다 크게 늘리지는 않는다. 크기는 짝수로 맞춘다(영상 인코더가 홀수를 싫어한다)
+  const width = Math.round(Math.min(MAX_WIDTH, sw) / 2) * 2
+  const height = Math.round(width / CARD_ASPECT / 2) * 2
+  return { sx: (videoWidth - sw) / 2, sy: (videoHeight - sh) / 2, sw, sh, width, height }
+}
+
+// 보이던 영역만 그린다. 앞카메라는 미리보기처럼 좌우를 뒤집어 보이던 그대로 저장되게 한다
+const drawFrame = (ctx: CanvasRenderingContext2D, video: HTMLVideoElement, area: CropArea, mirrored: boolean) => {
   ctx.save()
   if (mirrored) {
-    ctx.translate(width, 0)
+    ctx.translate(area.width, 0)
     ctx.scale(-1, 1)
   }
-  ctx.drawImage(video, 0, 0, width, height)
+  ctx.drawImage(video, area.sx, area.sy, area.sw, area.sh, 0, 0, area.width, area.height)
   ctx.restore()
 }
 
@@ -40,14 +59,15 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) 
   new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality))
 
 export const capturePhoto = async (video: HTMLVideoElement, mirrored: boolean): Promise<Blob> => {
-  const { width, height } = fitSize(video.videoWidth, video.videoHeight)
+  if (!video.videoWidth || !video.videoHeight) throw new Error('사진을 찍지 못했어요.')
+  const area = getCropArea(video.videoWidth, video.videoHeight)
   const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = area.width
+  canvas.height = area.height
   const ctx = canvas.getContext('2d')
-  if (!ctx || width === 0) throw new Error('사진을 찍지 못했어요.')
+  if (!ctx) throw new Error('사진을 찍지 못했어요.')
 
-  drawFrame(ctx, video, width, height, mirrored)
+  drawFrame(ctx, video, area, mirrored)
   const webp = await canvasToBlob(canvas, 'image/webp', 0.85)
   // 사파리는 webp를 못 만들어서 png를 돌려준다. 그때는 jpeg로 만든다
   if (webp?.type === 'image/webp') return webp
@@ -66,15 +86,16 @@ interface RecordClipOptions {
 }
 
 // 정해진 초만큼 녹화하고 저절로 멈춘다.
-// 아이폰 앞카메라를 그대로 녹화하면 영상이 옆으로 눕는 iOS 버그가 있어서(WebKit 323550),
-// 미리보기를 캔버스에 그리고 그 캔버스를 녹화한다. 캔버스 녹화를 못 하는 브라우저는 카메라를 그대로 녹화한다
+// 미리보기에 보이던 16:10 영역만 캔버스에 그려 그 캔버스를 녹화한다. 그래서 찍히는 것이 보이던 것과 같다.
+// 카메라를 그대로 녹화하면 아이폰 앞카메라 영상이 옆으로 눕는 iOS 버그(WebKit 323550)도 이렇게 피한다.
+// 캔버스 녹화를 못 하는 브라우저만 카메라 화면 전체를 그대로 녹화한다
 export const recordClip = ({ video, stream, mirrored, seconds, onProgress }: RecordClipOptions): Promise<Blob> =>
   new Promise((resolve, reject) => {
     const mimeType = pickRecorderMimeType()
-    const { width, height } = fitSize(video.videoWidth, video.videoHeight)
+    const area = getCropArea(video.videoWidth || 1280, video.videoHeight || 800)
     const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
+    canvas.width = area.width
+    canvas.height = area.height
     const ctx = canvas.getContext('2d')
     const useCanvas = ctx !== null && typeof canvas.captureStream === 'function'
 
@@ -83,7 +104,7 @@ export const recordClip = ({ video, stream, mirrored, seconds, onProgress }: Rec
     let source = stream
     if (ctx && useCanvas) {
       const draw = () => {
-        drawFrame(ctx, video, width, height, mirrored)
+        drawFrame(ctx, video, area, mirrored)
         frame = requestAnimationFrame(draw)
       }
       draw()
