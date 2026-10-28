@@ -157,6 +157,8 @@ export const EntryViewer = ({
             <textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
+              // 저장하는 동안 더 고치거나 취소하면, 저장이 끝나 닫힐 때 그 글이 사라진다
+              readOnly={isSaving}
               maxLength={CONTENT_MAX_LENGTH}
               rows={3}
               aria-label="감사제목 고치기"
@@ -167,7 +169,12 @@ export const EntryViewer = ({
                 {draft.length}/{CONTENT_MAX_LENGTH}
               </span>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setIsEditing(false)} className="rounded-full px-3 py-1.5 text-white/70">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                  className="rounded-full px-3 py-1.5 text-white/70 disabled:opacity-50"
+                >
                   취소
                 </button>
                 <button

@@ -8,6 +8,9 @@ import type { ThanksEntry, ThanksLog } from './types'
 
 const POLL_INTERVAL_MS = 30 * 1000
 
+const hasEntry = (logs: ThanksLog[] | null, entryId: number) =>
+  logs?.some((log) => log.entries.some((entry) => entry.id === entryId)) ?? false
+
 // 그날의 감사로그. 오늘 화면을 보고 있으면 30초마다 새로 불러온다
 export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
   const [logs, setLogs] = useState<ThanksLog[] | null>(null)
@@ -15,6 +18,10 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
   // 날짜를 넘긴 뒤에 늦게 도착한 앞 날짜 응답은 버린다
   const currentDate = useRef(date)
   currentDate.current = date
+  // 고치기·지우기·반응·댓글 응답이 다른 날짜로 넘어간 뒤에 오면, 그 기록은 지금 목록에 없으니 아무것도 하지 않는다.
+  // 그래야 새 날짜를 불러오는 응답을 버리지 않는다(지난 날짜는 새로고침을 안 해서 "불러오는 중…"에 멈춘다)
+  const shownLogs = useRef(logs)
+  shownLogs.current = logs
   // 새로고침은 화면 복귀 때와 30초마다 겹쳐 돌 수 있다. 더 새로운 요청이 있거나
   // 그사이 올리기·지우기로 목록을 직접 고쳤으면, 먼저 보낸 요청의 응답은 버린다
   const requestSeq = useRef(0)
@@ -55,12 +62,14 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
       // 다른 기기에서 이미 지웠으면 목록에서만 빼면 된다
       if (!(error instanceof HttpError && error.code === THANKS_ERROR_CODE.ENTRY_NOT_FOUND)) throw error
     }
+    if (!hasEntry(shownLogs.current, entryId)) return
     requestSeq.current += 1
     setLogs((prev) => (prev ? removeEntry(prev, entryId) : prev))
   }, [])
 
   // 반응처럼 한 기록만 바꿀 때. 사람 순서는 그대로다
   const updateEntry = useCallback((entryId: number, update: (entry: ThanksEntry) => ThanksEntry) => {
+    if (!hasEntry(shownLogs.current, entryId)) return
     requestSeq.current += 1
     setLogs((prev) =>
       prev
@@ -71,6 +80,7 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
 
   // 다른 기기에서 이미 지운 기록을 목록에서만 뺀다
   const dropEntry = useCallback((entryId: number) => {
+    if (!hasEntry(shownLogs.current, entryId)) return
     requestSeq.current += 1
     setLogs((prev) => (prev ? removeEntry(prev, entryId) : prev))
   }, [])

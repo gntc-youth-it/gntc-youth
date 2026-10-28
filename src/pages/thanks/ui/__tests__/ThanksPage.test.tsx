@@ -365,8 +365,10 @@ describe('ThanksPage', () => {
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     expect(mockUpdateThanksEntry).toHaveBeenCalledWith(1, '동기와 선배에게 감사')
-    // 저장하는 동안에는 다시 누를 수 없다
+    // 저장하는 동안에는 다시 누르거나, 더 고치거나, 취소할 수 없다
     expect(screen.getByRole('button', { name: '저장하는 중…' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '취소' })).toBeDisabled()
+    expect(textarea).toHaveAttribute('readonly')
 
     await act(async () => {
       respond({ ...mine, content: '동기와 선배에게 감사' })
