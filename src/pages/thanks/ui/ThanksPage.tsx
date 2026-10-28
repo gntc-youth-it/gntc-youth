@@ -6,6 +6,7 @@ import { dismissProfilePrompt, wasProfilePromptDismissed } from '../model/profil
 import { getCurrentSlot, getMissionDate, isValidMissionDate, shiftMissionDate } from '../model/slots'
 import type { ThanksAuthor, ThanksEntry } from '../model/types'
 import { useCurrentUser } from '../model/useCurrentUser'
+import { useEntryComments } from '../model/useEntryComments'
 import { useNow } from '../model/useNow'
 import { useReactions } from '../model/useReactions'
 import { useThanksLogs } from '../model/useThanksLogs'
@@ -51,7 +52,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
     : null
   const isWriting = searchParams.get('write') === '1'
 
-  // 반응을 누르는 사이 다른 기기에서 지워진 감사면 목록에서 빼고(크게 보기도 같이 닫힌다) 알려 준다
+  // 반응·댓글을 보내는 사이 다른 기기에서 지워진 감사면 목록에서 빼고(크게 보기도 같이 닫힌다) 알려 준다
   const handleEntryGone = useCallback(
     (entryId: number) => {
       dropEntry(entryId)
@@ -59,8 +60,13 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
     },
     [dropEntry]
   )
-  const handleReactionError = useCallback((message: string) => window.alert(message), [])
-  const { react } = useReactions({ updateEntry, onEntryGone: handleEntryGone, onError: handleReactionError })
+  const handleActionError = useCallback((message: string) => window.alert(message), [])
+  const { react } = useReactions({ updateEntry, onEntryGone: handleEntryGone, onError: handleActionError })
+  const comments = useEntryComments(openedEntry?.id ?? null, {
+    updateEntry,
+    onEntryGone: handleEntryGone,
+    onError: handleActionError,
+  })
 
   const me: ThanksAuthor = { userId: user.id, name: user.name, profileImageUrl: user.profileImagePath || null }
   const [profileSheet, setProfileSheet] = useState<'prompt' | 'edit' | null>(null)
@@ -171,6 +177,12 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
           now={now}
           onClose={closeOverlay}
           onReact={(emoji) => void react(openedEntry, emoji)}
+          comments={comments.comments}
+          commentsError={comments.error}
+          onRetryComments={() => void comments.reload()}
+          onAddComment={comments.add}
+          isSendingComment={comments.isSending}
+          onDeleteComment={(commentId) => void comments.remove(commentId)}
           onDeleteEntry={async () => {
             await deleteEntry(openedEntry.id)
             closeOverlay()

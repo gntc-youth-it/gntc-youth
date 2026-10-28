@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { patchProfile } from '../../../../features/edit-profile'
-import { addReaction, fetchThanksEntries } from '../../api/thanksApi'
+import { addReaction, createComment, deleteComment, fetchComments, fetchThanksEntries } from '../../api/thanksApi'
 import type { ThanksEntry } from '../../model/types'
 import { ThanksPage } from '../ThanksPage'
 
@@ -44,10 +44,16 @@ jest.mock('../../api/thanksApi', () => ({
   uploadEntryMedia: jest.fn(),
   addReaction: jest.fn(),
   removeReaction: jest.fn(),
+  fetchComments: jest.fn(),
+  createComment: jest.fn(),
+  deleteComment: jest.fn(),
 }))
 
 const mockFetchThanksEntries = fetchThanksEntries as jest.MockedFunction<typeof fetchThanksEntries>
 const mockAddReaction = addReaction as jest.MockedFunction<typeof addReaction>
+const mockFetchComments = fetchComments as jest.MockedFunction<typeof fetchComments>
+const mockCreateComment = createComment as jest.MockedFunction<typeof createComment>
+const mockDeleteComment = deleteComment as jest.MockedFunction<typeof deleteComment>
 
 const entry = (id: number, userId: number, name: string, createdAt: string, isMine = false): ThanksEntry => ({
   id,
@@ -69,6 +75,7 @@ beforeEach(() => {
   localStorage.clear()
   mockUser = null
   mockSearch = ''
+  mockFetchComments.mockResolvedValue({ entryId: 1, comments: [] })
   jest.useFakeTimers()
   jest.setSystemTime(new Date('2026-11-09T13:20:00+09:00'))
 })
@@ -243,5 +250,79 @@ describe('ThanksPage', () => {
     expect(mockAddReaction).toHaveBeenCalledWith(1, 'PRAY')
     const pray = await screen.findByRole('button', { name: '아멘 5' })
     expect(pray).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('크게 보기에서 댓글을 달고 지우면 목록과 카드의 최근 댓글이 같이 바뀐다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    // jsdom에는 confirm이 없다. CRA 설정은 테스트마다 jest.fn 구현을 지우므로 일반 함수로 둔다
+    window.confirm = () => true
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [entry(1, 2, '김하늘', '2026-11-08T22:15:00')] })
+    const myComment = {
+      id: 7,
+      author: { userId: 1, name: '정은혜', profileImageUrl: null },
+      content: '기도할게요 🙏',
+      isMine: true,
+      createdAt: '2026-11-09T04:19:00',
+    }
+    mockCreateComment.mockResolvedValue({ entryId: 1, comments: [myComment] })
+    mockDeleteComment.mockResolvedValue({ entryId: 1, comments: [] })
+    render(<ThanksPage />)
+
+    expect(await screen.findByText('첫 댓글로 마음을 보내 주세요')).toBeInTheDocument()
+    expect(mockFetchComments).toHaveBeenCalledWith(1)
+
+    const input = screen.getByRole('textbox', { name: '댓글' })
+    await user.type(input, '  기도할게요 🙏 ')
+    await user.click(screen.getByRole('button', { name: '등록' }))
+
+    expect(mockCreateComment).toHaveBeenCalledWith(1, '기도할게요 🙏')
+    expect(await screen.findByText('댓글 1')).toBeInTheDocument()
+    expect(input).toHaveValue('')
+    // 뒤에 깔린 목록 카드에도 최근 댓글 말풍선이 붙는다
+    expect(screen.getAllByText('기도할게요 🙏')).toHaveLength(2)
+
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(mockDeleteComment).toHaveBeenCalledWith(7)
+    expect(await screen.findByText('첫 댓글로 마음을 보내 주세요')).toBeInTheDocument()
+    expect(screen.queryByText('기도할게요 🙏')).not.toBeInTheDocument()
+  })
+
+  it('댓글을 다시 불러오지 못하면 보던 댓글은 그대로 두고 안내와 [다시 불러오기]를 띄운다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [entry(1, 2, '김하늘', '2026-11-08T22:15:00')] })
+    mockFetchComments.mockResolvedValue({
+      entryId: 1,
+      comments: [
+        {
+          id: 7,
+          author: { userId: 3, name: '이서준', profileImageUrl: null },
+          content: '함께 기뻐해요',
+          isMine: false,
+          createdAt: '2026-11-09T04:19:00',
+        },
+      ],
+    })
+    render(<ThanksPage />)
+    const section = await screen.findByRole('region', { name: '댓글' })
+    expect(await within(section).findByText('함께 기뻐해요')).toBeInTheDocument()
+
+    // 30초 뒤에 다시 불러오다 실패한다
+    mockFetchComments.mockRejectedValueOnce(new Error('offline'))
+    await act(async () => {
+      jest.advanceTimersByTime(30 * 1000)
+    })
+
+    expect(await within(section).findByRole('alert')).toHaveTextContent('댓글을 불러오지 못했어요.')
+    expect(within(section).getByText('함께 기뻐해요')).toBeInTheDocument()
+
+    await user.click(within(section).getByRole('button', { name: '다시 불러오기' }))
+
+    await waitFor(() => expect(within(section).queryByRole('alert')).not.toBeInTheDocument())
+    expect(within(section).getByText('함께 기뻐해요')).toBeInTheDocument()
   })
 })

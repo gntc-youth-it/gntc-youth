@@ -65,6 +65,12 @@ export interface ThanksEntryReactionsResponse {
   reactions: ThanksReaction[]
 }
 
+// GET·POST /thanks/entries/{id}/comments, DELETE /thanks/comments/{id}
+export interface ThanksCommentsResponse {
+  entryId: number
+  comments: ThanksComment[]
+}
+
 export interface CreateThanksEntryRequest {
   content: string
   fileId: number
@@ -77,8 +83,13 @@ export const THANKS_ERROR_CODE = {
   ENTRY_NOT_FOUND: 6003,
   // 남이 올린 파일, 사진·영상이 아닌 파일, 이미 다른 감사에 붙은 파일
   FILE_NOT_ATTACHABLE: 6005,
+  COMMENT_NOT_FOUND: 6006,
+  // 남의 댓글 지우기. 지울 수 있는 사람은 쓴 사람 본인과 MASTER뿐이다
+  COMMENT_ACCESS_DENIED: 6007,
   // 공통 코드. 감사를 지우면 붙어 있던 파일도 지워져서, 그 fileId를 다시 보내면 이 오류가 난다
   FILE_NOT_FOUND: 3001,
+  // 공통 코드. 댓글이 비었거나 100자를 넘으면 이 오류가 난다
+  INVALID_REQUEST: 1001,
 } as const
 
 export const CONTENT_MAX_LENGTH = 80
