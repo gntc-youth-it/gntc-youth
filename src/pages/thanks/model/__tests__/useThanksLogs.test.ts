@@ -159,6 +159,40 @@ describe('useThanksLogs', () => {
     expect(updated?.reactions).toEqual([{ emoji: 'PRAY', count: 1, reactedByMe: true }])
   })
 
+  it('다른 날짜로 넘어간 뒤에 앞 날짜 기록을 지우고 고치고 빼는 응답이 와도, 새 날짜를 불러온 응답을 버리지 않는다', async () => {
+    const { result, rerender } = renderHook(({ date }) => useThanksLogs(date, { poll: false }), {
+      initialProps: { date: '2026-11-09' },
+    })
+    await waitFor(() => expect(result.current.logs).not.toBeNull())
+
+    let finishDelete: () => void = () => undefined
+    mockDeleteThanksEntry.mockReturnValueOnce(
+      new Promise<void>((done) => {
+        finishDelete = done
+      })
+    )
+    let deleting: Promise<void> = Promise.resolve()
+    act(() => {
+      deleting = result.current.deleteEntry(1)
+    })
+    const previousDay = deferred()
+    mockFetchThanksEntries.mockReturnValueOnce(previousDay.promise)
+    rerender({ date: '2026-11-08' })
+
+    // 11/9 기록에 대한 응답들이 전날로 넘어간 뒤에야 온다
+    await act(async () => {
+      finishDelete()
+      await deleting
+    })
+    act(() => result.current.updateEntry(2, (current) => ({ ...current, content: '고친 감사' })))
+    act(() => result.current.dropEntry(2))
+    await act(async () => {
+      previousDay.resolve({ date: '2026-11-08', entries: [{ ...entry(5, 3, '2026-11-07T23:00:00'), missionDate: '2026-11-08' }] })
+    })
+
+    expect(result.current.logs?.flatMap((log) => log.entries).map((item) => item.id)).toEqual([5])
+  })
+
   it('다른 기기에서 지운 기록은 서버에 다시 묻지 않고 목록에서만 뺀다', async () => {
     const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
     await waitFor(() => expect(result.current.logs).not.toBeNull())

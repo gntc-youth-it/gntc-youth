@@ -12,7 +12,8 @@ interface EntryViewerProps {
   now: Date
   onClose: () => void
   onDeleteEntry?: () => Promise<void>
-  onUpdateContent?: (content: string) => void
+  // 고쳤으면 true. 그때만 고치기를 닫는다
+  onUpdateContent?: (content: string) => Promise<boolean>
   onReact?: (emoji: ReactionEmoji) => void
   // 댓글. 불러오는 중이면 null
   comments?: ThanksComment[] | null
@@ -41,6 +42,7 @@ export const EntryViewer = ({
 }: EntryViewerProps) => {
   const [isMuted, setIsMuted] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [draft, setDraft] = useState(entry.content)
   const [comment, setComment] = useState('')
@@ -59,11 +61,24 @@ export const EntryViewer = ({
     }
   }, [onClose])
 
-  const handleSaveContent = () => {
+  // 고칠 때마다 지금 감사제목에서 시작한다
+  const startEditing = () => {
+    setDraft(entry.content)
+    setIsEditing(true)
+  }
+
+  // 저장하는 동안에는 다시 보내지 않고, 고치지 못하면 고친 글을 그대로 둔다. 그대로면 보내지 않고 닫는다
+  const handleSaveContent = async () => {
     const trimmed = draft.trim()
-    if (!trimmed || !onUpdateContent) return
-    onUpdateContent(trimmed)
-    setIsEditing(false)
+    if (!trimmed || !onUpdateContent || isSaving) return
+    if (trimmed === entry.content) {
+      setIsEditing(false)
+      return
+    }
+    setIsSaving(true)
+    const saved = await onUpdateContent(trimmed)
+    setIsSaving(false)
+    if (saved) setIsEditing(false)
   }
 
   const handleDeleteEntry = async () => {
@@ -142,6 +157,8 @@ export const EntryViewer = ({
             <textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
+              // 저장하는 동안 더 고치거나 취소하면, 저장이 끝나 닫힐 때 그 글이 사라진다
+              readOnly={isSaving}
               maxLength={CONTENT_MAX_LENGTH}
               rows={3}
               aria-label="감사제목 고치기"
@@ -152,11 +169,21 @@ export const EntryViewer = ({
                 {draft.length}/{CONTENT_MAX_LENGTH}
               </span>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setIsEditing(false)} className="rounded-full px-3 py-1.5 text-white/70">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                  className="rounded-full px-3 py-1.5 text-white/70 disabled:opacity-50"
+                >
                   취소
                 </button>
-                <button type="button" onClick={handleSaveContent} className="rounded-full bg-white px-4 py-1.5 font-bold text-[#141414]">
-                  저장
+                <button
+                  type="button"
+                  onClick={handleSaveContent}
+                  disabled={!draft.trim() || isSaving}
+                  className="rounded-full bg-white px-4 py-1.5 font-bold text-[#141414] disabled:opacity-50"
+                >
+                  {isSaving ? '저장하는 중…' : '저장'}
                 </button>
               </div>
             </div>
@@ -168,7 +195,7 @@ export const EntryViewer = ({
         {entry.isMine && !isEditing && (onUpdateContent || onDeleteEntry) && (
           <div className="mt-2 flex gap-3 text-[13px] text-white/50">
             {onUpdateContent && (
-              <button type="button" onClick={() => setIsEditing(true)} className="hover:text-white">
+              <button type="button" onClick={startEditing} className="hover:text-white">
                 수정
               </button>
             )}

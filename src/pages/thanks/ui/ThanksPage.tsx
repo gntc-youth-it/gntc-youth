@@ -7,6 +7,7 @@ import { getCurrentSlot, getMissionDate, isValidMissionDate, shiftMissionDate } 
 import type { ThanksAuthor, ThanksEntry } from '../model/types'
 import { useCurrentUser } from '../model/useCurrentUser'
 import { useEntryComments } from '../model/useEntryComments'
+import { useEntryEdit } from '../model/useEntryEdit'
 import { useNow } from '../model/useNow'
 import { useReactions } from '../model/useReactions'
 import { useThanksLogs } from '../model/useThanksLogs'
@@ -52,7 +53,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
     : null
   const isWriting = searchParams.get('write') === '1'
 
-  // 반응·댓글을 보내는 사이 다른 기기에서 지워진 감사면 목록에서 빼고(크게 보기도 같이 닫힌다) 알려 준다
+  // 반응·댓글·고치기를 보내는 사이 다른 기기에서 지워진 감사면 목록에서 빼고(크게 보기도 같이 닫힌다) 알려 준다
   const handleEntryGone = useCallback(
     (entryId: number) => {
       dropEntry(entryId)
@@ -62,6 +63,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
   )
   const handleActionError = useCallback((message: string) => window.alert(message), [])
   const { react } = useReactions({ updateEntry, onEntryGone: handleEntryGone, onError: handleActionError })
+  const { updateContent } = useEntryEdit({ updateEntry, onEntryGone: handleEntryGone, onError: handleActionError })
   const comments = useEntryComments(openedEntry?.id ?? null, {
     updateEntry,
     onEntryGone: handleEntryGone,
@@ -176,6 +178,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
           entry={openedEntry}
           now={now}
           onClose={closeOverlay}
+          onUpdateContent={(content) => updateContent(openedEntry.id, content)}
           onReact={(emoji) => void react(openedEntry, emoji)}
           comments={comments.comments}
           commentsError={comments.error}
