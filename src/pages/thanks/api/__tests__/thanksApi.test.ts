@@ -1,6 +1,13 @@
 import { apiRequest, getFilePresignedUrl } from '../../../../shared/api'
 import { uploadToS3 } from '../../../../shared/lib'
-import { createThanksEntry, deleteThanksEntry, fetchThanksEntries, uploadEntryMedia } from '../thanksApi'
+import {
+  addReaction,
+  createThanksEntry,
+  deleteThanksEntry,
+  fetchThanksEntries,
+  removeReaction,
+  uploadEntryMedia,
+} from '../thanksApi'
 
 jest.mock('../../../../shared/api', () => ({
   ...jest.requireActual('../../../../shared/api'),
@@ -43,6 +50,14 @@ describe('thanksApi', () => {
     await deleteThanksEntry(5)
 
     expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/5', { method: 'DELETE' })
+  })
+
+  it('반응을 켜고 끈다', async () => {
+    await addReaction(12, 'PRAY')
+    await removeReaction(12, 'HEART')
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/reactions/PRAY', { method: 'PUT' })
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/reactions/HEART', { method: 'DELETE' })
   })
 
   it('줄인 사진을 S3에 올리고 파일 번호를 돌려준다', async () => {

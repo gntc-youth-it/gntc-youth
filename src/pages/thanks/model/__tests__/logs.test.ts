@@ -1,4 +1,4 @@
-import { groupLogs, removeEntry, toggleReaction, upsertEntry } from '../logs'
+import { groupLogs, removeEntry, setMyReaction, toggleReaction, upsertEntry } from '../logs'
 import type { Slot, ThanksAuthor, ThanksEntry } from '../types'
 
 const author = (userId: number): ThanksAuthor => ({ userId, name: `청년${userId}`, profileImageUrl: null })
@@ -87,5 +87,15 @@ describe('toggleReaction', () => {
     expect(toggleReaction([{ emoji: 'CLAP', count: 3, reactedByMe: true }], 'CLAP')).toEqual([
       { emoji: 'CLAP', count: 2, reactedByMe: false },
     ])
+  })
+})
+
+describe('setMyReaction', () => {
+  it('내 반응을 정한 값으로 맞추고, 이미 그렇다면 그대로 둔다', () => {
+    const reactions = [{ emoji: 'PRAY' as const, count: 2, reactedByMe: false }]
+
+    expect(setMyReaction(reactions, 'PRAY', true)).toEqual([{ emoji: 'PRAY', count: 3, reactedByMe: true }])
+    expect(setMyReaction(reactions, 'PRAY', false)).toBe(reactions)
+    expect(setMyReaction(reactions, 'HEART', true)).toEqual([...reactions, { emoji: 'HEART', count: 1, reactedByMe: true }])
   })
 })

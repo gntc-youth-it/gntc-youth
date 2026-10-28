@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { patchProfile } from '../../../../features/edit-profile'
-import { fetchThanksEntries } from '../../api/thanksApi'
+import { addReaction, fetchThanksEntries } from '../../api/thanksApi'
 import type { ThanksEntry } from '../../model/types'
 import { ThanksPage } from '../ThanksPage'
 
@@ -42,9 +42,12 @@ jest.mock('../../api/thanksApi', () => ({
   createThanksEntry: jest.fn(),
   deleteThanksEntry: jest.fn(),
   uploadEntryMedia: jest.fn(),
+  addReaction: jest.fn(),
+  removeReaction: jest.fn(),
 }))
 
 const mockFetchThanksEntries = fetchThanksEntries as jest.MockedFunction<typeof fetchThanksEntries>
+const mockAddReaction = addReaction as jest.MockedFunction<typeof addReaction>
 
 const entry = (id: number, userId: number, name: string, createdAt: string, isMine = false): ThanksEntry => ({
   id,
@@ -160,7 +163,9 @@ describe('ThanksPage', () => {
 
     render(<ThanksPage />)
 
-    expect(await screen.findByRole('dialog', { name: '프로필 사진과 이름 정하기' })).toBeInTheDocument()
+    // 목록 불러오기가 끝날 때까지 기다린 뒤에 본다. 그래야 불러오기가 테스트 밖에서 끝나지 않는다
+    expect(await screen.findByText('아직 아무도 감사를 남기지 않았어요')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '프로필 사진과 이름 정하기' })).toBeInTheDocument()
   })
 
   it('나중에 할게요를 누르면 오늘은 다시 묻지 않는다', async () => {
@@ -168,8 +173,10 @@ describe('ThanksPage', () => {
     mockUser = { id: 1, name: '정은혜' }
     mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
     const { unmount } = render(<ThanksPage />)
+    // 목록을 다 불러온 뒤에 누른다. 그래야 불러오기가 act 밖에서 끝나지 않는다
+    await screen.findByText('아직 아무도 감사를 남기지 않았어요')
 
-    await user.click(await screen.findByRole('button', { name: '나중에 할게요' }))
+    await user.click(screen.getByRole('button', { name: '나중에 할게요' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     unmount()
@@ -218,5 +225,23 @@ describe('ThanksPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(mockRefreshUser).toHaveBeenCalled()
     await waitFor(() => expect(mockFetchThanksEntries).toHaveBeenCalledTimes(2))
+  })
+
+  it('크게 보기에서 반응을 누르면 바로 켜지고 서버 값으로 맞춘다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({
+      date: '2026-11-09',
+      entries: [{ ...entry(1, 2, '김하늘', '2026-11-08T22:15:00'), reactions: [{ emoji: 'PRAY', count: 2, reactedByMe: false }] }],
+    })
+    mockAddReaction.mockResolvedValue({ entryId: 1, reactions: [{ emoji: 'PRAY', count: 5, reactedByMe: true }] })
+    render(<ThanksPage />)
+
+    await user.click(await screen.findByRole('button', { name: '아멘 2' }))
+
+    expect(mockAddReaction).toHaveBeenCalledWith(1, 'PRAY')
+    const pray = await screen.findByRole('button', { name: '아멘 5' })
+    expect(pray).toHaveAttribute('aria-pressed', 'true')
   })
 })

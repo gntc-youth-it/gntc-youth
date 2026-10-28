@@ -137,6 +137,38 @@ describe('useThanksLogs', () => {
     expect(result.current.logs?.flatMap((log) => log.entries).map((item) => item.id)).toEqual([2])
   })
 
+  it('기록 하나만 바꾸고, 그 전에 보낸 새로고침 응답이 늦게 와도 덮지 않는다', async () => {
+    const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
+    await waitFor(() => expect(result.current.logs).not.toBeNull())
+
+    const stale = deferred()
+    mockFetchThanksEntries.mockReturnValueOnce(stale.promise)
+    let reloading: Promise<void> = Promise.resolve()
+    act(() => {
+      reloading = result.current.reload()
+    })
+    act(() =>
+      result.current.updateEntry(1, (current) => ({ ...current, reactions: [{ emoji: 'PRAY', count: 1, reactedByMe: true }] }))
+    )
+    await act(async () => {
+      stale.resolve({ date: '2026-11-09', entries: [entry(1, 1, '2026-11-08T22:00:00'), entry(2, 2, '2026-11-08T23:00:00')] })
+      await reloading
+    })
+
+    const updated = result.current.logs?.flatMap((log) => log.entries).find((item) => item.id === 1)
+    expect(updated?.reactions).toEqual([{ emoji: 'PRAY', count: 1, reactedByMe: true }])
+  })
+
+  it('다른 기기에서 지운 기록은 서버에 다시 묻지 않고 목록에서만 뺀다', async () => {
+    const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
+    await waitFor(() => expect(result.current.logs).not.toBeNull())
+
+    act(() => result.current.dropEntry(1))
+
+    expect(mockDeleteThanksEntry).not.toHaveBeenCalled()
+    expect(result.current.logs?.map((log) => log.author.userId)).toEqual([2])
+  })
+
   it('방금 올린 기록을 바로 맨 위에 넣는다', async () => {
     const { result } = renderHook(() => useThanksLogs('2026-11-09', { poll: false }))
     await waitFor(() => expect(result.current.logs).not.toBeNull())
