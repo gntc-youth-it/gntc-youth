@@ -59,5 +59,21 @@ export const useThanksLogs = (date: string, { poll }: { poll: boolean }) => {
     setLogs((prev) => (prev ? removeEntry(prev, entryId) : prev))
   }, [])
 
-  return { logs, error, reload: load, addEntry, deleteEntry }
+  // 반응처럼 한 기록만 바꿀 때. 사람 순서는 그대로다
+  const updateEntry = useCallback((entryId: number, update: (entry: ThanksEntry) => ThanksEntry) => {
+    requestSeq.current += 1
+    setLogs((prev) =>
+      prev
+        ? prev.map((log) => ({ ...log, entries: log.entries.map((entry) => (entry.id === entryId ? update(entry) : entry)) }))
+        : prev
+    )
+  }, [])
+
+  // 다른 기기에서 이미 지운 기록을 목록에서만 뺀다
+  const dropEntry = useCallback((entryId: number) => {
+    requestSeq.current += 1
+    setLogs((prev) => (prev ? removeEntry(prev, entryId) : prev))
+  }, [])
+
+  return { logs, error, reload: load, addEntry, deleteEntry, updateEntry, dropEntry }
 }

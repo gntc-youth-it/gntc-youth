@@ -1,6 +1,12 @@
 import { apiRequest, getFilePresignedUrl } from '../../../shared/api'
 import { uploadToS3 } from '../../../shared/lib'
-import type { CreateThanksEntryRequest, ThanksEntriesResponse, ThanksEntry } from '../model/types'
+import type {
+  CreateThanksEntryRequest,
+  ReactionEmoji,
+  ThanksEntriesResponse,
+  ThanksEntry,
+  ThanksEntryReactionsResponse,
+} from '../model/types'
 
 export const fetchThanksEntries = (date: string): Promise<ThanksEntriesResponse> =>
   apiRequest<ThanksEntriesResponse>(`/thanks/entries?date=${encodeURIComponent(date)}`)
@@ -13,6 +19,13 @@ export const createThanksEntry = (data: CreateThanksEntryRequest): Promise<Thank
 export const deleteThanksEntry = async (entryId: number): Promise<void> => {
   await apiRequest<void>(`/thanks/entries/${entryId}`, { method: 'DELETE' })
 }
+
+// 반응 켜기·끄기. 여러 번 보내도 결과가 같고, 그사이 다른 사람이 누른 것까지 반영한 그 감사의 반응 전체를 돌려준다
+export const addReaction = (entryId: number, emoji: ReactionEmoji): Promise<ThanksEntryReactionsResponse> =>
+  apiRequest<ThanksEntryReactionsResponse>(`/thanks/entries/${entryId}/reactions/${emoji}`, { method: 'PUT' })
+
+export const removeReaction = (entryId: number, emoji: ReactionEmoji): Promise<ThanksEntryReactionsResponse> =>
+  apiRequest<ThanksEntryReactionsResponse>(`/thanks/entries/${entryId}/reactions/${emoji}`, { method: 'DELETE' })
 
 const EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',

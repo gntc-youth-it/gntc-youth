@@ -7,6 +7,7 @@ import { getCurrentSlot, getMissionDate, isValidMissionDate, shiftMissionDate } 
 import type { ThanksAuthor, ThanksEntry } from '../model/types'
 import { useCurrentUser } from '../model/useCurrentUser'
 import { useNow } from '../model/useNow'
+import { useReactions } from '../model/useReactions'
 import { useThanksLogs } from '../model/useThanksLogs'
 import { EntryViewer } from './EntryViewer'
 import { LogGroup } from './LogGroup'
@@ -40,7 +41,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
   const isToday = date === today
   const currentSlot = getCurrentSlot(now)
 
-  const { logs, error, reload, addEntry, deleteEntry } = useThanksLogs(date, { poll: isToday })
+  const { logs, error, reload, addEntry, deleteEntry, updateEntry, dropEntry } = useThanksLogs(date, { poll: isToday })
   const myLog = isToday ? logs?.find((log) => log.entries.some((entry) => entry.isMine)) : undefined
   const hasPostedCurrentSlot = myLog?.entries.some((entry) => entry.slot === currentSlot) ?? false
 
@@ -49,6 +50,17 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
     ? logs?.flatMap((log) => log.entries).find((entry) => entry.id === openedEntryId) ?? null
     : null
   const isWriting = searchParams.get('write') === '1'
+
+  // 반응을 누르는 사이 다른 기기에서 지워진 감사면 목록에서 빼고(크게 보기도 같이 닫힌다) 알려 준다
+  const handleEntryGone = useCallback(
+    (entryId: number) => {
+      dropEntry(entryId)
+      window.alert('이미 지워진 감사예요.')
+    },
+    [dropEntry]
+  )
+  const handleReactionError = useCallback((message: string) => window.alert(message), [])
+  const { react } = useReactions({ updateEntry, onEntryGone: handleEntryGone, onError: handleReactionError })
 
   const me: ThanksAuthor = { userId: user.id, name: user.name, profileImageUrl: user.profileImagePath || null }
   const [profileSheet, setProfileSheet] = useState<'prompt' | 'edit' | null>(null)
@@ -158,6 +170,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
           entry={openedEntry}
           now={now}
           onClose={closeOverlay}
+          onReact={(emoji) => void react(openedEntry, emoji)}
           onDeleteEntry={async () => {
             await deleteEntry(openedEntry.id)
             closeOverlay()

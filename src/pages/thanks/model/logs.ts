@@ -48,3 +48,9 @@ export const toggleReaction = (reactions: ThanksReaction[], emoji: ReactionEmoji
     )
     .filter((reaction) => reaction.count > 0)
 }
+
+// 내 반응이 켜졌는지(on)를 정한 값으로 맞춘다. 이미 그렇다면 그대로 둔다
+export const setMyReaction = (reactions: ThanksReaction[], emoji: ReactionEmoji, on: boolean): ThanksReaction[] => {
+  const reactedByMe = reactions.find((reaction) => reaction.emoji === emoji)?.reactedByMe ?? false
+  return reactedByMe === on ? reactions : toggleReaction(reactions, emoji)
+}

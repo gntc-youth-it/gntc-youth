@@ -59,6 +59,12 @@ export interface ThanksEntriesResponse {
   entries: ThanksEntry[]
 }
 
+// PUT·DELETE /thanks/entries/{id}/reactions/{emoji}
+export interface ThanksEntryReactionsResponse {
+  entryId: number
+  reactions: ThanksReaction[]
+}
+
 export interface CreateThanksEntryRequest {
   content: string
   fileId: number
