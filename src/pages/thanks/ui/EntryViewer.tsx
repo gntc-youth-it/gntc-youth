@@ -14,8 +14,13 @@ interface EntryViewerProps {
   onDeleteEntry?: () => Promise<void>
   onUpdateContent?: (content: string) => void
   onReact?: (emoji: ReactionEmoji) => void
-  comments?: ThanksComment[]
-  onAddComment?: (content: string) => void
+  // 댓글. 불러오는 중이면 null
+  comments?: ThanksComment[] | null
+  commentsError?: string | null
+  onRetryComments?: () => void
+  // 달았으면 true. 그때만 입력창을 비운다
+  onAddComment?: (content: string) => Promise<boolean>
+  isSendingComment?: boolean
   onDeleteComment?: (commentId: number) => void
 }
 
@@ -28,7 +33,10 @@ export const EntryViewer = ({
   onUpdateContent,
   onReact,
   comments,
+  commentsError,
+  onRetryComments,
   onAddComment,
+  isSendingComment = false,
   onDeleteComment,
 }: EntryViewerProps) => {
   const [isMuted, setIsMuted] = useState(true)
@@ -69,12 +77,16 @@ export const EntryViewer = ({
     }
   }
 
-  const handleSubmitComment = (event: FormEvent) => {
+  // 보내는 동안에는 다시 보내지 않고, 달지 못하면 쓴 글을 그대로 둔다
+  const handleSubmitComment = async (event: FormEvent) => {
     event.preventDefault()
     const trimmed = comment.trim()
-    if (!trimmed || !onAddComment) return
-    onAddComment(trimmed)
-    setComment('')
+    if (!trimmed || !onAddComment || isSendingComment) return
+    if (await onAddComment(trimmed)) setComment('')
+  }
+
+  const handleDeleteComment = (commentId: number) => {
+    if (onDeleteComment && window.confirm('이 댓글을 지울까요?')) onDeleteComment(commentId)
   }
 
   const slotLabel = getSlotInfo(entry.slot).label
@@ -194,8 +206,21 @@ export const EntryViewer = ({
 
         {canComment && (
           <section className="mt-7" aria-label="댓글">
-            <h2 className="text-[14px] font-bold text-white/70">댓글 {comments.length}</h2>
-            {comments.length === 0 ? (
+            <h2 className="text-[14px] font-bold text-white/70">댓글 {comments?.length ?? entry.commentCount}</h2>
+            {comments === null ? (
+              commentsError ? (
+                <p role="alert" className="mt-3 text-[14px] text-white/50">
+                  {commentsError}
+                  {onRetryComments && (
+                    <button type="button" onClick={onRetryComments} className="ml-2 font-semibold text-white underline">
+                      다시 불러오기
+                    </button>
+                  )}
+                </p>
+              ) : (
+                <p className="mt-3 text-[14px] text-white/40">댓글을 불러오는 중…</p>
+              )
+            ) : comments.length === 0 ? (
               <p className="mt-3 text-[14px] text-white/40">첫 댓글로 마음을 보내 주세요</p>
             ) : (
               <ul className="mt-3 space-y-3.5">
@@ -212,7 +237,7 @@ export const EntryViewer = ({
                     {item.isMine && onDeleteComment && (
                       <button
                         type="button"
-                        onClick={() => onDeleteComment(item.id)}
+                        onClick={() => handleDeleteComment(item.id)}
                         className="self-start text-[12px] text-white/40 hover:text-white"
                       >
                         삭제
@@ -242,10 +267,10 @@ export const EntryViewer = ({
             />
             <button
               type="submit"
-              disabled={!comment.trim()}
+              disabled={!comment.trim() || isSendingComment}
               className="rounded-full bg-white px-4 py-3 text-[14px] font-bold text-[#141414] disabled:opacity-40"
             >
-              등록
+              {isSendingComment ? '보내는 중…' : '등록'}
             </button>
           </div>
         </form>

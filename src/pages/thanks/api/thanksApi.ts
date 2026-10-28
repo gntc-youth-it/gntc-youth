@@ -3,6 +3,7 @@ import { uploadToS3 } from '../../../shared/lib'
 import type {
   CreateThanksEntryRequest,
   ReactionEmoji,
+  ThanksCommentsResponse,
   ThanksEntriesResponse,
   ThanksEntry,
   ThanksEntryReactionsResponse,
@@ -26,6 +27,19 @@ export const addReaction = (entryId: number, emoji: ReactionEmoji): Promise<Than
 
 export const removeReaction = (entryId: number, emoji: ReactionEmoji): Promise<ThanksEntryReactionsResponse> =>
   apiRequest<ThanksEntryReactionsResponse>(`/thanks/entries/${entryId}/reactions/${emoji}`, { method: 'DELETE' })
+
+// 댓글은 오래된 순(새 댓글이 아래). 달기·지우기도 그 감사의 댓글 전체를 돌려준다
+export const fetchComments = (entryId: number): Promise<ThanksCommentsResponse> =>
+  apiRequest<ThanksCommentsResponse>(`/thanks/entries/${entryId}/comments`)
+
+export const createComment = (entryId: number, content: string): Promise<ThanksCommentsResponse> =>
+  apiRequest<ThanksCommentsResponse>(`/thanks/entries/${entryId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  })
+
+export const deleteComment = (commentId: number): Promise<ThanksCommentsResponse> =>
+  apiRequest<ThanksCommentsResponse>(`/thanks/comments/${commentId}`, { method: 'DELETE' })
 
 const EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',

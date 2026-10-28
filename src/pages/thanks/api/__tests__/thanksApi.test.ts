@@ -2,8 +2,11 @@ import { apiRequest, getFilePresignedUrl } from '../../../../shared/api'
 import { uploadToS3 } from '../../../../shared/lib'
 import {
   addReaction,
+  createComment,
   createThanksEntry,
+  deleteComment,
   deleteThanksEntry,
+  fetchComments,
   fetchThanksEntries,
   removeReaction,
   uploadEntryMedia,
@@ -58,6 +61,19 @@ describe('thanksApi', () => {
 
     expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/reactions/PRAY', { method: 'PUT' })
     expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/reactions/HEART', { method: 'DELETE' })
+  })
+
+  it('댓글을 불러오고, 달고, 지운다', async () => {
+    await fetchComments(12)
+    await createComment(12, '기도할게요')
+    await deleteComment(7)
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/comments')
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12/comments', {
+      method: 'POST',
+      body: JSON.stringify({ content: '기도할게요' }),
+    })
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/comments/7', { method: 'DELETE' })
   })
 
   it('줄인 사진을 S3에 올리고 파일 번호를 돌려준다', async () => {
