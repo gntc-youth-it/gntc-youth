@@ -18,6 +18,9 @@ import { ThanksHeader } from './ThanksHeader'
 import { ThanksLoginRequired } from './ThanksLoginRequired'
 import { WriteBar } from './WriteBar'
 import { WriteSheet } from './WriteSheet'
+import { DailyProgress } from './DailyProgress'
+import { ThanksMark } from './ThanksBrand'
+import './thanks.css'
 
 interface OverlayState {
   openedFromList?: boolean
@@ -49,7 +52,7 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
 
   const openedEntryId = Number(searchParams.get('entry'))
   const openedEntry = openedEntryId
-    ? logs?.flatMap((log) => log.entries).find((entry) => entry.id === openedEntryId) ?? null
+    ? (logs?.flatMap((log) => log.entries).find((entry) => entry.id === openedEntryId) ?? null)
     : null
   const isWriting = searchParams.get('write') === '1'
 
@@ -131,8 +134,8 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2EFEA]">
-      <main className={`mx-auto max-w-md px-4 ${isToday ? 'pb-36' : 'pb-16'}`}>
+    <div className="thanks-app">
+      <main className={`thanks-shell ${isToday ? 'has-write-bar' : ''}`}>
         <ThanksHeader
           date={date}
           isToday={isToday}
@@ -142,23 +145,65 @@ const ThanksBoard = ({ user }: { user: UserInfo }) => {
           onOpenProfile={() => setProfileSheet('edit')}
           onPrevDate={() => changeDate(shiftMissionDate(date, -1))}
           onNextDate={() => changeDate(shiftMissionDate(date, 1))}
+          onToday={() => changeDate(today)}
         />
 
+        {isToday && logs !== null && (
+          <DailyProgress
+            currentSlot={currentSlot}
+            postedSlots={myLog?.entries.map((entry) => entry.slot) ?? []}
+            onWrite={() => openOverlay('write', '1')}
+          />
+        )}
+
+        <div className="thanks-feed-heading">
+          <h2 className="sr-only">함께 나눈 감사</h2>
+        </div>
+        {error && logs !== null && (
+          <p role="alert" className="thanks-error-inline">
+            새 기록을 불러오지 못했어요.
+            <button type="button" onClick={() => void reload()}>
+              다시 불러오기
+            </button>
+          </p>
+        )}
         {logs === null ? (
           error ? (
-            <p role="alert" className="mt-16 text-center text-[15px] text-[#6B7684]">
-              {error}
-            </p>
+            <div className="thanks-empty">
+              <p role="alert">{error}</p>
+              <button type="button" onClick={() => void reload()} className="thanks-retry">
+                다시 불러오기
+              </button>
+            </div>
           ) : (
-            <p className="mt-16 text-center text-[14px] text-[#8B95A1]">불러오는 중…</p>
+            <div role="status" className="thanks-skeleton">
+              <span className="sr-only">불러오는 중…</span>
+              <div aria-hidden="true" />
+              <div aria-hidden="true" />
+            </div>
           )
         ) : logs.length === 0 ? (
-          <p className="mt-24 text-center text-[44px]" aria-hidden="true">
-            🙏
-          </p>
+          <div className="thanks-empty">
+            <div className="thanks-empty-mark">
+              <ThanksMark size={42} />
+            </div>
+            <h3>{isToday ? '오늘의 첫 감사를 기다려요' : '잠시 쉬어 간 하루예요'}</h3>
+            <p>
+              {isToday
+                ? currentSlot
+                  ? '거창하지 않아도 괜찮아요. 사진 한 장과 짧은 감사로 오늘을 시작해 보세요.'
+                  : '아침 6시, 새로운 감사 기록이 열려요. 그동안 지난날의 감사를 돌아보세요.'
+                : '남겨진 기록은 없지만, 다른 날의 감사는 날짜를 넘겨서 볼 수 있어요.'}
+            </p>
+          </div>
         ) : (
           logs.map((log) => (
-            <LogGroup key={log.author.userId} log={log} now={now} onOpenEntry={(id) => openOverlay('entry', String(id))} />
+            <LogGroup
+              key={log.author.userId}
+              log={log}
+              now={now}
+              onOpenEntry={(id) => openOverlay('entry', String(id))}
+            />
           ))
         )}
       </main>

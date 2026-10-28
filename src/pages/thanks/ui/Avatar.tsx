@@ -3,7 +3,7 @@ import { cn } from '../../../shared/lib'
 import { toMediaSrc } from '../lib/mediaSrc'
 import type { ThanksAuthor } from '../model/types'
 
-const COLORS = ['#FFD3B6', '#C7E9FB', '#CDEFD2', '#FFE7A3', '#E2D4F7', '#FBD0DC']
+const COLORS = ['#FFE0CB', '#DCECF5', '#DDEEDC', '#F8EBC4', '#E9E2F5', '#F5DFE6']
 
 interface AvatarProps {
   author: ThanksAuthor
