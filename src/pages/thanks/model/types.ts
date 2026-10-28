@@ -81,6 +81,8 @@ export const THANKS_ERROR_CODE = {
   SLOT_CLOSED: 6001,
   ALREADY_POSTED: 6002,
   ENTRY_NOT_FOUND: 6003,
+  // 남의 감사 고치기·지우기. 고치기는 쓴 사람 본인만, 지우기는 본인과 MASTER만 된다
+  ENTRY_ACCESS_DENIED: 6004,
   // 남이 올린 파일, 사진·영상이 아닌 파일, 이미 다른 감사에 붙은 파일
   FILE_NOT_ATTACHABLE: 6005,
   COMMENT_NOT_FOUND: 6006,
@@ -88,7 +90,7 @@ export const THANKS_ERROR_CODE = {
   COMMENT_ACCESS_DENIED: 6007,
   // 공통 코드. 감사를 지우면 붙어 있던 파일도 지워져서, 그 fileId를 다시 보내면 이 오류가 난다
   FILE_NOT_FOUND: 3001,
-  // 공통 코드. 댓글이 비었거나 100자를 넘으면 이 오류가 난다
+  // 공통 코드. 감사제목이 비었거나 80자를, 댓글이 비었거나 100자를 넘으면 이 오류가 난다
   INVALID_REQUEST: 1001,
 } as const
 

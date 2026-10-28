@@ -9,6 +9,7 @@ import {
   fetchComments,
   fetchThanksEntries,
   removeReaction,
+  updateThanksEntry,
   uploadEntryMedia,
 } from '../thanksApi'
 
@@ -46,6 +47,15 @@ describe('thanksApi', () => {
     expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries', {
       method: 'POST',
       body: JSON.stringify({ content: '점심 사 준 동기에게 감사', fileId: 31 }),
+    })
+  })
+
+  it('감사제목을 고친다', async () => {
+    await updateThanksEntry(12, '동기와 선배에게 감사')
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/entries/12', {
+      method: 'PATCH',
+      body: JSON.stringify({ content: '동기와 선배에게 감사' }),
     })
   })
 

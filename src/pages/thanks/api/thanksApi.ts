@@ -16,6 +16,10 @@ export const fetchThanksEntries = (date: string): Promise<ThanksEntriesResponse>
 export const createThanksEntry = (data: CreateThanksEntryRequest): Promise<ThanksEntry> =>
   apiRequest<ThanksEntry>('/thanks/entries', { method: 'POST', body: JSON.stringify(data) })
 
+// 감사제목만 고친다. 고친 감사 전체를 돌려주고, 감사제목은 앞뒤 공백을 지운 값이다
+export const updateThanksEntry = (entryId: number, content: string): Promise<ThanksEntry> =>
+  apiRequest<ThanksEntry>(`/thanks/entries/${entryId}`, { method: 'PATCH', body: JSON.stringify({ content }) })
+
 // 서버가 붙어 있던 사진 파일도 같이 지운다
 export const deleteThanksEntry = async (entryId: number): Promise<void> => {
   await apiRequest<void>(`/thanks/entries/${entryId}`, { method: 'DELETE' })

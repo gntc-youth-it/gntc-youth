@@ -2,7 +2,14 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { patchProfile } from '../../../../features/edit-profile'
-import { addReaction, createComment, deleteComment, fetchComments, fetchThanksEntries } from '../../api/thanksApi'
+import {
+  addReaction,
+  createComment,
+  deleteComment,
+  fetchComments,
+  fetchThanksEntries,
+  updateThanksEntry,
+} from '../../api/thanksApi'
 import type { ThanksEntry } from '../../model/types'
 import { ThanksPage } from '../ThanksPage'
 
@@ -40,6 +47,7 @@ const withPhoto = { id: 1, name: '정은혜', profileImagePath: 'uploads/me.webp
 jest.mock('../../api/thanksApi', () => ({
   fetchThanksEntries: jest.fn(),
   createThanksEntry: jest.fn(),
+  updateThanksEntry: jest.fn(),
   deleteThanksEntry: jest.fn(),
   uploadEntryMedia: jest.fn(),
   addReaction: jest.fn(),
@@ -54,6 +62,7 @@ const mockAddReaction = addReaction as jest.MockedFunction<typeof addReaction>
 const mockFetchComments = fetchComments as jest.MockedFunction<typeof fetchComments>
 const mockCreateComment = createComment as jest.MockedFunction<typeof createComment>
 const mockDeleteComment = deleteComment as jest.MockedFunction<typeof deleteComment>
+const mockUpdateThanksEntry = updateThanksEntry as jest.MockedFunction<typeof updateThanksEntry>
 
 const entry = (id: number, userId: number, name: string, createdAt: string, isMine = false): ThanksEntry => ({
   id,
@@ -324,5 +333,73 @@ describe('ThanksPage', () => {
 
     await waitFor(() => expect(within(section).queryByRole('alert')).not.toBeInTheDocument())
     expect(within(section).getByText('함께 기뻐해요')).toBeInTheDocument()
+  })
+
+  it('내 감사를 크게 보고 감사제목을 고치면 크게 보기와 목록 카드가 같이 바뀐다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    const mine = entry(1, 1, '정은혜', '2026-11-08T22:15:00', true)
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [mine] })
+    let respond: (value: ThanksEntry) => void = () => undefined
+    mockUpdateThanksEntry.mockReturnValue(
+      new Promise((done) => {
+        respond = done
+      })
+    )
+    render(<ThanksPage />)
+
+    expect(await screen.findAllByText('정은혜의 감사')).toHaveLength(2)
+
+    // 그대로 저장하면 보내지 않고 닫는다
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    expect(mockUpdateThanksEntry).not.toHaveBeenCalled()
+    expect(screen.queryByRole('textbox', { name: '감사제목 고치기' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    const textarea = screen.getByRole('textbox', { name: '감사제목 고치기' })
+    expect(textarea).toHaveValue('정은혜의 감사')
+    await user.clear(textarea)
+    await user.type(textarea, ' 동기와 선배에게 감사 ')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    expect(mockUpdateThanksEntry).toHaveBeenCalledWith(1, '동기와 선배에게 감사')
+    // 저장하는 동안에는 다시 누를 수 없다
+    expect(screen.getByRole('button', { name: '저장하는 중…' })).toBeDisabled()
+
+    await act(async () => {
+      respond({ ...mine, content: '동기와 선배에게 감사' })
+    })
+
+    expect(screen.queryByRole('textbox', { name: '감사제목 고치기' })).not.toBeInTheDocument()
+    // 뒤에 깔린 목록 카드도 같이 바뀐다
+    expect(screen.getAllByText('동기와 선배에게 감사')).toHaveLength(2)
+    expect(screen.queryByText('정은혜의 감사')).not.toBeInTheDocument()
+  })
+
+  it('감사제목을 고치지 못하면 알리고, 고친 글을 그대로 둔다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    const alert = jest.spyOn(window, 'alert').mockImplementation(() => undefined)
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({
+      date: '2026-11-09',
+      entries: [entry(1, 1, '정은혜', '2026-11-08T22:15:00', true)],
+    })
+    mockUpdateThanksEntry.mockRejectedValue(new Error('offline'))
+    render(<ThanksPage />)
+
+    await user.click(await screen.findByRole('button', { name: '수정' }))
+    const textarea = screen.getByRole('textbox', { name: '감사제목 고치기' })
+    await user.clear(textarea)
+    await user.type(textarea, '동기와 선배에게 감사')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    expect(await screen.findByRole('button', { name: '저장' })).toBeEnabled()
+    expect(alert).toHaveBeenCalledWith('감사제목을 고치지 못했어요. 잠시 후 다시 해 주세요.')
+    expect(screen.getByRole('textbox', { name: '감사제목 고치기' })).toHaveValue('동기와 선배에게 감사')
+    // 목록 카드도 그대로다
+    expect(screen.getByText('정은혜의 감사')).toBeInTheDocument()
   })
 })
