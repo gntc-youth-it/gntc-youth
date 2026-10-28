@@ -108,7 +108,7 @@ describe('useReactions', () => {
     })
   })
 
-  it('다른 반응이 아직 가는 중이면 서버 값 위에 그 반응을 누른 대로 얹는다', async () => {
+  it('한 감사의 반응은 하나씩 차례로 보내고, 차례를 기다리는 반응은 서버 값 위에 누른 대로 얹는다', async () => {
     const pray = deferred()
     const heart = deferred()
     mockAddReaction.mockImplementation((_id, emoji) => (emoji === 'PRAY' ? pray.promise : heart.promise))
@@ -123,7 +123,11 @@ describe('useReactions', () => {
       reactingHeart = result.current.react(entry, 'HEART')
     })
 
-    // 🙏 응답에는 아직 ❤️가 없지만 화면에는 누른 ❤️가 남아 있어야 한다
+    // ❤️는 🙏 응답을 받을 때까지 보내지 않는다
+    expect(mockAddReaction).toHaveBeenCalledTimes(1)
+    expect(mockAddReaction).toHaveBeenLastCalledWith(12, 'PRAY')
+
+    // 🙏 응답에는 아직 ❤️가 없지만, 차례를 기다리는 ❤️는 화면에 누른 대로 남는다
     await act(async () => {
       pray.resolve({ entryId: 12, reactions: [{ emoji: 'PRAY', count: 3, reactedByMe: true }] })
       await reactingPray
@@ -132,18 +136,44 @@ describe('useReactions', () => {
       { emoji: 'PRAY', count: 3, reactedByMe: true },
       { emoji: 'HEART', count: 1, reactedByMe: true },
     ])
+    expect(mockAddReaction).toHaveBeenCalledTimes(2)
+    expect(mockAddReaction).toHaveBeenLastCalledWith(12, 'HEART')
 
     await act(async () => {
       heart.resolve({
         entryId: 12,
         reactions: [
           { emoji: 'PRAY', count: 3, reactedByMe: true },
-          { emoji: 'HEART', count: 1, reactedByMe: true },
+          { emoji: 'HEART', count: 2, reactedByMe: true },
         ],
       })
       await reactingHeart
     })
-    expect(entry.reactions).toHaveLength(2)
+    expect(entry.reactions).toEqual([
+      { emoji: 'PRAY', count: 3, reactedByMe: true },
+      { emoji: 'HEART', count: 2, reactedByMe: true },
+    ])
+  })
+
+  it('다른 감사의 반응은 기다리지 않고 바로 보낸다', async () => {
+    const first = deferred()
+    mockAddReaction.mockReturnValueOnce(first.promise).mockResolvedValueOnce({ entryId: 99, reactions: [] })
+    const other: ThanksEntry = { ...makeEntry([]), id: 99 }
+    const result = renderReactions()
+
+    let reacting: Promise<void> = Promise.resolve()
+    act(() => {
+      reacting = result.current.react(entry, 'PRAY')
+    })
+    await act(async () => {
+      await result.current.react(other, 'PRAY')
+    })
+
+    expect(mockAddReaction).toHaveBeenCalledWith(99, 'PRAY')
+    await act(async () => {
+      first.resolve({ entryId: 12, reactions: [{ emoji: 'PRAY', count: 3, reactedByMe: true }] })
+      await reacting
+    })
   })
 
   it('보내지 못하면 되돌리고 알린다', async () => {
@@ -166,15 +196,28 @@ describe('useReactions', () => {
     expect(onError).toHaveBeenCalledWith('반응을 보내지 못했어요. 잠시 후 다시 눌러 주세요.')
   })
 
-  it('이미 지워진 감사(6003)면 목록에서 빼도록 알린다', async () => {
-    mockAddReaction.mockRejectedValue(new HttpError(404, '감사 기록을 찾을 수 없어요.', 6003))
+  it('이미 지워진 감사(6003)면 목록에서 빼도록 한 번만 알리고, 차례를 기다리던 반응은 보내지 않는다', async () => {
+    const pray = deferred()
+    mockAddReaction.mockReturnValueOnce(pray.promise)
     const result = renderReactions()
 
+    let reactingPray: Promise<void> = Promise.resolve()
+    let reactingHeart: Promise<void> = Promise.resolve()
+    act(() => {
+      reactingPray = result.current.react(entry, 'PRAY')
+    })
+    act(() => {
+      reactingHeart = result.current.react(entry, 'HEART')
+    })
     await act(async () => {
-      await result.current.react(entry, 'PRAY')
+      pray.reject(new HttpError(404, '감사 기록을 찾을 수 없어요.', 6003))
+      await reactingPray
+      await reactingHeart
     })
 
+    expect(onEntryGone).toHaveBeenCalledTimes(1)
     expect(onEntryGone).toHaveBeenCalledWith(12)
+    expect(mockAddReaction).toHaveBeenCalledTimes(1)
     expect(onError).not.toHaveBeenCalled()
   })
 })
