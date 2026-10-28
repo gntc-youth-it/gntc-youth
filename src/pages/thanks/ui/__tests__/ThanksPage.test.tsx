@@ -173,6 +173,36 @@ describe('ThanksPage', () => {
     expect(screen.getByText(/저녁 감사는 18:00부터/)).toBeInTheDocument()
   })
 
+  it('내 기록 현황에서 지금 열린 시간의 작성을 시작할 수 있다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockFetchThanksEntries.mockResolvedValue({
+      date: '2026-11-09',
+      entries: [entry(1, 1, '정은혜', '2026-11-08T22:15:00', true)],
+    })
+    render(<ThanksPage />)
+
+    const progress = await screen.findByLabelText('나의 오늘 기록')
+    expect(within(progress).getByText('기록 완료')).toBeInTheDocument()
+    expect(within(progress).getByText('18:00부터')).toBeInTheDocument()
+    await user.click(within(progress).getByRole('button', { name: '오후 감사 기록하기' }))
+    expect(mockNavigate).toHaveBeenCalledWith({ search: 'write=1' }, { state: { openedFromList: true } })
+  })
+
+  it('목록을 불러오지 못했을 때 화면에서 재시도해 복구한다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockFetchThanksEntries.mockRejectedValueOnce(new Error('offline'))
+    render(<ThanksPage />)
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
+
+    await user.click(screen.getByRole('button', { name: '다시 불러오기' }))
+
+    expect(await screen.findByText('오늘의 첫 감사를 기다려요')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('프로필 사진이 없으면 들어왔을 때 사진과 이름을 정해 달라고 한다', async () => {
     mockUser = { id: 1, name: '정은혜' }
     mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
@@ -287,7 +317,7 @@ describe('ThanksPage', () => {
     await user.click(screen.getByRole('button', { name: '등록' }))
 
     expect(mockCreateComment).toHaveBeenCalledWith(1, '기도할게요 🙏')
-    expect(await screen.findByText('댓글 1')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '댓글 1' })).toBeInTheDocument()
     expect(input).toHaveValue('')
     // 뒤에 깔린 목록 카드에도 최근 댓글 말풍선이 붙는다
     expect(screen.getAllByText('기도할게요 🙏')).toHaveLength(2)
