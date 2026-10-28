@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { getReactionEmoji } from '../model/reactions'
+import { getReactionEmoji, REACTIONS } from '../model/reactions'
 import { formatKstTime, getSlotInfo } from '../model/slots'
 import type { ThanksEntry, ThanksMedia } from '../model/types'
 import { Avatar } from './Avatar'
@@ -49,16 +49,27 @@ export const EntryCard = ({ entry, onOpen }: EntryCardProps) => {
     .filter((reaction) => reaction.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 3)
+  // 버튼의 aria-label은 자식 내용을 대신하므로, 카드에 표시하는 정보도 함께 읽어 준다.
+  const reactionSummary = reactions
+    .map((reaction) => {
+      const label = REACTIONS.find((option) => option.id === reaction.emoji)?.label ?? '반응'
+      return `${label} ${reaction.count}개${reaction.reactedByMe ? ' (내 반응)' : ''}`
+    })
+    .join(', ')
+  const accessibleName = [
+    `${entry.author.name} ${slotLabel} 감사 ${time}: ${entry.content}`,
+    reactionSummary && `반응: ${reactionSummary}`,
+    `댓글 ${entry.commentCount}개`,
+    entry.latestComment && `최근 댓글, ${entry.latestComment.author.name}: ${entry.latestComment.content}`,
+    entry.media.type === 'VIDEO' && '소리 없이 재생되는 영상',
+  ]
+    .filter(Boolean)
+    .join('. ')
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry.id)}
-      aria-label={`${entry.author.name} ${slotLabel} 감사 ${time}: ${entry.content}`}
-      className="thanks-entry-card"
-    >
+    <button type="button" onClick={() => onOpen(entry.id)} aria-label={accessibleName} className="thanks-entry-card">
       <EntryCardFace media={entry.media} slotLabel={slotLabel} time={time} content={entry.content}>
         {reactions.length > 0 && (
-          <div className="thanks-card-reactions" aria-label="반응">
+          <div className="thanks-card-reactions" aria-hidden="true">
             {reactions.map((reaction) => (
               <span key={reaction.emoji} className={reaction.reactedByMe ? 'is-reacted' : ''}>
                 {getReactionEmoji(reaction.emoji)} <span>{reaction.count}</span>
@@ -73,7 +84,7 @@ export const EntryCard = ({ entry, onOpen }: EntryCardProps) => {
           </div>
         )}
         {entry.media.type === 'VIDEO' && (
-          <span className="thanks-video-label" aria-label="소리 없이 재생 중">
+          <span className="thanks-video-label" aria-hidden="true">
             <svg
               width="15"
               height="15"
@@ -89,7 +100,6 @@ export const EntryCard = ({ entry, onOpen }: EntryCardProps) => {
             </svg>
           </span>
         )}
-        <span className="sr-only">댓글 {entry.commentCount}</span>
       </EntryCardFace>
     </button>
   )

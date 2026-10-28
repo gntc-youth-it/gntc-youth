@@ -1,6 +1,6 @@
 import { SLOTS, formatKstTime, formatSlotDeadline, getSlotInfo, getSlotRange } from '../model/slots'
 import type { Slot } from '../model/types'
-import { CheckIcon, PlusIcon } from './ThanksIcons'
+import { CheckIcon, PlusIcon, SlotIcon } from './ThanksIcons'
 
 interface WriteBarProps {
   today: string
@@ -18,12 +18,12 @@ const nextSlotNotice = (today: string, slot: Slot | null): string => {
 export const WriteBar = ({ today, currentSlot, hasPostedCurrentSlot, onWrite }: WriteBarProps) => (
   <div className="thanks-write-bar">
     {currentSlot === null || hasPostedCurrentSlot ? (
-      <div className="thanks-write-complete">
-        <span className="thanks-complete-icon">
-          <CheckIcon />
+      <div className="thanks-write-complete" role="status">
+        <span className={currentSlot === null ? 'thanks-closed-icon' : 'thanks-complete-icon'}>
+          {currentSlot === null ? <SlotIcon slot="EVENING" /> : <CheckIcon />}
         </span>
         <div>
-          <p>{currentSlot ? `${getSlotInfo(currentSlot).label} 감사 완료` : '오늘 감사는 끝났어요'}</p>
+          <p>{currentSlot ? `${getSlotInfo(currentSlot).label} 감사 완료` : '지금은 기록 시간이 아니에요'}</p>
           <span>{nextSlotNotice(today, currentSlot)}</span>
         </div>
       </div>

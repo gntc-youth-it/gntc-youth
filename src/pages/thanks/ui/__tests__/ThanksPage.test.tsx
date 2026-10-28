@@ -170,7 +170,27 @@ describe('ThanksPage', () => {
     render(<ThanksPage />)
 
     expect(await screen.findByText(/오후 감사 완료/)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('오후 감사 완료')
     expect(screen.getByText(/저녁 감사는 18:00부터/)).toBeInTheDocument()
+  })
+
+  it.each([false, true])('자정 이후에는 기록 유무(%s)와 관계없이 마감 안내를 보여 준다', async (hasPosted) => {
+    jest.setSystemTime(new Date('2026-11-10T01:00:00+09:00'))
+    mockUser = withPhoto
+    mockFetchThanksEntries.mockResolvedValue({
+      date: '2026-11-09',
+      entries: hasPosted
+        ? [{ ...entry(3, 1, '정은혜', '2026-11-09T10:00:00', true), slot: 'EVENING' }]
+        : [],
+    })
+    render(<ThanksPage />)
+
+    expect(await screen.findByText('지금은 기록 시간이 아니에요')).toBeInTheDocument()
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent('아침 감사는 06:00부터')
+    expect(status).not.toHaveTextContent('완료')
+    expect(screen.queryByRole('button', { name: /감사 남기기|감사 기록하기/ })).not.toBeInTheDocument()
+    expect(mockFetchThanksEntries).toHaveBeenCalledWith('2026-11-09')
   })
 
   it('내 기록 현황에서 지금 열린 시간의 작성을 시작할 수 있다', async () => {

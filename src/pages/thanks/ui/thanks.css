@@ -416,7 +416,8 @@
   padding: 10px 16px;
   border-radius: 28px;
 }
-.thanks-complete-icon {
+.thanks-complete-icon,
+.thanks-closed-icon {
   display: grid;
   place-items: center;
   width: 30px;
@@ -424,6 +425,10 @@
   border-radius: 50%;
   background: #edf3e9;
   color: #516c58;
+}
+.thanks-closed-icon {
+  background: #f0f2f4;
+  color: var(--thanks-muted);
 }
 .thanks-write-complete p {
   font-size: 13px;
