@@ -207,21 +207,23 @@ export const EntryViewer = ({
         {canComment && (
           <section className="mt-7" aria-label="댓글">
             <h2 className="text-[14px] font-bold text-white/70">댓글 {comments?.length ?? entry.commentCount}</h2>
-            {comments === null ? (
-              commentsError ? (
-                <p role="alert" className="mt-3 text-[14px] text-white/50">
-                  {commentsError}
-                  {onRetryComments && (
-                    <button type="button" onClick={onRetryComments} className="ml-2 font-semibold text-white underline">
-                      다시 불러오기
-                    </button>
-                  )}
+            {/* 받아 둔 댓글이 있어도 다시 불러오지 못하면 알린다. 받아 둔 댓글은 그대로 보여 준다 */}
+            {commentsError && (
+              <p role="alert" className="mt-3 text-[14px] text-white/50">
+                {commentsError}
+                {onRetryComments && (
+                  <button type="button" onClick={onRetryComments} className="ml-2 font-semibold text-white underline">
+                    다시 불러오기
+                  </button>
+                )}
+              </p>
+            )}
+            {!comments || comments.length === 0 ? (
+              !commentsError && (
+                <p className="mt-3 text-[14px] text-white/40">
+                  {comments ? '첫 댓글로 마음을 보내 주세요' : '댓글을 불러오는 중…'}
                 </p>
-              ) : (
-                <p className="mt-3 text-[14px] text-white/40">댓글을 불러오는 중…</p>
               )
-            ) : comments.length === 0 ? (
-              <p className="mt-3 text-[14px] text-white/40">첫 댓글로 마음을 보내 주세요</p>
             ) : (
               <ul className="mt-3 space-y-3.5">
                 {comments.map((item) => (

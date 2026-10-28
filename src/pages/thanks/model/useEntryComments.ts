@@ -16,6 +16,20 @@ const POLL_INTERVAL_MS = 30 * 1000
 
 const hasCode = (error: unknown, code: number) => error instanceof HttpError && error.code === code
 
+// 한 감사의 댓글 달기·지우기는 하나씩 차례로 보낸다. 응답이 모두 그 감사의 댓글 전체라, 동시에 보내면
+// 먼저 처리된 요청의 응답이 늦게 도착해 더 새로운 목록을 덮을 수 있다(지운 댓글이 되살아나 보임).
+// 앞 요청이 실패해도 다음 요청은 보낸다
+const sendInOrder = <T>(queues: Map<number, Promise<unknown>>, entryId: number, send: () => Promise<T>) => {
+  const previous = queues.get(entryId)
+  const request = previous ? previous.then(send, send) : send()
+  queues.set(entryId, request)
+  const forget = () => {
+    if (queues.get(entryId) === request) queues.delete(entryId)
+  }
+  void request.then(forget, forget)
+  return request
+}
+
 // 크게 보기에서 연 감사의 댓글. 보고 있는 동안 30초마다 새로 불러오고,
 // 달거나 지우면 서버가 돌려준 댓글 전체로 바꾸면서 목록 카드의 댓글 수와 최근 댓글도 맞춘다
 export const useEntryComments = (entryId: number | null, { updateEntry, onEntryGone, onError }: UseEntryCommentsOptions) => {
@@ -24,14 +38,19 @@ export const useEntryComments = (entryId: number | null, { updateEntry, onEntryG
   const [error, setError] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
   const sending = useRef(false)
-  // 댓글을 달거나 지우면 그 전에 보낸 불러오기 응답은 버린다. 늦게 와서 방금 바뀐 목록을 덮지 않게
+  // 불러오기 응답이 왔을 때 그사이 다시 불러왔거나 달고 지운 결과를 받았으면 그 응답은 버린다
   const requestSeq = useRef(0)
+  // 감사마다 마지막으로 줄 세운 댓글 달기·지우기
+  const queues = useRef(new Map<number, Promise<unknown>>())
   const currentEntryId = useRef(entryId)
   currentEntryId.current = entryId
 
   const apply = useCallback(
     (id: number, list: ThanksComment[]) => {
-      if (currentEntryId.current === id) setComments(list)
+      if (currentEntryId.current === id) {
+        setComments(list)
+        setError(null)
+      }
       const latest = list[list.length - 1]
       updateEntry(id, (entry) => ({
         ...entry,
@@ -42,13 +61,22 @@ export const useEntryComments = (entryId: number | null, { updateEntry, onEntryG
     [updateEntry]
   )
 
+  // 달거나 지운 결과. 그사이 보낸 불러오기는 그 전 목록을 읽었을 수 있어 늦게 와서 덮지 않게 버린다.
+  // 다른 감사를 열었으면 그 감사의 불러오기는 그대로 두고 목록 카드만 맞춘다
+  const applyChange = useCallback(
+    (id: number, list: ThanksComment[]) => {
+      if (currentEntryId.current === id) requestSeq.current += 1
+      apply(id, list)
+    },
+    [apply]
+  )
+
   const load = useCallback(async () => {
     if (entryId === null) return
     const seq = ++requestSeq.current
     try {
       const { comments: list } = await fetchComments(entryId)
       if (seq !== requestSeq.current) return
-      setError(null)
       apply(entryId, list)
     } catch (loadError) {
       if (seq !== requestSeq.current) return
@@ -72,16 +100,16 @@ export const useEntryComments = (entryId: number | null, { updateEntry, onEntryG
   const add = useCallback(
     async (content: string): Promise<boolean> => {
       if (entryId === null || sending.current) return false
+      const id = entryId
       sending.current = true
       setIsSending(true)
-      requestSeq.current += 1
       try {
-        const { comments: list } = await createComment(entryId, content)
-        apply(entryId, list)
+        const { comments: list } = await sendInOrder(queues.current, id, () => createComment(id, content))
+        applyChange(id, list)
         return true
       } catch (addError) {
         if (hasCode(addError, THANKS_ERROR_CODE.ENTRY_NOT_FOUND)) {
-          onEntryGone(entryId)
+          onEntryGone(id)
           return false
         }
         onError(
@@ -95,19 +123,20 @@ export const useEntryComments = (entryId: number | null, { updateEntry, onEntryG
         setIsSending(false)
       }
     },
-    [apply, entryId, onEntryGone, onError]
+    [applyChange, entryId, onEntryGone, onError]
   )
 
   const remove = useCallback(
     async (commentId: number) => {
-      requestSeq.current += 1
+      if (entryId === null) return
+      const openedId = entryId
       try {
-        const { entryId: id, comments: list } = await deleteComment(commentId)
-        apply(id, list)
+        const { entryId: id, comments: list } = await sendInOrder(queues.current, openedId, () => deleteComment(commentId))
+        applyChange(id, list)
       } catch (removeError) {
-        // 다른 기기에서 이미 지운 댓글이면 목록만 새로 불러온다
+        // 다른 기기에서 이미 지운 댓글이면 목록만 새로 불러온다. 그사이 다른 감사를 열었으면 그냥 둔다
         if (hasCode(removeError, THANKS_ERROR_CODE.COMMENT_NOT_FOUND)) {
-          void load()
+          if (currentEntryId.current === openedId) void load()
           return
         }
         onError(
@@ -117,7 +146,7 @@ export const useEntryComments = (entryId: number | null, { updateEntry, onEntryG
         )
       }
     },
-    [apply, load, onError]
+    [applyChange, entryId, load, onError]
   )
 
   return { comments, error, isSending, add, remove, reload: load }

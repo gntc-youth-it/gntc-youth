@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { patchProfile } from '../../../../features/edit-profile'
@@ -288,5 +288,41 @@ describe('ThanksPage', () => {
     expect(mockDeleteComment).toHaveBeenCalledWith(7)
     expect(await screen.findByText('첫 댓글로 마음을 보내 주세요')).toBeInTheDocument()
     expect(screen.queryByText('기도할게요 🙏')).not.toBeInTheDocument()
+  })
+
+  it('댓글을 다시 불러오지 못하면 보던 댓글은 그대로 두고 안내와 [다시 불러오기]를 띄운다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [entry(1, 2, '김하늘', '2026-11-08T22:15:00')] })
+    mockFetchComments.mockResolvedValue({
+      entryId: 1,
+      comments: [
+        {
+          id: 7,
+          author: { userId: 3, name: '이서준', profileImageUrl: null },
+          content: '함께 기뻐해요',
+          isMine: false,
+          createdAt: '2026-11-09T04:19:00',
+        },
+      ],
+    })
+    render(<ThanksPage />)
+    const section = await screen.findByRole('region', { name: '댓글' })
+    expect(await within(section).findByText('함께 기뻐해요')).toBeInTheDocument()
+
+    // 30초 뒤에 다시 불러오다 실패한다
+    mockFetchComments.mockRejectedValueOnce(new Error('offline'))
+    await act(async () => {
+      jest.advanceTimersByTime(30 * 1000)
+    })
+
+    expect(await within(section).findByRole('alert')).toHaveTextContent('댓글을 불러오지 못했어요.')
+    expect(within(section).getByText('함께 기뻐해요')).toBeInTheDocument()
+
+    await user.click(within(section).getByRole('button', { name: '다시 불러오기' }))
+
+    await waitFor(() => expect(within(section).queryByRole('alert')).not.toBeInTheDocument())
+    expect(within(section).getByText('함께 기뻐해요')).toBeInTheDocument()
   })
 })
