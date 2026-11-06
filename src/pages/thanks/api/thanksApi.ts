@@ -3,11 +3,19 @@ import { uploadToS3 } from '../../../shared/lib'
 import type {
   CreateThanksEntryRequest,
   ReactionEmoji,
+  ThanksCellsResponse,
   ThanksCommentsResponse,
   ThanksEntriesResponse,
   ThanksEntry,
   ThanksEntryReactionsResponse,
 } from '../model/types'
+
+// 구역 목록과 내가 고른 구역
+export const fetchCells = (): Promise<ThanksCellsResponse> => apiRequest<ThanksCellsResponse>('/thanks/cells')
+
+// 내 구역을 정한다. 다시 보내면 바뀌고, 목록과 내 구역을 돌려준다
+export const chooseCell = (cellId: number): Promise<ThanksCellsResponse> =>
+  apiRequest<ThanksCellsResponse>('/thanks/my-cell', { method: 'PUT', body: JSON.stringify({ cellId }) })
 
 export const fetchThanksEntries = (date: string): Promise<ThanksEntriesResponse> =>
   apiRequest<ThanksEntriesResponse>(`/thanks/entries?date=${encodeURIComponent(date)}`)

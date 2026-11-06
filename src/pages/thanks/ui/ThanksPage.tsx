@@ -11,6 +11,7 @@ import { useEntryEdit } from '../model/useEntryEdit'
 import { useNow } from '../model/useNow'
 import { useReactions } from '../model/useReactions'
 import { useThanksLogs } from '../model/useThanksLogs'
+import { CellGate } from './CellGate'
 import { EntryViewer } from './EntryViewer'
 import { LogGroup } from './LogGroup'
 import { ProfileSheet } from './ProfileSheet'
@@ -29,7 +30,11 @@ interface OverlayState {
 export const ThanksPage = () => {
   const user = useCurrentUser()
   if (!user) return <ThanksLoginRequired />
-  return <ThanksBoard user={user} />
+  return (
+    <CellGate key={user.id}>
+      <ThanksBoard user={user} />
+    </CellGate>
+  )
 }
 
 const ThanksBoard = ({ user }: { user: UserInfo }) => {

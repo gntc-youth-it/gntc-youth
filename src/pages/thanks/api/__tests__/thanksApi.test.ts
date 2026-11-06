@@ -2,10 +2,12 @@ import { apiRequest, getFilePresignedUrl } from '../../../../shared/api'
 import { uploadToS3 } from '../../../../shared/lib'
 import {
   addReaction,
+  chooseCell,
   createComment,
   createThanksEntry,
   deleteComment,
   deleteThanksEntry,
+  fetchCells,
   fetchComments,
   fetchThanksEntries,
   removeReaction,
@@ -33,6 +35,17 @@ beforeEach(() => {
 })
 
 describe('thanksApi', () => {
+  it('구역 목록을 불러오고, 내 구역을 정한다', async () => {
+    await fetchCells()
+    await chooseCell(3)
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/cells')
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/my-cell', {
+      method: 'PUT',
+      body: JSON.stringify({ cellId: 3 }),
+    })
+  })
+
   it('그날 기록을 날짜로 불러온다', async () => {
     mockApiRequest.mockResolvedValue({ date: '2026-11-09', entries: [] })
 
