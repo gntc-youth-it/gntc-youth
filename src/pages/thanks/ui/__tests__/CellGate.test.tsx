@@ -95,7 +95,7 @@ describe('CellGate', () => {
     await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 0))
   })
 
-  it('들어가는 동안에는 다시 누를 수 없다', async () => {
+  it('들어가는 동안에는 다시 누르거나 다른 구역을 고를 수 없다', async () => {
     const user = userEvent.setup()
     let respond: (value: ThanksCellsResponse) => void = () => undefined
     mockChooseCell.mockReturnValue(
@@ -109,6 +109,7 @@ describe('CellGate', () => {
     await user.click(screen.getByRole('button', { name: '1구역 들어가기' }))
 
     expect(screen.getByRole('button', { name: '들어가는 중…' })).toBeDisabled()
+    expect(screen.getByRole('radio', { name: '2구역' })).toBeDisabled()
 
     await act(async () => {
       respond({ cells, myCellId: 1 })
@@ -126,6 +127,7 @@ describe('CellGate', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('구역을 저장하지 못했어요. 잠시 후 다시 눌러 주세요.')
     expect(screen.getByRole('radio', { name: '2구역' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: '1구역' })).toBeEnabled()
     expect(screen.getByRole('button', { name: '2구역 들어가기' })).toBeEnabled()
     expect(screen.queryByText('감사로그')).not.toBeInTheDocument()
   })
@@ -142,6 +144,25 @@ describe('CellGate', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('이 구역은 고를 수 없어요. 다시 골라 주세요.')
     await waitFor(() => expect(screen.queryByRole('radio', { name: '2구역' })).not.toBeInTheDocument())
     expect(screen.getByRole('button', { name: '구역을 골라 주세요' })).toBeDisabled()
+  })
+
+  it('고른 구역이 없어졌는데 새 목록도 받지 못하면, 보던 목록을 두고 다시 불러올 수 있다', async () => {
+    const user = userEvent.setup()
+    mockChooseCell.mockRejectedValue(new HttpError(404, '해당 구역이 존재하지 않습니다.', 1201))
+    renderGate()
+
+    await user.click(await screen.findByRole('radio', { name: '2구역' }))
+    mockFetchCells.mockRejectedValueOnce(new Error('offline'))
+    await user.click(screen.getByRole('button', { name: '2구역 들어가기' }))
+
+    expect(await screen.findByText('구역 목록을 불러오지 못했어요.')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: '1구역' })).toBeInTheDocument()
+
+    mockFetchCells.mockResolvedValue({ cells: [cells[0]], myCellId: null })
+    await user.click(screen.getByRole('button', { name: '다시 불러오기' }))
+
+    await waitFor(() => expect(screen.queryByRole('radio', { name: '2구역' })).not.toBeInTheDocument())
+    expect(screen.queryByText('구역 목록을 불러오지 못했어요.')).not.toBeInTheDocument()
   })
 
   it('목록을 불러오지 못하면 다시 불러올 수 있다', async () => {

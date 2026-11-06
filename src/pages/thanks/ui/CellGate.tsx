@@ -27,11 +27,14 @@ interface CellPickerProps {
   cells: ThanksCell[]
   isSaving: boolean
   error: string | null
+  // 없어진 구역을 골라 목록을 새로 받다가 실패한 경우. 보던 목록은 그대로 둔다
+  loadError: string | null
+  onReload: () => void
   onChoose: (cellId: number) => Promise<boolean>
 }
 
 // 잘못 고르면 취합이 틀어지므로, 고른 구역을 버튼에서 한 번 더 보여 주고 눌러야 들어간다
-const CellPicker = ({ cells, isSaving, error, onChoose }: CellPickerProps) => {
+const CellPicker = ({ cells, isSaving, error, loadError, onReload, onChoose }: CellPickerProps) => {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   // 목록을 새로 받아 고른 구역이 없어졌으면 고르지 않은 것으로 본다
   const selected = cells.find((cell) => cell.id === selectedId)
@@ -59,6 +62,8 @@ const CellPicker = ({ cells, isSaving, error, onChoose }: CellPickerProps) => {
               name="thanks-cell"
               checked={cell.id === selectedId}
               onChange={() => setSelectedId(cell.id)}
+              // 저장하는 동안 다른 구역을 누르면 화면과 저장된 구역이 달라진다
+              disabled={isSaving}
               className="sr-only"
             />
             <span className="thanks-cell-face">
@@ -74,6 +79,14 @@ const CellPicker = ({ cells, isSaving, error, onChoose }: CellPickerProps) => {
         {error && (
           <p role="alert" className="thanks-cell-error">
             {error}
+          </p>
+        )}
+        {loadError && (
+          <p role="alert" className="thanks-cell-error">
+            {loadError}
+            <button type="button" onClick={onReload}>
+              다시 불러오기
+            </button>
           </p>
         )}
         <button type="button" onClick={handleEnter} disabled={!selected || isSaving} className="thanks-write-button">
@@ -125,5 +138,14 @@ export const CellGate = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  return <CellPicker cells={cells} isSaving={isSaving} error={saveError} onChoose={choose} />
+  return (
+    <CellPicker
+      cells={cells}
+      isSaving={isSaving}
+      error={saveError}
+      loadError={loadError}
+      onReload={() => void reload()}
+      onChoose={choose}
+    />
+  )
 }

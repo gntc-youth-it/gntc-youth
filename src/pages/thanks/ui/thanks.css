@@ -645,6 +645,11 @@
   text-align: center;
   word-break: keep-all;
 }
+.thanks-cell-error button {
+  margin-left: 8px;
+  min-height: 44px;
+  text-decoration: underline;
+}
 .thanks-write-button:disabled {
   background: #e4e7e8;
   color: #535c65;
