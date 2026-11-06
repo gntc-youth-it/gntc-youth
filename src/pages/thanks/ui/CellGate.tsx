@@ -97,11 +97,18 @@ const CellPicker = ({ cells, isSaving, error, loadError, onReload, onChoose }: C
   )
 }
 
+interface CellGateProps {
+  // 구역 목록이나 내 구역이 필요한 화면은 함수로 받는다
+  children: ReactNode | ((cells: ThanksCell[], myCellId: number) => ReactNode)
+}
+
 // 구역을 고른 사람만 감사로그에 들어간다. 프로필 사진·이름 안내도 구역을 고른 뒤에 뜬다
-export const CellGate = ({ children }: { children: ReactNode }) => {
+export const CellGate = ({ children }: CellGateProps) => {
   const { cells, myCellId, loadError, saveError, isSaving, reload, choose } = useMyCell()
 
-  if (myCellId !== null) return <>{children}</>
+  if (cells !== null && myCellId !== null) {
+    return <>{typeof children === 'function' ? children(cells, myCellId) : children}</>
+  }
 
   if (cells === null) {
     return (

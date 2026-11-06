@@ -61,6 +61,21 @@ describe('CellGate', () => {
     expect(screen.getByText('감사로그')).toBeInTheDocument()
   })
 
+  it('구역 목록과 내 구역이 필요한 화면에는 함수로 넘겨 준다', async () => {
+    mockFetchCells.mockResolvedValue({ cells, myCellId: 2 })
+    render(
+      <CellGate>
+        {(list, myCellId) => (
+          <p>
+            {list.length}개 중 {myCellId}번
+          </p>
+        )}
+      </CellGate>
+    )
+
+    expect(await screen.findByText('2개 중 2번')).toBeInTheDocument()
+  })
+
   it('이미 고른 사람은 바로 들어간다', async () => {
     mockFetchCells.mockResolvedValue({ cells, myCellId: 1 })
     renderGate()

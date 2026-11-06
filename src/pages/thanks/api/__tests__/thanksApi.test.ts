@@ -7,6 +7,7 @@ import {
   createThanksEntry,
   deleteComment,
   deleteThanksEntry,
+  fetchCellStats,
   fetchCells,
   fetchComments,
   fetchThanksEntries,
@@ -44,6 +45,12 @@ describe('thanksApi', () => {
       method: 'PUT',
       body: JSON.stringify({ cellId: 3 }),
     })
+  })
+
+  it('구역 현황을 불러온다', async () => {
+    await fetchCellStats(3)
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/thanks/cells/3/stats')
   })
 
   it('그날 기록을 날짜로 불러온다', async () => {

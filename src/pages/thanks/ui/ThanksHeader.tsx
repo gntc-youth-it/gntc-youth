@@ -3,7 +3,7 @@ import { formatMissionDate } from '../model/slots'
 import type { ThanksAuthor } from '../model/types'
 import { Avatar } from './Avatar'
 import { ThanksBrand } from './ThanksBrand'
-import { Chevron } from './ThanksIcons'
+import { Chevron, PeopleIcon } from './ThanksIcons'
 
 interface ThanksHeaderProps {
   date: string
@@ -29,16 +29,21 @@ export const ThanksHeader = ({
   onToday,
 }: ThanksHeaderProps) => (
   <header className="thanks-header">
-    <div className="thanks-nav">
+    <div className="thanks-nav has-actions">
       <Link to="/" aria-label="홈으로" className="thanks-icon-button">
         <Chevron direction="left" />
       </Link>
       <h1>
         <ThanksBrand />
       </h1>
-      <button type="button" onClick={onOpenProfile} aria-label="내 프로필" className="thanks-profile-button">
-        <Avatar author={me} size={34} />
-      </button>
+      <div className="thanks-nav-actions">
+        <Link to="/thanks/cell" aria-label="우리 구역 현황" className="thanks-icon-button">
+          <PeopleIcon />
+        </Link>
+        <button type="button" onClick={onOpenProfile} aria-label="내 프로필" className="thanks-profile-button">
+          <Avatar author={me} size={34} />
+        </button>
+      </div>
     </div>
     <div className="thanks-date-row">
       <button type="button" onClick={onPrevDate} aria-label="전날 보기" className="thanks-icon-button">

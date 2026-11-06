@@ -7,7 +7,7 @@ import { AdminUsersPage } from '../pages/admin/users'
 import { AdminPostsPage } from '../pages/admin/posts'
 import { GalleryPage, GalleryWritePage } from '../pages/gallery'
 import { SchedulePage } from '../pages/schedule'
-import { ThanksPage } from '../pages/thanks'
+import { CellStatusPage, ThanksPage } from '../pages/thanks'
 import './styles/index.css'
 
 export const App = () => {
@@ -20,6 +20,7 @@ export const App = () => {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/thanks" element={<ThanksPage />} />
+          <Route path="/thanks/cell" element={<CellStatusPage />} />
           {/* 동물원 나들이(2026-10-10)가 끝나 페이지를 지웠다. 카톡 등에 남은 예전 링크는 홈으로 보낸다 */}
           <Route path="/zoo/*" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<LoginPage />} />

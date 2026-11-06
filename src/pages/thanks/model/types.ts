@@ -89,6 +89,21 @@ export interface ThanksCellsResponse {
   myCellId: number | null
 }
 
+// 구역을 고른 사람 한 명의 기록
+export interface ThanksCellMemberStats {
+  user: ThanksAuthor
+  // 아직 안 올렸으면 null
+  lastPostedAt: string | null
+  // 올린 날만 들어 있다
+  dailyCounts: { date: string; count: number }[]
+}
+
+// GET /thanks/cells/{cellId}/stats — 구역을 고른 사람 전부. 순서와 합계는 화면에서 정한다
+export interface ThanksCellStatsResponse {
+  cellId: number
+  members: ThanksCellMemberStats[]
+}
+
 // 백엔드 ExceptionCode 중 화면에서 따로 안내하는 것
 export const THANKS_ERROR_CODE = {
   SLOT_CLOSED: 6001,
@@ -101,6 +116,8 @@ export const THANKS_ERROR_CODE = {
   COMMENT_NOT_FOUND: 6006,
   // 남의 댓글 지우기. 지울 수 있는 사람은 쓴 사람 본인과 MASTER뿐이다
   COMMENT_ACCESS_DENIED: 6007,
+  // 다른 구역 현황 보기. 자기 구역과 MASTER만 볼 수 있다
+  CELL_ACCESS_DENIED: 6008,
   // 없는 구역을 고른 경우. 목록을 띄워 둔 사이 구역이 없어지면 난다
   CELL_NOT_FOUND: 1201,
   // 공통 코드. 감사를 지우면 붙어 있던 파일도 지워져서, 그 fileId를 다시 보내면 이 오류가 난다
