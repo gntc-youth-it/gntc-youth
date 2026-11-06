@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
-import { getReactionEmoji, REACTIONS } from '../model/reactions'
+import { REACTIONS } from '../model/reactions'
 import { formatKstTime, getSlotInfo } from '../model/slots'
 import type { ThanksEntry, ThanksMedia } from '../model/types'
 import { Avatar } from './Avatar'
 import { EntryMedia } from './EntryMedia'
+import { ReactionSticker } from './ReactionSticker'
 
 interface EntryCardFaceProps {
   media: Pick<ThanksMedia, 'url' | 'type'> | null
@@ -72,7 +73,7 @@ export const EntryCard = ({ entry, onOpen }: EntryCardProps) => {
           <div className="thanks-card-reactions" aria-hidden="true">
             {reactions.map((reaction) => (
               <span key={reaction.emoji} className={reaction.reactedByMe ? 'is-reacted' : ''}>
-                {getReactionEmoji(reaction.emoji)} <span>{reaction.count}</span>
+                <ReactionSticker emoji={reaction.emoji} size={26} /> <span>{reaction.count}</span>
               </span>
             ))}
           </div>

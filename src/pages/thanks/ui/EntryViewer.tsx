@@ -5,6 +5,7 @@ import { COMMENT_MAX_LENGTH, CONTENT_MAX_LENGTH } from '../model/types'
 import type { ReactionEmoji, ThanksComment, ThanksEntry } from '../model/types'
 import { Avatar } from './Avatar'
 import { EntryMedia } from './EntryMedia'
+import { ReactionSticker } from './ReactionSticker'
 
 // 반응·댓글·감사제목 수정은 API가 붙는 단계에서 넘겨준다. 넘기지 않으면 그 부분은 안 보인다
 interface EntryViewerProps {
@@ -208,7 +209,7 @@ export const EntryViewer = ({
         )}
 
         {onReact && (
-          <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="반응">
+          <div className="thanks-reaction-picker" role="group" aria-label="반응">
             {REACTIONS.map((option) => {
               const reaction = entry.reactions.find((item) => item.emoji === option.id)
               const active = reaction?.reactedByMe ?? false
@@ -219,12 +220,11 @@ export const EntryViewer = ({
                   onClick={() => onReact(option.id)}
                   aria-pressed={active}
                   aria-label={`${option.label} ${reaction?.count ?? 0}`}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[18px] transition-colors ${
-                    active ? 'bg-white text-[#141414]' : 'bg-white/10 hover:bg-white/20'
-                  }`}
+                  className="thanks-reaction-option"
                 >
-                  {option.emoji}
-                  {reaction && <span className="text-[13px] font-bold">{reaction.count}</span>}
+                  <ReactionSticker emoji={option.id} size={44} showFallbackLabel={false} />
+                  <span className="thanks-reaction-name">{option.label}</span>
+                  {reaction && reaction.count > 0 && <span className="thanks-reaction-count">{reaction.count}</span>}
                 </button>
               )
             })}
