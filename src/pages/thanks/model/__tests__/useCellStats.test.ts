@@ -71,6 +71,18 @@ describe('useCellStats', () => {
     await waitFor(() => expect(result.current.error).toBe('내 구역 현황만 볼 수 있어요.'))
   })
 
+  it('지금 보는 구역의 현황이 아니면 내주지 않는다', async () => {
+    mockFetchCellStats.mockResolvedValue(statsOf(3))
+    const { result } = renderHook(() => useCellStats(9))
+
+    await waitFor(() => expect(mockFetchCellStats).toHaveBeenCalledWith(9))
+    await act(async () => {
+      await result.current.reload()
+    })
+
+    expect(result.current.stats).toBeNull()
+  })
+
   it('다른 구역으로 바꾸면 비우고 새로 불러오며, 앞 구역 응답이 늦게 와도 버린다', async () => {
     const first = deferred()
     mockFetchCellStats.mockReturnValueOnce(first.promise)

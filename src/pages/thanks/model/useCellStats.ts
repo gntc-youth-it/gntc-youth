@@ -40,5 +40,6 @@ export const useCellStats = (cellId: number) => {
 
   usePolling(load, POLL_INTERVAL_MS)
 
-  return { stats, error, reload: load }
+  // 구역을 바꾼 직후 화면을 비우기 전에도 새 구역 이름 아래에 앞 구역 숫자가 보이지 않게 한다
+  return { stats: stats?.cellId === cellId ? stats : null, error, reload: load }
 }
