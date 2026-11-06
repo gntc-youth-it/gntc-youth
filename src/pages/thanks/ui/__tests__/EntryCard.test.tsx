@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ThanksEntry } from '../../model/types'
 import { EntryCard } from '../EntryCard'
+import { REACTIONS } from '../../model/reactions'
 
 const entry: ThanksEntry = {
   id: 7,
@@ -48,6 +49,24 @@ it('카드의 접근 가능한 이름에 표시된 반응·내 반응·댓글을
 it('반응이나 댓글이 없는 카드도 누락된 값 없이 읽을 수 있다', () => {
   render(<EntryCard entry={entry} onOpen={jest.fn()} />)
   expect(screen.getByRole('button')).toHaveAccessibleName('정은혜 아침 감사 09:15: 함께 나눈 아침에 감사해요. 댓글 0개')
+})
+
+it.each(REACTIONS)('$label 스티커가 로드되지 않으면 이름과 개수를 표시한다', ({ id, label }) => {
+  const { container } = render(
+    <EntryCard
+      entry={{ ...entry, reactions: [{ emoji: id, count: 2, reactedByMe: true }] }}
+      onOpen={jest.fn()}
+    />
+  )
+  const card = screen.getByRole('button')
+  const accessibleName = card.getAttribute('aria-label')
+  const sticker = container.querySelector('.thanks-reaction-sticker')!
+  fireEvent.error(sticker)
+
+  expect(screen.getByText(label)).toBeVisible()
+  expect(screen.getByText('2')).toBeVisible()
+  expect(container.querySelector('.thanks-reaction-sticker')).not.toBeInTheDocument()
+  expect(card).toHaveAccessibleName(accessibleName!)
 })
 
 it('반응·댓글 수가 바뀌면 읽기 내용도 갱신하고 영상의 무음 상태를 알린다', () => {

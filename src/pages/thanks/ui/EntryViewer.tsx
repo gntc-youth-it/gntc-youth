@@ -222,7 +222,7 @@ export const EntryViewer = ({
                   aria-label={`${option.label} ${reaction?.count ?? 0}`}
                   className="thanks-reaction-option"
                 >
-                  <ReactionSticker emoji={option.id} size={44} />
+                  <ReactionSticker emoji={option.id} size={44} showFallbackLabel={false} />
                   <span className="thanks-reaction-name">{option.label}</span>
                   {reaction && reaction.count > 0 && <span className="thanks-reaction-count">{reaction.count}</span>}
                 </button>

@@ -340,6 +340,12 @@
   object-fit: contain;
   user-select: none;
 }
+.thanks-reaction-fallback {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .thanks-reaction-picker {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -742,6 +748,11 @@
   }
   .thanks-card-comment {
     bottom: 10px;
+  }
+}
+@media (max-width: 319px) {
+  .thanks-reaction-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (prefers-reduced-motion: reduce) {
