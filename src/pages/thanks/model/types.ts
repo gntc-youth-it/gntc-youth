@@ -76,6 +76,19 @@ export interface CreateThanksEntryRequest {
   fileId: number
 }
 
+// 교회 안의 팀. 처음 들어올 때 하나를 고르고, 나중에 구역별로 취합한다
+export interface ThanksCell {
+  id: number
+  name: string
+}
+
+// GET /thanks/cells, PUT /thanks/my-cell — 구역 목록은 서버가 정한 순서 그대로 보여 준다
+export interface ThanksCellsResponse {
+  cells: ThanksCell[]
+  // 아직 고르지 않았으면 null
+  myCellId: number | null
+}
+
 // 백엔드 ExceptionCode 중 화면에서 따로 안내하는 것
 export const THANKS_ERROR_CODE = {
   SLOT_CLOSED: 6001,
@@ -88,6 +101,8 @@ export const THANKS_ERROR_CODE = {
   COMMENT_NOT_FOUND: 6006,
   // 남의 댓글 지우기. 지울 수 있는 사람은 쓴 사람 본인과 MASTER뿐이다
   COMMENT_ACCESS_DENIED: 6007,
+  // 없는 구역을 고른 경우. 목록을 띄워 둔 사이 구역이 없어지면 난다
+  CELL_NOT_FOUND: 1201,
   // 공통 코드. 감사를 지우면 붙어 있던 파일도 지워져서, 그 fileId를 다시 보내면 이 오류가 난다
   FILE_NOT_FOUND: 3001,
   // 공통 코드. 감사제목이 비었거나 80자를, 댓글이 비었거나 100자를 넘으면 이 오류가 난다

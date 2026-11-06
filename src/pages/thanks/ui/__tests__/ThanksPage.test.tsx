@@ -4,8 +4,10 @@ import type { ReactNode } from 'react'
 import { patchProfile } from '../../../../features/edit-profile'
 import {
   addReaction,
+  chooseCell,
   createComment,
   deleteComment,
+  fetchCells,
   fetchComments,
   fetchThanksEntries,
   updateThanksEntry,
@@ -45,6 +47,8 @@ const mockPatchProfile = patchProfile as jest.MockedFunction<typeof patchProfile
 const withPhoto = { id: 1, name: '정은혜', profileImagePath: 'uploads/me.webp' }
 
 jest.mock('../../api/thanksApi', () => ({
+  fetchCells: jest.fn(),
+  chooseCell: jest.fn(),
   fetchThanksEntries: jest.fn(),
   createThanksEntry: jest.fn(),
   updateThanksEntry: jest.fn(),
@@ -57,12 +61,19 @@ jest.mock('../../api/thanksApi', () => ({
   deleteComment: jest.fn(),
 }))
 
+const mockFetchCells = fetchCells as jest.MockedFunction<typeof fetchCells>
+const mockChooseCell = chooseCell as jest.MockedFunction<typeof chooseCell>
 const mockFetchThanksEntries = fetchThanksEntries as jest.MockedFunction<typeof fetchThanksEntries>
 const mockAddReaction = addReaction as jest.MockedFunction<typeof addReaction>
 const mockFetchComments = fetchComments as jest.MockedFunction<typeof fetchComments>
 const mockCreateComment = createComment as jest.MockedFunction<typeof createComment>
 const mockDeleteComment = deleteComment as jest.MockedFunction<typeof deleteComment>
 const mockUpdateThanksEntry = updateThanksEntry as jest.MockedFunction<typeof updateThanksEntry>
+
+const cells = [
+  { id: 1, name: '1구역' },
+  { id: 2, name: '2구역' },
+]
 
 const entry = (id: number, userId: number, name: string, createdAt: string, isMine = false): ThanksEntry => ({
   id,
@@ -84,6 +95,8 @@ beforeEach(() => {
   localStorage.clear()
   mockUser = null
   mockSearch = ''
+  // 구역을 이미 고른 사람. 고르는 흐름은 따로 확인한다
+  mockFetchCells.mockResolvedValue({ cells, myCellId: 1 })
   mockFetchComments.mockResolvedValue({ entryId: 1, comments: [] })
   jest.useFakeTimers()
   jest.setSystemTime(new Date('2026-11-09T13:20:00+09:00'))
@@ -94,6 +107,41 @@ afterEach(() => {
 })
 
 describe('ThanksPage', () => {
+  it('구역을 고르기 전에는 감사로그를 불러오지 않고, 고른 뒤에 들어가며, 프로필 안내도 그다음에 뜬다', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    // jsdom에는 scrollTo가 없다
+    window.scrollTo = () => undefined
+    // 프로필 사진이 없는 사람이다
+    mockUser = { id: 1, name: '정은혜' }
+    mockFetchCells.mockResolvedValue({ cells, myCellId: null })
+    mockChooseCell.mockResolvedValue({ cells, myCellId: 2 })
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
+    render(<ThanksPage />)
+
+    await user.click(await screen.findByRole('radio', { name: '2구역' }))
+    expect(mockFetchThanksEntries).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '2구역 들어가기' }))
+
+    expect(mockChooseCell).toHaveBeenCalledWith(2)
+    expect(await screen.findByText('오늘의 첫 감사를 기다려요')).toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(mockFetchThanksEntries).toHaveBeenCalledWith('2026-11-09')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('이미 구역을 고른 사람에게는 다시 묻지 않고, 링크로 연 감사도 바로 보여 준다', async () => {
+    mockUser = withPhoto
+    mockSearch = 'entry=1'
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [entry(1, 2, '김하늘', '2026-11-08T22:15:00')] })
+    render(<ThanksPage />)
+
+    expect(await screen.findByRole('dialog', { name: '김하늘의 아침 감사' })).toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(mockChooseCell).not.toHaveBeenCalled()
+  })
+
   it('로그인하지 않았으면 로그인 안내를 보여 주고, 로그인 뒤 이 화면으로 돌아오게 한다', async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     render(<ThanksPage />)
@@ -102,6 +150,7 @@ describe('ThanksPage', () => {
 
     expect(sessionStorage.getItem('redirectAfterLogin')).toBe('/thanks')
     expect(mockNavigate).toHaveBeenCalledWith('/login')
+    expect(mockFetchCells).not.toHaveBeenCalled()
     expect(mockFetchThanksEntries).not.toHaveBeenCalled()
   })
 
