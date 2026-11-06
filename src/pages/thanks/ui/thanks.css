@@ -719,6 +719,192 @@
   box-shadow: none;
   cursor: default;
 }
+.thanks-nav.has-actions {
+  position: relative;
+}
+.thanks-nav.has-actions > h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.thanks-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.thanks-nav-actions > .thanks-icon-button {
+  background: white;
+  width: 38px;
+  height: 38px;
+}
+.thanks-status-heading {
+  margin-top: 4px;
+  text-align: center;
+}
+.thanks-status-heading p {
+  color: var(--thanks-muted);
+  font-size: 13px;
+}
+.thanks-status-heading h2,
+.thanks-status-select {
+  margin-top: 2px;
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+}
+.thanks-status-select {
+  max-width: 100%;
+  /* 폭이 가장 긴 구역 이름에 맞춰지므로, 짧은 이름도 가운데에 오게 한다 */
+  padding: 0 22px;
+  text-align: center;
+  text-align-last: center;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23535c65' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right center;
+  color: inherit;
+  cursor: pointer;
+}
+.thanks-status-select:focus-visible {
+  outline: 2px solid #526477;
+  outline-offset: 4px;
+}
+.thanks-status-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+.thanks-status-tiles > div {
+  padding: 13px 16px 14px;
+  border-radius: 18px;
+  background: #ffffffb3;
+}
+.thanks-status-tiles dt {
+  color: var(--thanks-muted);
+  font-size: 12px;
+}
+.thanks-status-tiles dd {
+  margin-top: 3px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.thanks-status-tiles dd span {
+  margin-left: 2px;
+  color: #535c65;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.thanks-status-members {
+  margin-top: 8px;
+  padding: 13px 14px 2px;
+  border-radius: 18px;
+  background: #ffffffb3;
+}
+.thanks-status-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--thanks-muted);
+  font-size: 11px;
+}
+.thanks-heat-scale {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.thanks-heat-scale > i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.thanks-heat-scale > span:first-child {
+  margin-right: 2px;
+}
+.thanks-heat-scale > span:last-child {
+  margin-left: 2px;
+}
+.thanks-status-member {
+  display: flex;
+  gap: 10px;
+  padding: 12px 0;
+}
+.thanks-status-member + .thanks-status-member {
+  border-top: 1px solid #eef0ee;
+}
+.thanks-status-member-body {
+  flex: 1;
+  min-width: 0;
+}
+.thanks-status-member-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.thanks-status-member-top .thanks-author-name {
+  min-width: 0;
+}
+.thanks-status-member-top .thanks-posted-at {
+  flex-shrink: 0;
+  margin-top: 0;
+}
+.thanks-status-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.thanks-status-count > span {
+  margin-left: 1px;
+  color: var(--thanks-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.thanks-heat-strip {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: 8px;
+}
+.thanks-heat-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+}
+.thanks-heat-0 {
+  background: #e9ece9;
+}
+.thanks-heat-1 {
+  background: #eda53a;
+}
+.thanks-heat-2 {
+  background: #bd7a1b;
+}
+.thanks-heat-3 {
+  background: #7f4e13;
+}
+.thanks-status-skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+.thanks-status-skeleton > div {
+  height: 84px;
+  border-radius: 18px;
+  background: #e9ece9;
+}
+.thanks-status-skeleton > div:last-child {
+  grid-column: 1 / -1;
+  height: 320px;
+}
 @media (max-width: 359px) {
   .thanks-shell {
     padding-left: 14px;
@@ -730,6 +916,11 @@
   }
   .thanks-wordmark {
     font-size: 15px;
+  }
+  /* 좁은 폭에서는 가운데에 고정하면 오른쪽 버튼에 붙는다 */
+  .thanks-nav.has-actions > h1 {
+    position: static;
+    transform: none;
   }
   .thanks-card-overlay {
     left: 18px;

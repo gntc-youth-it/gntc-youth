@@ -131,6 +131,15 @@ describe('ThanksPage', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('맨 위 헤더에서 우리 구역 현황으로 들어간다', async () => {
+    mockUser = withPhoto
+    mockFetchThanksEntries.mockResolvedValue({ date: '2026-11-09', entries: [] })
+    render(<ThanksPage />)
+
+    expect(await screen.findByRole('link', { name: '우리 구역 현황' })).toHaveAttribute('href', '/thanks/cell')
+    expect(await screen.findByText('오늘의 첫 감사를 기다려요')).toBeInTheDocument()
+  })
+
   it('이미 구역을 고른 사람에게는 다시 묻지 않고, 링크로 연 감사도 바로 보여 준다', async () => {
     mockUser = withPhoto
     mockSearch = 'entry=1'
