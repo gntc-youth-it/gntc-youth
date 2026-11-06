@@ -321,7 +321,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 6px;
+  padding: 2px 7px 2px 3px;
   border-radius: 12px;
   background: #0004;
   font-size: 15px;
@@ -333,6 +333,63 @@
 .thanks-card-reactions .is-reacted {
   background: #fff;
   color: #252a31;
+}
+.thanks-reaction-sticker {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+  user-select: none;
+}
+.thanks-reaction-picker {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 20px;
+}
+.thanks-reaction-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 84px;
+  padding: 8px 2px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: #e2e2df;
+  background: #ffffff0d;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.thanks-reaction-option:hover {
+  background: #ffffff18;
+}
+.thanks-reaction-option[aria-pressed='true'] {
+  border-color: #f7be54;
+  background: #fff1d4;
+  color: #684719;
+}
+.thanks-reaction-name {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.thanks-reaction-count {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: 15px;
+  padding: 1px 3px;
+  border-radius: 8px;
+  background: #00000028;
+  font-size: 10px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.thanks-reaction-option[aria-pressed='true'] .thanks-reaction-count {
+  background: #ebc77d;
 }
 .thanks-card-comment {
   position: absolute;
